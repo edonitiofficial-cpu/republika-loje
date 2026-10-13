@@ -389,118 +389,249 @@
     <button class="nav-item" onclick="switchMainTab('tab-diplomacy', this)"><span class="nav-icon">🌍</span><span>Diplomacia</span></button>
 </nav>
 
-<script>
 /* ============================================================================
-   1. KONSTANTET DHE BAZA E TË DHËNAVE
+   1. BAZA E TË DHËNAVE FILLESTARE REALE & 120 DEPUTETËT E LEGJISLATURËS
    ============================================================================ */
 const MAX_ACTION_POINTS = 10;
-const STORAGE_KEY_AUTO = "republika_ks_2026_v5";
+const STORAGE_KEY_AUTO = "republika_ks_2026_autosave_v5";
+const STORAGE_KEY_SLOTS = "republika_ks_2026_slots_v5";
 const MONTHS_SQ = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor"];
 
+const FULL_ROSTER_NAMES = {
+    LVV: ["Albin Kurti", "Glauk Konjufca", "Albulena Haxhiu", "Donika Gërvalla-Schwarz", "Hekuran Murati", "Xhelal Sveçla", "Arben Vitia", "Ejup Maqedonci", "Mimoza Kusari-Lila", "Artane Rizvanolli", "Arbërie Nagavci", "Hajrulla Çeku", "Faton Peci", "Liburn Aliu", "Rozeta Hajdari", "Saranda Bogujevci", "Armend Muja", "Jeta Statovci", "Mefail Bajqinovci", "Fitore Pacolli-Dalipi", "Dimal Basha", "Salih Zyba", "Adnan Rrustemi", "Arbreshë Kryeziu-Hyseni", "Tinka Kurti", "Driton Hyseni", "Enver Dugolli", "Fatmire Kollçaku", "Labinotë Demi-Murtezi", "Haki Abazi", "Valon Ramadani", "Nijazi Isaku", "Shqipe Mehmeti-Selimi", "Ardian Gola", "Avni Dehari", "Besim Muzaqi", "Fjolla Ujkani", "Halil Thaçi", "Mirlinda Tishukaj-Sadiku", "Vendenis Lahu", "Agon Batusha", "Alban Bajrami", "Arjeta Fejza", "Arta Bajralija", "Burim Meta", "Drita Millaku", "Ekrem Mustafa", "Enver Haliti", "Fatmir Humolli", "Gani Krasniqi", "Gramoz Agusholli", "Hydajet Hyseni-Kaloshi", "Jahja Kokaj", "Jetmire Vrenezi", "Luan Aliu"],
+    PDK: ["Bedri Hamza", "Memli Krasniqi", "Vlora Çitaku", "Uran Ismaili", "Abelard Tahiri", "Eliza Hoxha", "Blerta Deliu-Kodra", "Xhavit Haliti", "Mërgim Lushtaku", "Ganimete Musliu", "Ferat Shala", "Rashit Qalaj", "Enver Hoxhaj", "Ariana Musliu-Shoshi", "Bekim Haxhiu", "Hajdar Beqa", "Isak Shabani", "Floretë Zejnullahu", "Hisni Kilaj", "Ardian Kastrati", "Fadil Nura", "Përparim Gruda", "Besa Kabashi-Ramaj", "Zenun Pajaziti"],
+    LDK: ["Lumir Abdixhiku", "Hykmete Bajrami", "Lutfi Haziri", "Doarsa Kica-Xhelili", "Kujtim Shala", "Avdullah Hoti", "Arben Gashi", "Jehona Lushaku-Sadriu", "Besian Mustafa", "Armend Zemaj", "Anton Quni", "Vlora Dumoshi", "Marigona Geci", "Driton Selmanaj", "Valentina Bunjaku-Rexhepi", "Rrezarta Krasniqi", "Agim Veliu", "Alban Zogaj", "Sibel Halimi", "Visar Azemi"],
+    AAK: ["Ardian Gjini", "Ramush Haradinaj", "Besnik Tahiri", "Time Kadrijaj", "Albana Bytyqi", "Bekë Berisha", "Pal Lekaj", "Shemsedin Dreshaj", "Daut Haradinaj"],
+    MIN_MULTI: ["Elbert Krasniqi (IRDK)", "Emilija Redžepi (NDS)", "Fikrim Damka (KDTP)", "Nenad Rašić (ZSPO)", "Duda Balje (SDU)", "Rasim Demiri (Vakat)", "Veton Berisha (PLE)", "Artan Asllani (PSA)", "Adem Hodža (JGP)", "Albert Kinolli (PREBK)", "Enis Kervan (KDTP)"],
+    SL: ["Zlatan Elek (SL)", "Igor Simić (SL)", "Slavko Simić (SL)", "Miljana Nikolić (SL)", "Zoran Mojsilović (SL)", "Verica Ćeranić (SL)", "Branislav Nikolić (SL)", "Milan Kostić (SL)", "Cvetko Veljković (SL)", "Ljubinko Karadžić (SL)"]
+};
+
 const INITIAL_POLITICAL_DB = {
+    electionDate: "7 Qershor 2026",
+    certificationDate: "8 Korrik 2026",
+    turnoutPercent: 41.45,
+    constitutionalRules: { totalSeats: 120, generalSeats: 100, guaranteedMinoritySeats: 20, serbGuaranteedSeats: 10, otherMinorityGuaranteedSeats: 10, thresholdGeneral: 5.0, simpleMajority: 61, twoThirdsMajority: 80, presidentialRound1And2: 80, presidentialRound3Votes: 61, presidentialQuorum: 80, genderQuotaMinPercent: 30 },
     parties: {
-        LVV: { id: "LVV", name: "Lëvizja Vetëvendosje!", short: "LVV", leader: "Albin Kurti", color: "#dc2626", tagClass: "tag-lvv", seats: 53, poll: 47.1, partyFunds: 420000, relations: { PDK: 24, LDK: 38, AAK: 28, MIN_MULTI: 84, SL: 10 } },
-        PDK: { id: "PDK", name: "Partia Demokratike e Kosovës", short: "PDK", leader: "Bedri Hamza", color: "#2563eb", tagClass: "tag-pdk", seats: 22, poll: 19.4, partyFunds: 360000, relations: { LVV: 24, LDK: 62, AAK: 68, MIN_MULTI: 75, SL: 15 } },
-        LDK: { id: "LDK", name: "Lidhja Demokratike e Kosovës", short: "LDK", leader: "Lumir Abdixhiku", color: "#0ea5e9", tagClass: "tag-ldk", seats: 18, poll: 16.7, partyFunds: 310000, relations: { LVV: 38, PDK: 62, AAK: 64, MIN_MULTI: 78, SL: 15 } },
-        AAK: { id: "AAK", name: "Aleanca për Ardhmërinë e Kosovës", short: "AAK", leader: "Ramush Haradinaj", color: "#d97706", tagClass: "tag-aak", seats: 7, poll: 6.7, partyFunds: 195000, relations: { LVV: 28, PDK: 68, LDK: 64, MIN_MULTI: 70, SL: 12 } },
-        MIN_MULTI: { id: "MIN_MULTI", name: "Grupi Multietnik (11)", short: "Komunitetet", leader: "Elbert Krasniqi", color: "#10b981", tagClass: "tag-min", seats: 11, poll: 4.6, partyFunds: 150000, relations: { LVV: 84, PDK: 75, LDK: 78, AAK: 70, SL: 25 } },
-        SL: { id: "SL", name: "Lista Serbe", short: "Lista Serbe (9)", leader: "Zlatan Elek", color: "#475569", tagClass: "tag-sl", seats: 9, poll: 5.5, partyFunds: 210000, relations: { LVV: 10, PDK: 15, LDK: 15, AAK: 12, MIN_MULTI: 25 } }
+        LVV: { id: "LVV", name: "Lëvizja Vetëvendosje! (me Guxo & Alternativa)", short: "LVV", leader: "Albin Kurti", deputyLeaders: ["Glauk Konjufca", "Albulena Haxhiu", "Donika Gërvalla-Schwarz"], orgSecretary: "Alim Rama", color: "#dc2626", tagClass: "tag-lvv", seats: 53, poll: 47.13, community: "GENERAL", ideology: "Socialdemokraci, Sovranitet Shtetëror & Zhvillim", euStance: 88, usStance: 82, dialogueStance: "Reciprocitet i plotë dhe mos-themelim i asociacionit monoetnik", partyDiscipline: 92, internalCohesion: 88, partyFunds: 420000, relations: { LVV: 100, PDK: 24, LDK: 38, AAK: 28, MIN_MULTI: 84, SL: 10 }, candidates: [ { id: "c_kurti", name: "Albin Kurti", gender: "M", region: "PRISHTINA", pop: 95, loyalty: 100, role: "Kryeministër / Kryetar i LVV" }, { id: "c_konjufca", name: "Glauk Konjufca", gender: "M", region: "PRISHTINA", pop: 91, loyalty: 95, role: "Zëvendëskryeministër I & Ministër i Jashtëm" }, { id: "c_haxhiu", name: "Albulena Haxhiu", gender: "F", region: "PRISHTINA", pop: 84, loyalty: 98, role: "Kryetare e Kuvendit të Kosovës" } ], reserves: [] },
+        PDK: { id: "PDK", name: "Partia Demokratike e Kosovës", short: "PDK", leader: "Bedri Hamza", deputyLeaders: ["Memli Krasniqi", "Vlora Çitaku", "Uran Ismaili"], orgSecretary: "Betim Gjoshi", color: "#2563eb", tagClass: "tag-pdk", seats: 22, poll: 19.44, community: "GENERAL", ideology: "Qendra e Djathtë, Zhvillim Ekonomik & Partneritet Atlantik", euStance: 94, usStance: 98, dialogueStance: "Marrëveshje gjithëpërfshirëse në koordinim të plotë me SHBA-në", partyDiscipline: 87, internalCohesion: 85, partyFunds: 360000, relations: { LVV: 24, PDK: 100, LDK: 62, AAK: 68, MIN_MULTI: 75, SL: 15 }, candidates: [ { id: "c_hamza", name: "Bedri Hamza", gender: "M", region: "MITROVICA", pop: 89, loyalty: 96, role: "Kryetar i PDK-së / Ekspert Financiar" } ], reserves: [] },
+        LDK: { id: "LDK", name: "Lidhja Demokratike e Kosovës", short: "LDK", leader: "Lumir Abdixhiku", deputyLeaders: ["Lutfi Haziri", "Hykmete Bajrami", "Doarsa Kica-Xhelili"], orgSecretary: "Imri Ahmeti", color: "#0ea5e9", tagClass: "tag-ldk", seats: 18, poll: 16.69, community: "GENERAL", ideology: "Qendra e Djathtë, Institucionalizëm & Integrim Euro-Atlantik", euStance: 96, usStance: 97, dialogueStance: "Respektim i Kushtetutës dhe aleancë me SHBA", partyDiscipline: 83, internalCohesion: 82, partyFunds: 310000, relations: { LVV: 38, PDK: 62, LDK: 100, AAK: 64, MIN_MULTI: 78, SL: 15 }, candidates: [ { id: "c_abdixhiku", name: "Lumir Abdixhiku", gender: "M", region: "PRISHTINA", pop: 86, loyalty: 97, role: "Kryetar i LDK-së" } ], reserves: [] },
+        AAK: { id: "AAK", name: "Aleanca për Ardhmërinë e Kosovës", short: "AAK", leader: "Ardian Gjini / Ramush Haradinaj", deputyLeaders: ["Besnik Tahiri", "Time Kadrijaj", "Pal Lekaj"], orgSecretary: "Blerim Kuçi", color: "#d97706", tagClass: "tag-aak", seats: 7, poll: 6.74, community: "GENERAL", ideology: "Konservatorizëm Kombëtar, Siguri & Anëtarësim direkt në NATO", euStance: 89, usStance: 96, dialogueStance: "Marrëveshje finale me njohje reciproke", partyDiscipline: 89, internalCohesion: 87, partyFunds: 195000, relations: { LVV: 28, PDK: 68, LDK: 64, AAK: 100, MIN_MULTI: 70, SL: 12 }, candidates: [ { id: "c_gjini", name: "Ardian Gjini", gender: "M", region: "GJAKOVA", pop: 83, loyalty: 96, role: "Kryetar / Drejtues i AAK-së" } ], reserves: [] },
+        MIN_MULTI: { id: "MIN_MULTI", name: "Grupi Multietnik & Komunitetet", short: "Komunitetet (11)", leader: "Elbert Krasniqi & Emilija Redžepi", deputyLeaders: ["Fikrim Damka (KDTP)", "Nenad Rašić (ZSPO)"], orgSecretary: "Veton Berisha", color: "#10b981", tagClass: "tag-min", seats: 11, poll: 4.60, community: "GUARANTEED_MULTI", ideology: "Të Drejtat e Komuniteteve", euStance: 92, usStance: 92, dialogueStance: "Integrim paqësor", partyDiscipline: 85, internalCohesion: 80, partyFunds: 150000, relations: { LVV: 84, PDK: 75, LDK: 78, AAK: 70, MIN_MULTI: 100, SL: 25 }, candidates: [ { id: "c_krasniqi_e", name: "Elbert Krasniqi (IRDK)", gender: "M", region: "PEJA", pop: 79, loyalty: 92, role: "Ministër i MAPL" } ], reserves: [] },
+        SL: { id: "SL", name: "Lista Serbe (Srpska Lista)", short: "Lista Serbe (9)", leader: "Zlatan Elek", deputyLeaders: ["Igor Simić", "Slavko Simić"], orgSecretary: "Milan Radojević", color: "#475569", tagClass: "tag-sl", seats: 9, poll: 5.40, community: "GUARANTEED_SERB", ideology: "Koordinim me Beogradin", euStance: 50, usStance: 45, dialogueStance: "Asociacioni me kompetenca ekzekutive", partyDiscipline: 95, internalCohesion: 90, partyFunds: 210000, relations: { LVV: 10, PDK: 15, LDK: 15, AAK: 12, MIN_MULTI: 25, SL: 100 }, candidates: [ { id: "c_elek", name: "Zlatan Elek", gender: "M", region: "MITROVICA", pop: 65, loyalty: 96, role: "Kryetar i Listës Serbe" } ], reserves: [] }
     },
     ministries: [
-        { id: "mfpt", name: "Ministria e Financave, Punës dhe Transfereve", minister: "Hekuran Murati", party: "LVV", budget: 860, competence: 88, loyalty: 95 },
-        { id: "mpjd", name: "Ministria e Punëve të Jashtme", minister: "Glauk Konjufca", party: "LVV", budget: 68, competence: 92, loyalty: 95 },
-        { id: "mpb", name: "Ministria e Punëve të Brendshme", minister: "Xhelal Sveçla", party: "LVV", budget: 235, competence: 89, loyalty: 97 },
-        { id: "mm", name: "Ministria e Mbrojtjes (FSK)", minister: "Ejup Maqedonci", party: "LVV", budget: 250, competence: 94, loyalty: 93 },
-        { id: "md", name: "Ministria e Drejtësisë", minister: "Donika Gërvalla", party: "LVV", budget: 62, competence: 83, loyalty: 90 },
-        { id: "msh", name: "Ministria e Shëndetësisë", minister: "Arben Vitia", party: "LVV", budget: 345, competence: 86, loyalty: 94 },
-        { id: "mashti", name: "Ministria e Arsimit (MASHTI)", minister: "Arbërie Nagavci", party: "LVV", budget: 330, competence: 80, loyalty: 95 },
-        { id: "me", name: "Ministria e Ekonomisë", minister: "Artane Rizvanolli", party: "LVV", budget: 195, competence: 85, loyalty: 92 },
-        { id: "mapl", name: "Ministria e Pushtetit Lokal", minister: "Elbert Krasniqi", party: "MIN_MULTI", budget: 65, competence: 85, loyalty: 91 }
+        { id: "mfpt", name: "Ministria e Financave, Punës dhe Transfereve", minister: "Hekuran Murati", party: "LVV", budget: 860, competence: 88, loyalty: 95, risk: 12, currentIssue: "Kërkesat sindikale dhe rishikimi buxhetor" },
+        { id: "mpjd", name: "Ministria e Punëve të Jashtme dhe Diasporës", minister: "Glauk Konjufca", party: "LVV", budget: 68, competence: 92, loyalty: 95, risk: 8, currentIssue: "Lobimi për Këshillin e Evropës dhe misionet diplomatike" },
+        { id: "mpb", name: "Ministria e Punëve të Brendshme", minister: "Xhelal Sveçla", party: "LVV", budget: 235, competence: 89, loyalty: 97, risk: 18, currentIssue: "Patrullimet kufitare në veri" },
+        { id: "mm", name: "Ministria e Mbrojtjes (FSK)", minister: "Ejup Maqedonci", party: "LVV", budget: 250, competence: 94, loyalty: 93, risk: 5, currentIssue: "Furnizimi me armatim" },
+        { id: "md", name: "Ministria e Drejtësisë", minister: "Donika Gërvalla", party: "LVV", budget: 62, competence: 83, loyalty: 90, risk: 16, currentIssue: "Vetingu në drejtësi dhe Kodi Civil" },
+        { id: "msh", name: "Ministria e Shëndetësisë", minister: "Arben Vitia", party: "LVV", budget: 345, competence: 86, loyalty: 94, risk: 15, currentIssue: "Lista e barnave esenciale" },
+        { id: "mashti", name: "Ministria e Arsimit, Shkencës dhe Teknologjisë", minister: "Arbërie Nagavci", party: "LVV", budget: 330, competence: 80, loyalty: 95, risk: 20, currentIssue: "Tekstet shkollore dhe çerdhet" },
+        { id: "me", name: "Ministria e Ekonomisë dhe Energjisë", minister: "Artane Rizvanolli", party: "LVV", budget: 195, competence: 85, loyalty: 92, risk: 17, currentIssue: "Remonti i blloqeve të KEK-ut" },
+        { id: "mmphi", name: "Ministria e Infrastrukturës", minister: "Liburn Aliu", party: "LVV", budget: 365, competence: 81, loyalty: 84, risk: 22, currentIssue: "Shpronësimet në rrugët magjistrale" },
+        { id: "mbpzhr", name: "Ministria e Bujqësisë", minister: "Faton Peci", party: "LVV", budget: 150, competence: 86, loyalty: 90, risk: 14, currentIssue: "Subvencionet për grurin" },
+        { id: "mint", name: "Ministria e Industrisë dhe Tregtisë", minister: "Rozeta Hajdari", party: "LVV", budget: 85, competence: 76, loyalty: 93, risk: 26, currentIssue: "Mbikëqyrja e çmimeve" },
+        { id: "mkrs", name: "Ministria e Kulturës dhe Sportit", minister: "Hajrulla Çeku", party: "LVV", budget: 185, competence: 90, loyalty: 94, risk: 9, currentIssue: "Masterplani i Lojërave Mesdhetare 2030" },
+        { id: "mapl", name: "Ministria e Administrimit të Pushtetit Lokal", minister: "Elbert Krasniqi", party: "MIN_MULTI", budget: 65, competence: 85, loyalty: 91, risk: 10, currentIssue: "Granti i performancës komunale" },
+        { id: "mkk", name: "Ministria për Komunitete dhe Kthim", minister: "Nenad Rašić", party: "MIN_MULTI", budget: 55, competence: 82, loyalty: 88, risk: 14, currentIssue: "Mbështetja për bizneset e komuniteteve" },
+        { id: "mzhr", name: "Ministria e Zhvillimit Rajonal", minister: "Fikrim Damka", party: "MIN_MULTI", budget: 60, competence: 81, loyalty: 87, risk: 13, currentIssue: "Zonat ekonomike ndërkomunale" }
     ],
     municipalities: [
-        { id: "m_prishtina", name: "Prishtina", region: "PRISHTINA", mayorParty: "LDK", mayorName: "Përparim Rama", budgetM: 124 },
-        { id: "m_prizreni", name: "Prizreni", region: "PRIZRENI", mayorParty: "PDK", mayorName: "Shaqir Totaj", budgetM: 68 },
-        { id: "m_peja", name: "Peja", region: "PEJA", mayorParty: "LDK", mayorName: "Gazmend Muhaxheri", budgetM: 42 },
-        { id: "m_mitrovica", name: "Mitrovica e Jugut", region: "MITROVICA", mayorParty: "PDK", mayorName: "Bedri Hamza", budgetM: 32 },
-        { id: "m_gjilani", name: "Gjilani", region: "GJILANI", mayorParty: "LVV", mayorName: "Alban Hyseni", budgetM: 39 },
-        { id: "m_ferizaj", name: "Ferizaj", region: "FERIZAJ", mayorParty: "PDK", mayorName: "Agim Aliu", budgetM: 45 },
-        { id: "m_gjakova", name: "Gjakova", region: "GJAKOVA", mayorParty: "AAK", mayorName: "Ardian Gjini", budgetM: 44 }
+        { id: "m_prishtina", name: "Prishtina", region: "PRISHTINA", voters: 206000, mayorParty: "LDK", mayorName: "Përparim Rama", issue: "Trafiku urban, Unaza e Kryeqytetit", budgetM: 124 },
+        { id: "m_podujeva", name: "Podujeva", region: "PRISHTINA", voters: 87000, mayorParty: "LVV", mayorName: "Shpejtim Bulliqi", issue: "Magjistralja Prishtinë–Podujevë", budgetM: 31 },
+        { id: "m_lipjani", name: "Lipjani", region: "PRISHTINA", voters: 64000, mayorParty: "LDK", mayorName: "Imri Ahmeti", issue: "Infrastruktura në fshatra", budgetM: 24 },
+        { id: "m_fushkosova", name: "Fushë Kosova", region: "PRISHTINA", voters: 46000, mayorParty: "LDK", mayorName: "Burim Berisha", issue: "Mbingarkesa urbane, shkollat e reja", budgetM: 19 },
+        { id: "m_obiliqi", name: "Obiliqi", region: "PRISHTINA", voters: 26000, mayorParty: "LDK", mayorName: "Xhafer Gashi", issue: "Ndotja nga KEK-u", budgetM: 15 },
+        { id: "m_drenasi", name: "Drenasi", region: "PRISHTINA", voters: 57000, mayorParty: "PDK", mayorName: "Ramiz Lladrovci", issue: "Parku i Biznesit", budgetM: 21 },
+        { id: "m_gracanica", name: "Graçanica", region: "PRISHTINA", voters: 21000, mayorParty: "SL", mayorName: "Novak Živić", issue: "Shërbimet komunale", budgetM: 11 },
+        { id: "m_novoberda", name: "Novobërda", region: "PRISHTINA", voters: 9500, mayorParty: "SL", mayorName: "Saša Milošević", issue: "Turizmi rural", budgetM: 5 },
+        { id: "m_prizreni", name: "Prizreni", region: "PRIZRENI", voters: 178000, mayorParty: "PDK", mayorName: "Shaqir Totaj", issue: "Qendra Historike, Autostrada", budgetM: 68 },
+        { id: "m_suhareka", name: "Suhareka", region: "PRIZRENI", voters: 69000, mayorParty: "AAK", mayorName: "Bali Muharremaj", issue: "Vreshtaria", budgetM: 25 },
+        { id: "m_malisheva", name: "Malisheva", region: "PRIZRENI", voters: 56000, mayorParty: "PDK", mayorName: "Ekrem Kastrati", issue: "Nënkalimet urbane", budgetM: 20 },
+        { id: "m_dragashi", name: "Dragashi", region: "PRIZRENI", voters: 40000, mayorParty: "LDK", mayorName: "Bexhet Xheladini", issue: "Blegtoria në Sharr", budgetM: 13 },
+        { id: "m_mamusha", name: "Mamusha", region: "PRIZRENI", voters: 5500, mayorParty: "MIN_MULTI", mayorName: "Abdülhadi Krasniç", issue: "Sera bujqësore", budgetM: 4 },
+        { id: "m_peja", name: "Peja", region: "PEJA", voters: 115000, mayorParty: "LDK", mayorName: "Gazmend Muhaxheri", issue: "Turizmi në Rugovë", budgetM: 42 },
+        { id: "m_istogu", name: "Istogu", region: "PEJA", voters: 51000, mayorParty: "LDK", mayorName: "Ilir Ferati", issue: "Bujqësia, Trofta", budgetM: 18 },
+        { id: "m_klina", name: "Klina", region: "PEJA", voters: 49000, mayorParty: "AAK", mayorName: "Zenun Elezaj", issue: "Uji i pijshëm", budgetM: 16 },
+        { id: "m_gjakova", name: "Gjakova", region: "GJAKOVA", voters: 118000, mayorParty: "AAK", mayorName: "Ardian Gjini", issue: "Aeroporti i Gjakovës", budgetM: 44 },
+        { id: "m_rahoveci", name: "Rahoveci", region: "GJAKOVA", voters: 61000, mayorParty: "AAK", mayorName: "Smajl Latifi", issue: "Subvencionet për verëtarët", budgetM: 21 },
+        { id: "m_decani", name: "Deçani", region: "GJAKOVA", voters: 43000, mayorParty: "AAK", mayorName: "Bashkim Ramosaj", issue: "Rruga Deçan–Plavë", budgetM: 15 },
+        { id: "m_juniku", name: "Juniku", region: "GJAKOVA", voters: 6200, mayorParty: "LDK", mayorName: "Ruzhdi Shehu", issue: "Kullat tradicionale", budgetM: 4 },
+        { id: "m_mitrovica_j", name: "Mitrovica e Jugut", region: "MITROVICA", voters: 84000, mayorParty: "PDK", mayorName: "Bedri Hamza", issue: "Trepça", budgetM: 32 },
+        { id: "m_vushtrria", name: "Vushtrria", region: "MITROVICA", voters: 76000, mayorParty: "PDK", mayorName: "Ferit Idrizi", issue: "Kultivimi i patates", budgetM: 26 },
+        { id: "m_skenderaj", name: "Skenderaj", region: "MITROVICA", voters: 55000, mayorParty: "PDK", mayorName: "Fadil Nura", issue: "Memoriali në Prekaz", budgetM: 20 },
+        { id: "m_mitrovica_v", name: "Mitrovica e Veriut", region: "MITROVICA", voters: 18500, mayorParty: "SL", mayorName: "Milan Radojević", issue: "Ura e Ibrit", budgetM: 9 },
+        { id: "m_zvecani", name: "Zveçani", region: "MITROVICA", voters: 7200, mayorParty: "SL", mayorName: "Dragiša Milović", issue: "Trepça në veri", budgetM: 5 },
+        { id: "m_leposaviqi", name: "Leposaviqi", region: "MITROVICA", voters: 13500, mayorParty: "SL", mayorName: "Zoran Todić", issue: "Kontrolli kufitar në Jarinjë", budgetM: 7 },
+        { id: "m_zubinpotoku", name: "Zubin Potoku", region: "MITROVICA", voters: 6800, mayorParty: "SL", mayorName: "Miloš Perović", issue: "Siguria e Liqenit të Ujmanit", budgetM: 5 },
+        { id: "m_gjilani", name: "Gjilani", region: "GJILANI", voters: 105000, mayorParty: "LVV", mayorName: "Alban Hyseni", issue: "Autostrada e Gjilanit", budgetM: 39 },
+        { id: "m_vitia", name: "Vitia", region: "GJILANI", voters: 49000, mayorParty: "LDK", mayorName: "Sokol Haliti", issue: "Lidhja me autostradën", budgetM: 17 },
+        { id: "m_kamenica", name: "Kamenica", region: "GJILANI", voters: 36000, mayorParty: "LVV", mayorName: "Kadri Rahimaj", issue: "Reforma në arsim", budgetM: 13 },
+        { id: "m_ranillugu", name: "Ranillugu", region: "GJILANI", voters: 5100, mayorParty: "SL", mayorName: "Tanja Antić", issue: "Bujqësia lokale", budgetM: 4 },
+        { id: "m_parteshi", name: "Parteshi", region: "GJILANI", voters: 4800, mayorParty: "SL", mayorName: "Dragan Petković", issue: "Infrastruktura rurale", budgetM: 3 },
+        { id: "m_kllokoti", name: "Kllokoti", region: "GJILANI", voters: 4200, mayorParty: "SL", mayorName: "Vladan Bogdanović", issue: "Banjat termale", budgetM: 3 },
+        { id: "m_ferizaj", name: "Ferizaj", region: "FERIZAJ", voters: 119000, mayorParty: "PDK", mayorName: "Agim Aliu", issue: "Spitali Rajonal", budgetM: 45 },
+        { id: "m_kacaniku", name: "Kaçaniku", region: "FERIZAJ", voters: 36000, mayorParty: "PDK", mayorName: "Besim Ilazi", issue: "Impianti i ujërave", budgetM: 13 },
+        { id: "m_shtimja", name: "Shtimja", region: "FERIZAJ", voters: 29000, mayorParty: "LVV", mayorName: "Qemajl Aliu", issue: "Unaza e Shtimes", budgetM: 11 },
+        { id: "m_hanielezit", name: "Hani i Elezit", region: "FERIZAJ", voters: 9800, mayorParty: "PDK", mayorName: "Mehmet Ballazhi", issue: "Dogana kufitare", budgetM: 5 },
+        { id: "m_shterpce", name: "Shtërpca", region: "FERIZAJ", voters: 12500, mayorParty: "SL", mayorName: "Ivica Tanasijević", issue: "Qendra e skijimit në Brezovicë", budgetM: 6 }
     ]
 };
 
-const DYNAMIC_EVENTS_POOL = [
+function getInitialStateSectors() {
+    return [
+        { id: "sec_econ", name: "1. Ekonomia & Financat Publike", ministry: "Ministria e Financave", score: 68, problem: "Informaliteti fiskal dhe qasja në financa për prodhuesit", projectTitle: "Digjitalizimi i Arkave Fiskale & Fondi Sovran", costM: 25, weeksTotal: 8, weeksLeft: 0, active: false, competence: "QEVERI (Vendim i Mbledhjes së Qeverisë)" },
+        { id: "sec_edu", name: "2. Arsimi, Shkollat & Universitetet", ministry: "MASHTI", score: 62, problem: "Mungesa e çerdheve publike dhe laboratorëve digjitalë në shkolla", projectTitle: "Ndërtimi i 25 Çerdheve & Smart-Labs në Shkolla", costM: 30, weeksTotal: 10, weeksLeft: 0, active: false, competence: "MINISTRI / QEVERI" },
+        { id: "sec_health", name: "3. Shëndetësia & Spitalet (QKUK)", ministry: "Ministria e Shëndetësisë", score: 60, problem: "Listat e pritjes në QKUK dhe sistemi informativ shëndetësor", projectTitle: "Modernizimi i Klinikave të QKUK & Barnat Esenciale", costM: 35, weeksTotal: 10, weeksLeft: 0, active: false, competence: "QEVERI & BUXHET" },
+        { id: "sec_police", name: "4. Policia & Siguria Publike", ministry: "Ministria e Punëve të Brendshme", score: 82, problem: "Shtesat e rrezikshmërisë dhe pajisjet logjistike kufitare", projectTitle: "Flota e Re e Automjeteve të Blinduara & Kamera Trupi", costM: 20, weeksTotal: 6, weeksLeft: 0, active: false, competence: "KRYEMINISTRI & MPB" },
+        { id: "sec_fsk", name: "5. Mbrojtja & Forca e Sigurisë (FSK)", ministry: "Ministria e Mbrojtjes", score: 86, problem: "Kapacitetet kundërajrore dhe fabrika e municioneve", projectTitle: "Prokurimi i Sistemeve Mbrojtëse & Kazerma e Re", costM: 45, weeksTotal: 12, weeksLeft: 0, active: false, competence: "KUVENDI (Kërkon Ligj / Buxhet)" },
+        { id: "sec_roads", name: "6. Rrugët & Infrastruktura", ministry: "MMPHI", score: 64, problem: "Vonesat në magjistralet Prishtinë-Podujevë, Mitrovicë dhe Gjilan", projectTitle: "Përshpejtimi i Loteve Rrugore & Shpronësimet", costM: 40, weeksTotal: 12, weeksLeft: 0, active: false, competence: "QEVERI (Vendim Shpronësimi)" },
+        { id: "sec_energy", name: "7. Energjia & Furnizimi (KEK/KOSTT)", ministry: "Ministria e Ekonomisë", score: 72, problem: "Vjetërsia e termocentraleve Kosova A & B dhe humbjet në rrjet", projectTitle: "Bateritë Akumuluese & Parku Solar 100MW në KEK", costM: 50, weeksTotal: 14, weeksLeft: 0, active: false, competence: "KUVENDI / QEVERI" },
+        { id: "sec_tech", name: "8. Teknologjia & Digjitalizimi (e-Kosova)", ministry: "Zyra e KM / MASHTI", score: 77, problem: "Ndërlidhja e regjistrave shtetërorë dhe siguria kibernetike", projectTitle: "Zgjerimi i e-Kosova me 120 Shërbime & Qendra Kibernetike", costM: 15, weeksTotal: 6, weeksLeft: 0, active: false, competence: "KRYEMINISTRI (Urdhëresë)" },
+        { id: "sec_agri", name: "9. Bujqësia & Zhvillimi Rural", ministry: "MBPZHR", score: 74, problem: "Sistemet e ujitjes në Dukagjin e Anamoravë dhe sigurimi bujqësor", projectTitle: "Zgjerimi i Kanalit të Ujitjes Radoniqi & Ibër-Lepenc", costM: 22, weeksTotal: 9, weeksLeft: 0, active: false, competence: "MINISTRIA E BUJQËSISË" },
+        { id: "sec_env", name: "10. Mjedisi & Menaxhimi i Mbeturinave", ministry: "MMPHI", score: 58, problem: "Deponitë ilegale dhe ndotja e lumenjve", projectTitle: "Impiantet e Riciklimit & Pastrimi i Shtretërve të Lumenjve", costM: 18, weeksTotal: 8, weeksLeft: 0, active: false, competence: "QEVERI & KOMUNAT" },
+        { id: "sec_social", name: "11. Punësimi & Politikat Sociale", ministry: "MFPT", score: 70, problem: "Papunësia tek të rinjtë dhe gratë, skema e asistencës sociale", projectTitle: "Zgjerimi i Platformës Superpuna & Reforma e Pensioneve", costM: 28, weeksTotal: 8, weeksLeft: 0, active: false, competence: "QEVERI" },
+        { id: "sec_justice", name: "12. Drejtësia & Administrata Publike", ministry: "Ministria e Drejtësisë", score: 66, problem: "Numri i lartë i lëndëve të vjetra në gjykata", projectTitle: "Gjykata Komerciale & Digjitalizimi i Gjykatave", costM: 16, weeksTotal: 8, weeksLeft: 0, active: false, competence: "KUVENDI / MD" },
+        { id: "sec_rail", name: "13. Transporti Publik & Hekurudhat", ministry: "MMPHI", score: 61, problem: "Modernizimi i Linjës Hekurudhore 10", projectTitle: "Elektrifikimi i Hekurudhës & Studimi Prishtinë-Durrës", costM: 32, weeksTotal: 12, weeksLeft: 0, active: false, competence: "QEVERI" },
+        { id: "sec_water", name: "14. Uji & Kanalizimi", ministry: "MMPHI / Komunat", score: 67, problem: "Furnizimi me ujë të pijshëm në fshatra dhe trajtimi i ujërave të zeza", projectTitle: "7 Impiante Rajonale të Ujërave të Zeza", costM: 24, weeksTotal: 10, weeksLeft: 0, active: false, competence: "QEVERI" },
+        { id: "sec_local", name: "15. Zhvillimi Komunal & Shërbimet Lokale", ministry: "MAPL & MZHR", score: 73, problem: "Kapacitetet e ulëta buxhetore të komunave të vogla", projectTitle: "Fondi i Katërt i Granteve Kapitale për Komunat", costM: 30, weeksTotal: 8, weeksLeft: 0, active: false, competence: "QEVERI & KUVENDI" }
+    ];
+}
+
+function getInitialPMInbox() {
+    return [
+        { id: "req_init_1", senderName: "Liburn Aliu", senderRole: "Ministër i Infrastrukturës", category: "VENDIM OPERACIONAL", urgency: "E LARTË", deadlineWeeks: 3, title: "Vonesa në shpronësimet e rrugëve Prishtinë–Podujevë dhe Mitrovicë", desc: "Kontraktorët kanë ngadalësuar punimet për shkak të kontesteve pronësore.", consequenceText: "Nëse nuk veprohet: -2.5% Mbështetje.", options: [ { label: "Mirato €18M shtesë", costB: 0.018, appDelta: 2.2, secId: "sec_roads", outcome: "U miratuan mjetet për shpronësim." }, { label: "Shkëput kontratat", costB: 0, appDelta: 1.5, secId: "sec_roads", outcome: "Kontraktorët u penalizuan." } ] },
+        { id: "req_init_2", senderName: "Përparim Rama & Imri Ahmeti", senderRole: "Kryetarët e Komunave", category: "KËRKESË NGA KOMUNAT", urgency: "MESATARE", deadlineWeeks: 4, title: "Bashkëfinancim për Projektet Kapitale", desc: "Asociacioni i Komunave kërkon zhbllokimin e mjeteve.", consequenceText: "Mosveprimi ul raportin me komunat (-1.8% Mbështetje).", options: [ { label: "Prano memorandum bashkëfinancimi (-€15M)", costB: 0.015, appDelta: 2.5, secId: "sec_local", outcome: "Kryetarët e komunave përshëndetën bashkëpunimin." } ] },
+        { id: "req_init_3", senderName: "Ambasadori i SHBA-së & Shefi i Zyrës së BE-së", senderRole: "QUINT", category: "FTESË DIPLOMATIKE", urgency: "E LARTË", deadlineWeeks: 2, title: "Konsultim para Raundit në Bruksel", desc: "Ambasadorët kërkojnë takim pune në Kryeministri për veriun.", consequenceText: "Vonesa ul pikët diplomatike (-5 pikë).", options: [ { label: "Prit ambasadorët në takim", costB: 0, appDelta: 1.8, dipBonus: 5, outcome: "Takim konstruktiv me QUINT-in." } ] }
+    ];
+}
+
+function getInitialLaws() {
+    return [
+        { id: "law_budget_2027", title: "Projektligji për Ndarjet Buxhetore", ministry: "Ministria e Financave", desc: "Rrit koeficientin e pagave.", majorityType: "SIMPLE_61", requiredVotes: 61, costB: 0.14, approvalEffect: 4.5, supportParties: ["LVV", "MIN_MULTI"], stage: "Leximi i Dytë", status: "PENDING" },
+        { id: "law_vetting_bureau", title: "Byroja Shtetërore për Konfiskim", ministry: "Ministria e Drejtësisë", desc: "Sipas Komisionit të Venecias.", majorityType: "SIMPLE_61", requiredVotes: 61, costB: 0.02, approvalEffect: 5.2, supportParties: ["LVV", "MIN_MULTI"], stage: "Shqyrtim në Komision", status: "PENDING" },
+        { id: "law_eu_growth_plan", title: "Marrëveshja Ndërkombëtare për Planin e Rritjes", ministry: "Ministria e Financave", desc: "Kërkon 80 vota.", majorityType: "INTL_80", requiredVotes: 80, costB: -0.22, approvalEffect: 4.0, supportParties: ["LVV", "PDK", "LDK", "AAK", "MIN_MULTI"], stage: "Seancë Plenare", status: "PENDING" },
+        { id: "law_fsk_defense_fund", title: "Ligji për Fondin e Mbrojtjes (FSK)", ministry: "Ministria e Mbrojtjes", desc: "Buxhet miliardësh për ushtrinë.", majorityType: "SIMPLE_61", requiredVotes: 61, costB: 0.18, approvalEffect: 5.8, supportParties: ["LVV", "PDK", "LDK", "AAK", "MIN_MULTI"], stage: "Leximi i Parë", status: "PENDING" },
+        { id: "law_civil_code", title: "Projekt-Kodi Civil", ministry: "Ministria e Drejtësisë", desc: "Kundërshtime nga konservatorët.", majorityType: "SIMPLE_61", requiredVotes: 61, costB: 0.01, approvalEffect: 1.5, supportParties: ["LVV"], stage: "Debat Parlamentar", status: "PENDING" }
+    ];
+}
+
+function getInitialPromises() {
+    return [
+        { id: "prom_salary_1000", title: "Rritja e pagës mesatare në 1,000€", deadlineWeeks: 48, costB: 0.14, progress: 35, fulfilled: false, source: "Programi Qeverisës" },
+        { id: "prom_army_1b", title: "Buxheti 1 Miliard Euro për FSK-në", deadlineWeeks: 36, costB: 0.18, progress: 45, fulfilled: false, source: "Seanca e Kuvendit" },
+        { id: "prom_highways", title: "Përfundimi i magjistraleve dhe autostradave", deadlineWeeks: 52, costB: 0.16, progress: 40, fulfilled: false, source: "Zotim Infrastrukture" }
+    ];
+}
+
+function getInitialCabinetAgenda() {
+    return [
+        { id: "cab_1", title: "Subvencionimi i Tarifave të Energjisë", ministry: "Ministria e Ekonomisë", ministerName: "Artane Rizvanolli", costB: 0.06, approvalGain: 3.2, done: false, note: "Parandalon reduktimet gjatë dimrit.", ministerArgument: "Na duhet intervenim urgjent prej €60M." },
+        { id: "cab_2", title: "Dyfishimi i Shtesave për Fëmijë", ministry: "Ministria e Financave", ministerName: "Hekuran Murati", costB: 0.08, approvalGain: 4.8, done: false, note: "Prek mbi 400 mijë fëmijë.", ministerArgument: "Kjo është masë direkte sociale." },
+        { id: "cab_3", title: "Ndërtimi i Stadiumit Kombëtar", ministry: "Ministria e Kulturës", ministerName: "Hajrulla Çeku", costB: 0.09, approvalGain: 4.1, done: false, note: "Për Lojërat Mesdhetare 2030.", ministerArgument: "Afatet e Komitetit Ndërkombëtar janë strikte." }
+    ];
+}
+
+const DEFAULT_PRESIDENTIAL_CANDIDATES = {
+    cand_pula: { id: "cand_pula", name: "Prof. Dr. Justina Shiroka-Pula", type: "Akademike / Konsensuale (ASHAK)", acceptParties: ["LVV", "PDK", "MIN_MULTI"], popBonus: 3.5 },
+    cand_osmani: { id: "cand_osmani", name: "Dr. Vjosa Osmani-Sadriu", type: "Politike / Institucionale", acceptParties: ["LDK", "MIN_MULTI", "AAK"], popBonus: 3.0 },
+    cand_konjufca: { id: "cand_konjufca", name: "Glauk Konjufca", type: "Kandidat Politik (LVV)", acceptParties: ["LVV", "MIN_MULTI"], popBonus: 4.0 },
+    cand_jashari: { id: "cand_jashari", name: "Prof. Dr. Murat Jashari", type: "Personalitet Unifikues", acceptParties: ["LVV", "PDK", "LDK", "AAK", "MIN_MULTI"], popBonus: 6.0 }
+};
+function getAllPresCandidates() { return Object.assign({}, DEFAULT_PRESIDENTIAL_CANDIDATES, state.customPresCandidates || {}); }
+
+function getInterlocutorsByCategory(catCode) {
+    var list = [];
+    if (catCode === "INST_KOSOVO") {
+        list.push(
+            { name: state.presidentName, role: "Presidente", inst: "Presidenca e Kosovës", rel: 82 },
+            { name: state.speakerOfAssembly, role: "Kryetare e Kuvendit", inst: "Kuvendi i Kosovës", rel: 88 },
+            { name: "Glauk Konjufca", role: "Zëvendëskryeministër", inst: "Kryeministria / MPJD", rel: 94 },
+            { name: "Gjeneralleitnant Bashkim Jashari", role: "Komandant i FSK-së", inst: "FSK", rel: 92 },
+            { name: "Gazmend Hoxha", role: "Drejtor i Përgjithshëm i Policisë", inst: "Policia e Kosovës", rel: 90 },
+            { name: "Ahmet Ismaili", role: "Guvernator i BQK-së", inst: "BQK", rel: 84 }
+        );
+    } else if (catCode === "PARTY_LEADERS") {
+        Object.values(state.parties).forEach(function(p) {
+            list.push({ name: p.leader + " (" + p.short + ")", role: "Kryetar i " + p.name, inst: p.seats + " Deputetë", rel: state.parties[state.playerParty].relations[p.id] || 50 });
+        });
+    } else if (catCode === "MINISTERS") {
+        state.ministries.forEach(function(m) { list.push({ name: m.minister, role: "Ministër", inst: m.name, rel: m.loyalty }); });
+    } else if (catCode === "MPS_120") {
+        state.mps.forEach(function(mp) { list.push({ name: "#" + mp.seatNumber + " " + mp.name, role: mp.role, inst: "Grupi " + mp.party, rel: mp.trustPlayer || mp.loyalty }); });
+    } else if (catCode === "MAYORS_38") {
+        state.municipalities.forEach(function(m) { list.push({ name: m.mayorName, role: "Kryetar Komune", inst: m.name, rel: m.relationWithGov || 60 }); });
+    } else if (catCode === "INTL_DIPLOMATS") {
+        list.push(
+            { name: "Ambasadori Amerikan", role: "Ambasada e SHBA-së", inst: "SHBA", rel: state.diplomacy.USA.score },
+            { name: "Përfaqësuesi i BE-së", role: "Komisioni Evropian", inst: "BE", rel: state.diplomacy.EU.score },
+            { name: "Ambasadori i Gjermanisë", role: "Ambasada Gjermane", inst: "Gjermania", rel: state.diplomacy.GERMANY.score }
+        );
+    }
+    return list;
+}
+
+const DYNAMIC_EVENTS = [
     {
-        id: "ev_brussels_seq", category: "DIPLOMACI", title: "Presion për Sekuencim nga Brukseli",
-        cooldown: 12, condition: (s) => s.diplomacy.EU.score < 80,
-        desc: "BE kërkon hapa konkretë. Refuzimi ngadalëson fondet e Planit të Rritjes.",
+        id: "ev_dash_brussels", category: "DIPLOMACI & DIALOG", title: "Thirrje Urgjente nga Brukseli", cause: "Presioni për sekuencimin e Marrëveshjes së Ohrit.", desc: "BE dhe SHBA kërkojnë plan zbatimi për zhbllokimin e fondeve.",
         options: [
-            { text: "Kërko garanci nga NATO paraprakisht", costAP: 1, apply: (s) => { s.approval+=2; s.diplomacy.EU.score-=5; } },
-            { text: "Dërgo plan kompromisi", costAP: 2, apply: (s) => { s.diplomacy.EU.score+=8; s.budgetTotalB+=0.1; s.approval-=2; } }
+            { text: "Kërko garanci nga NATO", impactText: "+4.2% Popullaritet, -5 pikë BE", apply: function(s) { s.approval+=4.2; s.diplomacy.EU.score-=5; } },
+            { text: "Dërgo Propozim Konstruktiv", impactText: "+9 pikë SHBA/BE, +€150M Buxhet", apply: function(s) { s.diplomacy.USA.score+=9; s.budgetTotalB+=0.15; s.dialogueProgress+=15; } }
         ]
-    },
+    }
+];
+
+const RANDOM_EVENTS_POOL = [
     {
-        id: "ev_teachers_strike", category: "SOCIALE", title: "Kërcënim me Grevë nga SBASHK",
-        cooldown: 24, condition: (s) => s.budgetTotalB > 3.0 && s.approval < 60,
-        desc: "Mësimdhënësit kërkojnë rritje page dhe paralajmërojnë mbylljen e shkollave.",
+        id: "ev_teachers_strike", category: "SOCIALE", title: "Kërcënim me Grevë nga SBASHK", cooldown: 24, condition: (s) => s.budgetTotalB > 3.0 && s.approval < 60, desc: "Mësimdhënësit paralajmërojnë mbylljen e shkollave.",
         options: [
             { text: "Arrij marrëveshje (Rritje Page)", costAP: 2, apply: (s) => { s.budgetTotalB-=0.05; s.approval+=4; } },
-            { text: "Kërko testin e performancës fillimisht", costAP: 1, apply: (s) => { s.approval-=4; } }
+            { text: "Kërko testin e performancës", costAP: 1, apply: (s) => { s.approval-=4; } }
         ]
     },
     {
-        id: "ev_north_crisis", category: "SIGURI KOMBËTARE", title: "Tensione dhe Lëvizje në Veri",
-        cooldown: 20, condition: (s) => s.securityNorth < 85 && Math.random() < 0.3,
-        desc: "AKI dhe Policia raportojnë lëvizje të dyshimta pranë kufirit. KFOR kërkon koordinim.",
+        id: "ev_north_crisis", category: "SIGURI KOMBËTARE", title: "Tensione në Veri", cooldown: 20, condition: (s) => s.securityNorth < 85 && Math.random() < 0.3, desc: "Lëvizje të dyshimta pranë kufirit. KFOR kërkon koordinim.",
         options: [
-            { text: "Dërgo Njësitë Speciale (Operacion i menjëhershëm)", costAP: 0, apply: (s) => { s.securityNorth=Math.min(100, s.securityNorth+10); s.diplomacy.USA.score-=8; s.approval+=4; } },
+            { text: "Dërgo Njësitë Speciale", costAP: 0, apply: (s) => { s.securityNorth=Math.min(100, s.securityNorth+10); s.diplomacy.USA.score-=8; s.approval+=4; } },
             { text: "Koordinohu me KFOR & QUINT", costAP: 0, apply: (s) => { s.diplomacy.USA.score+=5; s.securityNorth+=2; s.approval-=1.5; } }
         ]
     }
 ];
 
-let state = null;
-
 /* ============================================================================
-   2. MENAXHIMI I SHTETIT DHE KOHËS
+   2. MOTOR I SHTETIT DHE KOHËS
    ============================================================================ */
-function createFreshState(mode, chosenParty) {
+function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customInfo = null) {
+    const isPostElectionAlt = (mode === "ALT_POST_ELECTION");
+    const partiesClone = JSON.parse(JSON.stringify(INITIAL_POLITICAL_DB.parties));
+    const ministriesClone = JSON.parse(JSON.stringify(INITIAL_POLITICAL_DB.ministries));
+    const munisClone = JSON.parse(JSON.stringify(INITIAL_POLITICAL_DB.municipalities)).map(m => Object.assign({}, m, { localSupportPlayer: m.mayorParty === chosenParty ? 54 : 32, relationWithGov: m.mayorParty === chosenParty ? 88 : 58, projects: [] }));
+
+    if (customInfo) {
+        partiesClone[chosenParty].name = customInfo.partyName;
+        partiesClone[chosenParty].short = customInfo.partyName.substring(0, 14);
+        partiesClone[chosenParty].leader = customInfo.leaderName;
+        partiesClone[chosenParty].candidates[0].name = customInfo.leaderName;
+    }
+
     let s = {
-        version: "5.0.2026", mode: mode,
-        year: 2026, monthIndex: 9, week: 1, turnCount: 1,
-        actionPoints: MAX_ACTION_POINTS,
-        eventHistory: [],
-        elections: { active: false, type: null, phase: null, weeksLeft: 0, polls: {} },
-        
-        playerParty: chosenParty,
-        assemblyConstituted: true, governmentFormed: true, presidentElected: true,
-        primeMinister: INITIAL_POLITICAL_DB.parties[chosenParty].leader,
-        speakerOfAssembly: "Albulena Haxhiu",
-        presidentName: "Prof. Dr. Justina Shiroka-Pula",
-        
-        coalitionParties: ["LVV", "MIN_MULTI"],
-        approval: chosenParty === "LVV" ? 49.5 : 44.0,
-        budgetTotalB: 3.32, taxRevenueB: 3.05, gdpGrowth: 3.9, unemployment: 10.8,
-        securityNorth: 76, dialogueProgress: 52,
-        
+        version: "5.0.2026", mode: mode, year: 2026, monthIndex: isPostElectionAlt ? 6 : 9, week: 1, turnCount: 1, mandateNumber: 1, weeksToNextRegularElection: 200,
+        actionPoints: MAX_ACTION_POINTS, eventHistory: [], elections: { active: false, type: null, phase: null, weeksLeft: 0, polls: {} },
+        playerParty: chosenParty, playerRole: (chosenParty === "LVV" && !isPostElectionAlt) ? "PRIME_MINISTER" : (isPostElectionAlt ? "MANDATE_NEGOTIATOR" : "OPPOSITION_LEADER"),
+        assemblyConstituted: !isPostElectionAlt, speakerOfAssembly: isPostElectionAlt ? "Në pritje të votimit (61 vota)" : "Albulena Haxhiu (LVV)", governmentFormed: !isPostElectionAlt, primeMinister: isPostElectionAlt ? "Qeveria në detyrë" : "Albin Kurti (LVV)", coalitionParties: isPostElectionAlt ? [chosenParty] : ["LVV", "MIN_MULTI"], coalitionAgreements: isPostElectionAlt ? [] : [{ partner: "MIN_MULTI", ministriesCount: 3, deputyPM: true, conditions: "3 Ministri dhe investime", honored: true }],
+        presidentElected: !isPostElectionAlt, presidentName: isPostElectionAlt ? "Ushtruese e Detyrës" : "Prof. Dr. Justina Shiroka-Pula", presidentialDeadlineWeeks: isPostElectionAlt ? 8 : 260, presidentialRound: 1, presidentialCandidateId: "cand_pula", presidentialSignatures: isPostElectionAlt ? 53 : 81, quorumPledgedParties: isPostElectionAlt ? [chosenParty, "MIN_MULTI"] : ["LVV", "PDK", "MIN_MULTI"], customPresCandidates: {},
+        approval: chosenParty === "LVV" ? 49.5 : 44.0, presidentApproval: 64.0, budgetTotalB: 3.32, taxRevenueB: 3.05, deficitPct: 2.4, publicDebtPct: 17.2, gdpGrowth: 3.9, unemployment: 10.8, inflation: 2.7, remittancesB: 1.38, energyStability: 78, securityNorth: 76,
         diplomacy: {
-            USA: { name: "Shtetet e Bashkuara (SHBA)", city: "Uashington D.C.", score: 78, official: "Sekretari i Shtetit" },
-            EU: { name: "Bashkimi Evropian (BE)", city: "Bruksel", score: 74, official: "Përfaqësuesi i Lartë" },
-            GERMANY: { name: "Gjermania", city: "Berlin", score: 76, official: "Kancelari Federal" }
+            USA: { name: "SHBA", city: "Uashington", official: "Sekretari i Shtetit", score: 78, note: "Kërkon koordinim për veriun." },
+            EU: { name: "BE", city: "Bruksel", official: "Përfaqësuesi i Lartë", score: 74, note: "Kushtëzon fondet me dialogun." },
+            GERMANY: { name: "Gjermania", city: "Berlin", official: "Kancelari Federal", score: 76, note: "Mbështet Procesin e Berlinit." }
         },
-        
-        parties: JSON.parse(JSON.stringify(INITIAL_POLITICAL_DB.parties)),
-        ministries: JSON.parse(JSON.stringify(INITIAL_POLITICAL_DB.ministries)),
-        municipalities: JSON.parse(JSON.stringify(INITIAL_POLITICAL_DB.municipalities)),
-        laws: [
-            { id: "law_buxheti", title: "Ligji për Buxhetin 2027", ministry: "Ministria e Financave", desc: "Ndarja buxhetore vjetore.", majorityType: "SIMPLE_61", requiredVotes: 61, status: "PENDING", supportParties: ["LVV", "MIN_MULTI"] },
-            { id: "law_eu_growth", title: "Ratifikimi i Planit të Rritjes nga BE", ministry: "Ministria e Financave", desc: "Kërkon 2/3 e deputetëve (80 vota) për marrëveshje ndërkombëtare.", majorityType: "INTL_80", requiredVotes: 80, status: "PENDING", supportParties: ["LVV", "PDK", "LDK", "AAK", "MIN_MULTI"] }
-        ],
-        pmInboxRequests: [
-            { id: "inq_1", senderName: "Përparim Rama", title: "Bashkëfinancimi i Unazës së Kryeqytetit", deadlineWeeks: 3, desc: "Kërkojmë 15 Milionë Euro për Unazën." }
-        ],
-        mediaFeed: [], historyLog: []
+        dialogueProgress: 52, dialogueChronologyStep: 1, dialogueDraftProposal: null, dialogueAlliesConsulted: false, dialogueNegotiationLog: ["Korrik 2026: BE kërkon rifillimin e dialogut."],
+        scheduledMeetings: [], pmInboxRequests: getInitialPMInbox(), stateSectors: getInitialStateSectors(), customInterlocutors: [], activePressSession: null,
+        parties: partiesClone, ministries: ministriesClone, municipalities: munisClone, mps: [], laws: getInitialLaws(), promises: getInitialPromises(), cabinetAgenda: getInitialCabinetAgenda(), mediaFeed: [], historyLog: [], currentEventIndex: 0
     };
-    s.mps = generate120MPs(s.parties);
+
+    s.mps = generate120MPs(s.parties, chosenParty);
     return s;
 }
 
@@ -516,38 +647,80 @@ function consumeAP(cost, bypassMsg = false) {
     }
 }
 
-function advanceTime(weeksCount) {
-    for (let i = 0; i < weeksCount; i++) {
-        state.week++; state.turnCount++;
-        state.actionPoints = MAX_ACTION_POINTS;
+function advanceTime(weeksCount, silentToast) {
+    if (typeof weeksCount === "undefined") weeksCount = 1;
+    if (typeof silentToast === "undefined") silentToast = false;
+    var dueMeetingIdx = -1;
+
+    for (var i = 0; i < weeksCount; i++) {
+        state.week++; state.turnCount++; state.weeksToNextRegularElection--;
+        state.actionPoints = MAX_ACTION_POINTS; // Reseto AP
         
         if (state.week > 4) {
             state.week = 1; state.monthIndex++;
-            if (state.monthIndex > 11) { state.monthIndex = 0; state.year++; }
+            if (state.monthIndex > 11) {
+                state.monthIndex = 0; state.year++;
+                state.budgetTotalB = +(3.25 + (state.gdpGrowth * 0.06)).toFixed(2);
+                addMediaNews("Financat", "Nis viti fiskal " + state.year + ": Buxheti i ri arrin në €" + state.budgetTotalB + " Miliardë.", "POSITIVE");
+            }
         }
 
-        // Përpuno afatet e kërkesave
-        for (let r = state.pmInboxRequests.length - 1; r >= 0; r--) {
+        (state.stateSectors || []).forEach(sec => {
+            if (sec.active && sec.weeksLeft > 0) {
+                sec.weeksLeft--;
+                if (sec.weeksLeft === 0) {
+                    sec.active = false; sec.score = clamp(sec.score + 12, 10, 100); state.approval = clamp(state.approval + 2.4, 5, 95); state.gdpGrowth = +(state.gdpGrowth + 0.1).toFixed(1);
+                    addMediaNews("Shteti", "Përfundoi reforma: " + sec.projectTitle, "POSITIVE");
+                }
+            }
+        });
+
+        state.municipalities.forEach(m => {
+            if (!m.projects) return;
+            m.projects.forEach(pr => {
+                if (pr.status !== "I Përfunduar") {
+                    pr.weeksLeft = Math.max(0, pr.weeksLeft - 1);
+                    pr.progress = Math.min(100, Math.round(((pr.totalWeeks - pr.weeksLeft) / pr.totalWeeks) * 100));
+                    if (pr.weeksLeft === 0) { pr.status = "I Përfunduar"; state.approval = clamp(state.approval + 1.5, 5, 95); }
+                }
+            });
+        });
+
+        for (var r = (state.pmInboxRequests || []).length - 1; r >= 0; r--) {
             state.pmInboxRequests[r].deadlineWeeks--;
             if (state.pmInboxRequests[r].deadlineWeeks <= 0) {
-                state.approval = Math.max(5, state.approval - 1.5);
-                addMediaNews("Kritika Publike", `Qeveria injoroi kërkesën: "${state.pmInboxRequests[r].title}".`, "CRITICAL");
+                state.approval = clamp(state.approval - 2.2, 5, 95);
+                addMediaNews("Kritika", "Qeveria theu afatin për dosjen urgjente!", "CRITICAL");
                 state.pmInboxRequests.splice(r, 1);
             }
         }
 
+        if (state.scheduledMeetings) {
+            state.scheduledMeetings.forEach((m, idx) => { if (m.status === "SCHEDULED" && m.dueTurn <= state.turnCount && dueMeetingIdx === -1) dueMeetingIdx = idx; });
+        }
+
+        state.promises.forEach(pr => {
+            if (!pr.fulfilled) {
+                pr.deadlineWeeks--;
+                if (pr.deadlineWeeks === 0) { state.approval = clamp(state.approval - 4.0, 5, 95); addMediaNews("Llogaridhënia", `Premtimi i pambajtur: ${pr.title}`, "CRITICAL"); }
+            }
+        });
+
         processElectoralPhases();
-        checkDynamicEvents();
+        checkRandomEvents();
     }
-    
-    showWeeklyBriefing();
+
+    state.parties[state.playerParty].poll = clamp(state.parties[state.playerParty].poll + ((state.approval - 46) * 0.03), 4, 72);
+    normalizePartyPolls();
     refreshAllUI();
+
+    if (dueMeetingIdx !== -1) conductScheduledMeeting(dueMeetingIdx);
+    else showWeeklyBriefing();
 }
 
 function showWeeklyBriefing() {
     let inboxCnt = state.pmInboxRequests.length;
     let elecAlert = state.elections.active ? `<div style="color:var(--warning); margin-bottom:10px;">⚠️ Faza Zgjedhore: ${state.elections.phase} (Edhe ${state.elections.weeksLeft} javë)</div>` : "";
-    
     document.getElementById("weeklyBriefingContent").innerHTML = `
         <div class="card-header"><div class="card-title">📅 Brifingu Javor i Qeverisë</div></div>
         <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
@@ -565,142 +738,49 @@ function showWeeklyBriefing() {
     toggleModal('weeklyBriefingModal', true);
 }
 
-/* ============================================================================
-   3. MOTORI I EVENTEVE
-   ============================================================================ */
-function checkDynamicEvents() {
-    if (Math.random() > 0.3) return; // 30% shans për t'u shfaqur një event
-    
-    let eligible = DYNAMIC_EVENTS_POOL.filter(ev => {
+function checkRandomEvents() {
+    if (Math.random() > 0.3) return; 
+    let eligible = RANDOM_EVENTS_POOL.filter(ev => {
         if (!ev.condition(state)) return false;
-        let lastOccurrence = state.eventHistory.find(h => h.id === ev.id);
-        if (lastOccurrence && (state.turnCount - lastOccurrence.turn) < ev.cooldown) return false;
-        return true;
+        let lastOcc = state.eventHistory.find(h => h.id === ev.id);
+        return !(lastOcc && (state.turnCount - lastOcc.turn) < ev.cooldown);
     });
-
     if (eligible.length > 0) {
         let chosenEv = eligible[Math.floor(Math.random() * eligible.length)];
-        fireDynamicEvent(chosenEv);
+        let existing = state.eventHistory.find(h => h.id === chosenEv.id);
+        if (existing) existing.turn = state.turnCount; else state.eventHistory.push({ id: chosenEv.id, turn: state.turnCount });
+
+        let optsHtml = chosenEv.options.map((opt, idx) => `<button class="choice-btn" onclick="resolveRandomEvent('${chosenEv.id}', ${idx})"><span class="choice-title">${idx+1}. ${opt.text}</span><span class="choice-impact">Kosto: ${opt.costAP} AP</span></button>`).join("");
+        document.getElementById("majorEventModalContent").innerHTML = `
+            <div class="card-header"><div class="card-title">⚡ Zhvillim i Papritur: ${chosenEv.title}</div><span class="tag tag-lvv">${chosenEv.category}</span></div>
+            <p style="font-size:0.85rem; line-height:1.6; margin-bottom:14px;">${chosenEv.desc}</p>
+            <div style="display:flex; flex-direction:column; gap:8px;">${optsHtml}</div>
+        `;
+        toggleModal("majorEventModal", true);
     }
 }
-
-function fireDynamicEvent(ev) {
-    let existing = state.eventHistory.find(h => h.id === ev.id);
-    if (existing) existing.turn = state.turnCount;
-    else state.eventHistory.push({ id: ev.id, turn: state.turnCount });
-
-    let optsHtml = ev.options.map((opt, idx) => `
-        <button class="choice-btn" onclick="resolveDynamicEvent('${ev.id}', ${idx})">
-            <span class="choice-title">${idx+1}. ${opt.text}</span>
-            <span class="choice-impact">Kosto: ${opt.costAP} AP</span>
-        </button>
-    `).join("");
-
-    document.getElementById("majorEventModalContent").innerHTML = `
-        <div class="card-header"><div class="card-title">⚡ Zhvillim i Papritur: ${ev.title}</div><span class="tag tag-lvv">${ev.category}</span></div>
-        <p style="font-size:0.85rem; line-height:1.6; margin-bottom:14px;">${ev.desc}</p>
-        <div style="display:flex; flex-direction:column; gap:8px;">${optsHtml}</div>
-    `;
-    toggleModal("majorEventModal", true);
-}
-
-function resolveDynamicEvent(eventId, optIdx) {
-    let ev = DYNAMIC_EVENTS_POOL.find(e => e.id === eventId);
+function resolveRandomEvent(eventId, optIdx) {
+    let ev = RANDOM_EVENTS_POOL.find(e => e.id === eventId);
     let opt = ev.options[optIdx];
-
-    if (!consumeAP(opt.costAP, true)) {
-        showToast("S'keni Pikë Veprimi (AP) të mjaftueshme. Zgjidhni një opsion pa kosto ose prisni javën tjetër.");
-        return;
-    }
-
+    if (!consumeAP(opt.costAP, true)) { showToast("S'keni AP të mjaftueshme. Prisni javën tjetër."); return; }
     opt.apply(state);
     toggleModal("majorEventModal", false);
-    addMediaNews("Ngjarje e Ditës", ev.title + " mori një epilog të ri nga Kryeministria.", "NEUTRAL");
-    refreshAllUI();
-    showToast("Vendimi u zbatua me sukses!");
+    refreshAllUI(); showToast("Vendimi u zbatua me sukses!");
 }
 
 /* ============================================================================
-   4. VOTIMI PARLAMENTAR ME ANIMACION
+   3. SISTEMI I ZGJEDHJEVE ME FAZA
    ============================================================================ */
-function voteLawInAssemblyAnimated(lawIdx) {
-    if (!consumeAP(2)) return; // Seanca plenare kushton 2 AP
-    let law = state.laws[lawIdx];
-    
-    document.getElementById("majorEventModalContent").innerHTML = `
-        <div class="card-header"><div class="card-title">🏛️ Seancë Plenare: Votim elektronik</div></div>
-        <p style="text-align:center; font-size:0.95rem; margin-bottom:15px;">Projektligji: <strong>${law.title}</strong></p>
-        <div class="grid-3" style="text-align:center; margin-bottom:20px;">
-            <div style="background:rgba(16,185,129,0.1); border:1px solid var(--success); border-radius:8px; padding:15px;">
-                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">PRO</div>
-                <div class="vote-counter vote-pro" id="animVotePro">0</div>
-            </div>
-            <div style="background:rgba(239,68,68,0.1); border:1px solid var(--danger); border-radius:8px; padding:15px;">
-                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">KUNDËR</div>
-                <div class="vote-counter vote-kunder" id="animVoteKunder">0</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; padding:15px;">
-                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">ABSTENIM</div>
-                <div class="vote-counter vote-abstenim" id="animVoteAbstenim">0</div>
-            </div>
-        </div>
-        <div id="voteAnimStatus" style="text-align:center; font-weight:bold; font-size:1.1rem; color:var(--accent-gold);">Po numërohen votat...</div>
-        <button id="voteAnimCloseBtn" class="action-btn btn-outline" style="display:none; width:100%; justify-content:center; margin-top:15px;" onclick="toggleModal('majorEventModal', false); refreshAllUI();">Mbyll Raportin</button>
-    `;
-    toggleModal("majorEventModal", true);
-
-    let vPro = 0, vKunder = 0, vAbst = 0;
-    state.mps.forEach(mp => {
-        let supports = law.supportParties.includes(mp.party) || state.coalitionParties.includes(mp.party);
-        if (supports) {
-            if (mp.rebelRisk && Math.random() < 0.15) vAbst++; else vPro++;
-        } else {
-            if (Math.random() < 0.1) vAbst++; else vKunder++;
-        }
-    });
-
-    let curPro = 0, curKunder = 0, curAbst = 0;
-    let animTimer = setInterval(() => {
-        let updating = false;
-        if (curPro < vPro) { curPro += Math.ceil((vPro - curPro)/4); curPro = Math.min(curPro, vPro); updating = true; }
-        if (curKunder < vKunder) { curKunder += Math.ceil((vKunder - curKunder)/4); curKunder = Math.min(curKunder, vKunder); updating = true; }
-        if (curAbst < vAbst) { curAbst += Math.ceil((vAbst - curAbst)/4); curAbst = Math.min(curAbst, vAbst); updating = true; }
-
-        document.getElementById("animVotePro").textContent = curPro;
-        document.getElementById("animVoteKunder").textContent = curKunder;
-        document.getElementById("animVoteAbstenim").textContent = curAbst;
-
-        if (!updating) {
-            clearInterval(animTimer);
-            let passed = (vPro >= law.requiredVotes);
-            law.status = passed ? "PASSED" : "FAILED";
-            law.lastVoteResult = `${vPro} PËR, ${vKunder} KUNDËR, ${vAbst} ABST.`;
-            
-            document.getElementById("voteAnimStatus").innerHTML = passed 
-                ? `<span style="color:var(--success);">✔ LIGJI MIRATOHET! (Pragu: ${law.requiredVotes})</span>`
-                : `<span style="color:var(--danger);">✕ KUVENDI RRËZON LIGJIN! (Pragu: ${law.requiredVotes})</span>`;
-            document.getElementById("voteAnimCloseBtn").style.display = "flex";
-
-            if (passed) { state.approval += 1.5; addMediaNews("Kuvendi Live", `U miratua "${law.title}"!`, "POSITIVE"); }
-            else { state.approval -= 1.5; addMediaNews("Kuvendi Live", `Dështoi miratimi i "${law.title}".`, "CRITICAL"); }
-        }
-    }, 150);
-}
-
-/* ============================================================================
-   5. ZGJEDHJET ME FAZA
-   ============================================================================ */
-function startElections(type) {
-    if (!consumeAP(3)) return; // Shpallja kërkon 3 AP
+function startElections(type, reasonText) {
+    if (!consumeAP(3)) return; // 3 AP për shpalljen e zgjedhjeve
     state.elections = { active: true, type: type, phase: "FUSHATA ZGJEDHORE", weeksLeft: 4, polls: JSON.parse(JSON.stringify(state.parties)) };
     refreshAllUI();
-    showToast(`Zgjedhjet ${type === 'LOCAL' ? 'Lokale' : 'Qendrore'} u shpallën! Fushata do të zgjasë 4 javë.`);
+    showToast(`Zgjedhjet ${type === 'LOCAL' ? 'Lokale' : 'Qendrore'} u shpallën! Fushata do të zgjasë 4 javë. Arsyeja: ${reasonText || 'Fundi i mandatit'}`);
 }
 
 function processElectoralPhases() {
     if (!state.elections.active) return;
     state.elections.weeksLeft--;
-    
     if (state.elections.weeksLeft <= 0) {
         if (state.elections.phase === "FUSHATA ZGJEDHORE") {
             state.elections.phase = "DITA E ZGJEDHJEVE"; state.elections.weeksLeft = 1;
@@ -719,91 +799,218 @@ function finalizeElections() {
     if (state.elections.type === "LOCAL") {
         let fitoi = 0;
         state.municipalities.forEach(m => {
-            if (Math.random() * 100 < state.parties[state.playerParty].poll + 5) {
-                m.mayorParty = state.playerParty; m.mayorName = "Kryetar i Ri"; fitoi++;
-            }
+            if (m.mayorParty === "SL" || m.mayorParty === "MIN_MULTI") return;
+            let playerSupport = m.localSupportPlayer || state.parties[state.playerParty].poll;
+            if (playerSupport >= 48 || Math.random() * 100 < playerSupport) { m.mayorParty = state.playerParty; m.mayorName = "Kryetar i ri (" + state.parties[state.playerParty].short + ")"; fitoi++; }
         });
-        showMajorAnnouncement({ badge: "REZULTATET E LOKALEVE", title: "Zgjedhjet Lokale Përfunduan", reason: "KQZ ka certifikuar 38 komunat.", immediateImpact: `Fituat ${fitoi} komuna në total.` });
+        showMajorAnnouncement({ badge: "REZULTATET E LOKALEVE", title: "Zgjedhjet Lokale Përfunduan", reason: "KQZ ka certifikuar 38 komunat.", immediateImpact: `Partia juaj fitoi ${fitoi} komuna në total.` });
     } else {
-        // Logjika e mandateve për Qendroret këtu...
-        showMajorAnnouncement({ badge: "ZGJEDHJE PARLAMENTARE", title: "Kuvendi i Ri u Zgjodh", reason: "Mandati rifillon.", immediateImpact: "Faza e negociatave hapet." });
+        let genKeys = ["LVV", "PDK", "LDK", "AAK"];
+        let sumVotes = genKeys.reduce((a, k) => a + state.elections.polls[k].poll, 0);
+        let alloc = 0;
+        genKeys.forEach((k, idx) => {
+            if (idx === 3) state.parties[k].seats = 100 - alloc;
+            else { let s = Math.round((state.elections.polls[k].poll / sumVotes) * 100); state.parties[k].seats = s; alloc += s; }
+        });
+        state.mps = generate120MPs(state.parties, state.playerParty);
+        state.mandateNumber++; state.weeksToNextRegularElection = 208;
+        state.assemblyConstituted = false; state.governmentFormed = false; state.coalitionParties = [state.playerParty, "MIN_MULTI"];
+        showMajorAnnouncement({ badge: "REZULTATET E QENDROREVE", title: "Legjislatura e Re u Zgjodh", reason: "Qytetarët folën me votë.", immediateImpact: "Faza e negociatave për koalicion dhe Qeveri hapet tani!" });
     }
     refreshAllUI();
 }
 
 /* ============================================================================
-   6. RENDERIMI I UI (Përditësimi i pamjes)
+   4. VOTIMI PARLAMENTAR I ANIMUAR
+   ============================================================================ */
+function voteLawInAssemblyAnimated(lawIdx) {
+    if (!consumeAP(2)) return; // 2 AP
+    let law = state.laws[lawIdx];
+    
+    document.getElementById("majorEventModalContent").innerHTML = `
+        <div class="card-header"><div class="card-title">🏛️ Seancë Plenare: Votim Elektronik</div></div>
+        <p style="text-align:center; font-size:0.95rem; margin-bottom:15px;">Projektligji: <strong>${law.title}</strong></p>
+        <div class="grid-3" style="text-align:center; margin-bottom:20px;">
+            <div style="background:rgba(16,185,129,0.1); border:1px solid var(--success); border-radius:8px; padding:15px;">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Vota PRO</div>
+                <div class="vote-counter vote-pro" id="animVotePro">0</div>
+            </div>
+            <div style="background:rgba(239,68,68,0.1); border:1px solid var(--danger); border-radius:8px; padding:15px;">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">KUNDËR</div>
+                <div class="vote-counter vote-kunder" id="animVoteKunder">0</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; padding:15px;">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">ABSTENIM</div>
+                <div class="vote-counter vote-abstenim" id="animVoteAbstenim">0</div>
+            </div>
+        </div>
+        <div id="voteAnimStatus" style="text-align:center; font-weight:bold; font-size:1.1rem; color:var(--accent-gold);">Po numërohen votat e deputetëve...</div>
+        <button id="voteAnimCloseBtn" class="action-btn btn-outline" style="display:none; width:100%; justify-content:center; margin-top:15px;" onclick="toggleModal('majorEventModal', false); refreshAllUI();">Vazhdo ▶</button>
+    `;
+    toggleModal("majorEventModal", true);
+
+    let vPro = 0, vKunder = 0, vAbst = 0, minorityYes = 0;
+    state.mps.forEach(mp => {
+        if (!mp.votingHistory) mp.votingHistory = [];
+        let partySupports = law.supportParties.includes(mp.party) || state.coalitionParties.includes(mp.party) || mp.promisedVoteNext;
+        if (partySupports) {
+            let rebelChance = (law.id === "law_civil_code" && !mp.promisedVoteNext) ? 0.20 : (mp.rebelRisk && !mp.promisedVoteNext ? 0.10 : 0.0);
+            if (Math.random() < rebelChance) { vAbst++; mp.votingHistory.push(law.id + ": ABSTENIM"); }
+            else { vPro++; mp.votingHistory.push(law.id + ": PRO"); if (mp.party === "MIN_MULTI" || mp.party === "SL") minorityYes++; }
+        } else {
+            vKunder++; mp.votingHistory.push(law.id + ": KUNDËR");
+        }
+    });
+
+    let passed = false;
+    if (law.majorityType === "INTL_80") passed = (vPro >= 80);
+    else if (law.majorityType === "VITAL_DOUBLE") passed = (vPro >= 61 && minorityYes >= 14);
+    else passed = (vPro >= 61);
+
+    let curPro = 0, curKunder = 0, curAbst = 0;
+    let animTimer = setInterval(() => {
+        let updating = false;
+        if (curPro < vPro) { curPro += Math.ceil((vPro - curPro)/4); curPro = Math.min(curPro, vPro); updating = true; }
+        if (curKunder < vKunder) { curKunder += Math.ceil((vKunder - curKunder)/4); curKunder = Math.min(curKunder, vKunder); updating = true; }
+        if (curAbst < vAbst) { curAbst += Math.ceil((vAbst - curAbst)/4); curAbst = Math.min(curAbst, vAbst); updating = true; }
+
+        document.getElementById("animVotePro").textContent = curPro;
+        document.getElementById("animVoteKunder").textContent = curKunder;
+        document.getElementById("animVoteAbstenim").textContent = curAbst;
+
+        if (!updating) {
+            clearInterval(animTimer);
+            law.status = passed ? "PASSED" : "FAILED";
+            law.lastVoteResult = `${vPro} PËR, ${vKunder} KUNDËR, ${vAbst} ABST.`;
+            
+            document.getElementById("voteAnimStatus").innerHTML = passed 
+                ? `<span style="color:var(--success);">✔ LIGJI U MIRATUA NGA KUVENDI! (Pragu: ${law.requiredVotes})</span>`
+                : `<span style="color:var(--danger);">✕ KUVENDI E RRËZOI PROJEKTLIGJIN! (Pragu: ${law.requiredVotes})</span>`;
+            document.getElementById("voteAnimCloseBtn").style.display = "flex";
+
+            if (passed) {
+                law.stage = "I dekretuar dhe publikuar";
+                state.budgetTotalB = +(state.budgetTotalB - (law.costB || 0)).toFixed(2);
+                state.approval = clamp(state.approval + law.approvalEffect, 5, 95);
+                addMediaNews("Kuvendi", `Miratohet ${law.title} me ${vPro} vota PRO.`, "POSITIVE");
+            } else {
+                state.approval = clamp(state.approval - 2.0, 5, 95);
+                addMediaNews("KOHA", `Dështon miratimi i ${law.title} në Kuvend.`, "CRITICAL");
+            }
+        }
+    }, 120);
+}
+
+/* ============================================================================
+   5. RENDERIMI I UI-së ORIGJINALE DHE HELPERS
    ============================================================================ */
 function updateTopBar() {
+    let p = state.parties[state.playerParty];
+    let coalSeats = getCoalitionSeats();
+    let isGov = state.coalitionParties.includes(state.playerParty) && state.governmentFormed;
+    document.getElementById("roleDisplay").textContent = isGov ? `Kryeministër (${p.short})` : `Lider i ${p.short} (Opozitë/Negociata)`;
     document.getElementById("dateDisplay").textContent = `${MONTHS_SQ[state.monthIndex]} ${state.year} • Java ${state.week}`;
     document.getElementById("actionPointsDisplay").textContent = `⚡ Veprime: ${state.actionPoints}/${MAX_ACTION_POINTS}`;
+    
     document.getElementById("statApproval").textContent = state.approval.toFixed(1) + "%";
-    document.getElementById("statSeats").textContent = getCoalitionSeats() + " / 120";
+    document.getElementById("statSeats").textContent = coalSeats + " / 120";
     document.getElementById("statBudget").textContent = "€" + state.budgetTotalB.toFixed(2) + " Mld";
     document.getElementById("statEconomy").textContent = "+" + state.gdpGrowth + "% | " + state.unemployment + "%";
-    
-    let avgDiplomacy = Math.round((state.diplomacy.USA.score + state.diplomacy.EU.score + state.diplomacy.GERMANY.score) / 3);
-    document.getElementById("statIntl").textContent = avgDiplomacy + " / 100";
-    document.getElementById("statConstStatus").textContent = state.presidentElected ? "Stabil" : "Tranzicion";
+    let avgDip = Math.round((state.diplomacy.USA.score + state.diplomacy.EU.score + state.diplomacy.GERMANY.score) / 3);
+    document.getElementById("statIntl").textContent = avgDip + " / 100";
+    document.getElementById("statConstStatus").textContent = state.presidentElected ? "Stabil" : `Afati: ${state.presidentialDeadlineWeeks}j`;
 }
 
 function renderDashboard() {
-    document.getElementById("govStatusBadge").textContent = state.governmentFormed ? "Qeveri Në Mandat" : "Faza e Negociatave";
+    let ev = DYNAMIC_EVENTS[state.currentEventIndex % DYNAMIC_EVENTS.length];
+    document.getElementById("activeEventCard").innerHTML = `
+        <div class="card-header"><div class="card-title">⚡ Dosja në Tavolinë: ${ev.title}</div><span class="tag tag-lvv">${ev.category}</span></div>
+        <p style="font-size:0.83rem; color:#cbd5e1; margin-bottom:12px;">${ev.desc}</p>
+        <div>${ev.options.map((opt, idx) => `<button class="choice-btn" onclick="resolveActiveEvent(${idx})"><span class="choice-title">${idx+1}.${opt.text}</span><span class="choice-impact">${opt.impactText}</span></button>`).join("")}</div>
+    `;
+
+    document.getElementById("govStatusBadge").textContent = state.governmentFormed ? "Qeveri në Mandat" : "Faza Negociuese";
     document.getElementById("institutionalSummary").innerHTML = `
-        <div style="font-size:0.85rem; line-height:1.6;">
-            <div>• <strong>Presidentja:</strong> ${state.presidentName}</div>
-            <div>• <strong>Kryeministri:</strong> ${state.primeMinister}</div>
-            <div>• <strong>Partnerët:</strong> ${state.coalitionParties.join(" + ")} (${getCoalitionSeats()} vota)</div>
-        </div>
+        <div>• <strong>Presidentja:</strong> ${state.presidentName}</div>
+        <div>• <strong>Kryeparlamentarja:</strong> ${state.speakerOfAssembly}</div>
+        <div>• <strong>Kryeministri:</strong> ${state.primeMinister} (${state.coalitionParties.join(" + ")})</div>
     `;
 
     document.getElementById("quickInboxPreview").innerHTML = state.pmInboxRequests.map((req, idx) => `
-        <div style="background:rgba(255,255,255,0.03); border-left:3px solid var(--danger); padding:8px; margin-bottom:6px; border-radius:6px; font-size:0.8rem;">
-            <strong>${req.title}</strong><br>
-            <span style="color:var(--text-muted); font-size:0.7rem;">Nga: ${req.senderName} • Afati: ${req.deadlineWeeks} javë</span>
-            <div style="margin-top:5px;"><button class="btn-top" onclick="resolveInboxRequest(${idx})">Shqyrto (0 AP)</button></div>
+        <div style="background:rgba(255,255,255,0.03); border-left:3px solid var(--danger); padding:8px; margin-bottom:6px; border-radius:6px;">
+            <div style="font-size:0.8rem; font-weight:bold;">${req.title}</div>
+            <div style="font-size:0.7rem; color:var(--text-muted);">Nga: ${req.senderName} • Afati: ${req.deadlineWeeks} javë</div>
+            <button class="btn-top" style="margin-top:5px;" onclick="openPMRequestModal(${idx})">Shqyrto (0 AP)</button>
         </div>
-    `).join("") || `<div style="font-size:0.8rem; color:var(--text-muted);">S'ka dosje urgjente.</div>`;
+    `).join("") || `<div style="font-size:0.8rem; color:var(--text-muted);">S'ka kërkesa urgjente.</div>`;
 
-    document.getElementById("mediaFeedList").innerHTML = state.mediaFeed.slice(0,4).map(m => `
-        <div class="news-item-clickable">
-            <div style="font-size:0.7rem; color:var(--text-muted);"><strong>${m.outlet}</strong></div>
-            <div style="font-size:0.8rem;">${m.title}</div>
+    document.getElementById("mediaFeedList").innerHTML = state.mediaFeed.slice(0, 4).map((m, idx) => `
+        <div class="news-item-clickable" onclick="openNewsArticleModal(${idx})">
+            <div style="font-size:0.7rem; color:var(--text-muted);"><strong>📰 ${m.outlet}</strong></div>
+            <div style="font-size:0.8rem; font-weight:600;">${m.title}</div>
         </div>
     `).join("");
 
     document.getElementById("quickPollBars").innerHTML = Object.values(state.parties).map(p => `
-        <div class="prog-row">
-            <div class="prog-label"><span>${p.short}</span><span>${p.poll.toFixed(1)}%</span></div>
-            <div class="prog-track"><div class="prog-fill" style="width:${p.poll * 1.5}%; background:${p.color};"></div></div>
-        </div>
+        <div class="prog-row"><div class="prog-label"><span>${p.short}</span><span>${p.poll.toFixed(1)}%</span></div><div class="prog-track"><div class="prog-fill" style="width:${p.poll * 1.5}%; background:${p.color};"></div></div></div>
     `).join("");
+
+    renderPMInboxSection();
+    document.getElementById("historyLogContainer").innerHTML = state.historyLog.map(item => `<div style="padding:7px 10px; border-bottom:1px solid var(--border); font-size:0.79rem;">• ${item}</div>`).join("");
 }
 
-function resolveInboxRequest(idx) {
-    let req = state.pmInboxRequests[idx];
-    state.pmInboxRequests.splice(idx, 1);
-    state.approval += 1.0;
-    state.budgetTotalB -= 0.01;
-    addMediaNews("ZKM", `Kryeministri zgjidhi kërkesën: "${req.title}"`, "POSITIVE");
-    refreshAllUI();
-    showToast("Kërkesa u miratua (Kushtoi €10M). AP nuk u konsumuan.");
+function renderPartySection() {
+    let p = state.parties[state.playerParty];
+    document.getElementById("partyDetailsContainer").innerHTML = `
+        <div class="card">
+            <div class="card-header"><div class="card-title">🚩 ${p.name}</div><span class="tag ${p.tagClass}">${p.seats} Deputetë • ${p.poll.toFixed(1)}%</span></div>
+            <div class="grid-2" style="font-size:0.82rem; line-height:1.7;">
+                <div>• Lideri: ${p.leader}<br>• Ideologjia: ${p.ideology}<br>• Qëndrimi i Dialogut: ${p.dialogueStance}</div>
+                <div>• Disiplina: ${p.partyDiscipline}%<br>• Kohezioni: ${p.internalCohesion}%<br>• Buxheti Parti: €${p.partyFunds.toLocaleString()}</div>
+            </div>
+            <div style="margin-top:12px; display:flex; gap:8px;">
+                <button class="action-btn" onclick="holdPartyCouncilMeeting()">Këshilli i Përgjithshëm (1 AP)</button>
+                <button class="action-btn btn-gold" onclick="fundraisePartyDiaspora()">Tubim Financiar (1 AP)</button>
+            </div>
+        </div>
+        ${renderCoalitionNegotiationsHTML()}
+    `;
+}
+
+function renderCoalitionNegotiationsHTML() {
+    let coalSeats = getCoalitionSeats();
+    let otherParties = Object.values(state.parties).filter(p => p.id !== state.playerParty);
+    return `
+        <div class="card">
+            <div class="card-header"><div class="card-title">🤝 Tavolina e Koalicionit</div><span class="tag tag-gold">${coalSeats} / 120 Deputetë</span></div>
+            <button class="action-btn btn-gold" style="margin-bottom:10px; width:100%; justify-content:center;" onclick="formalizeGovernmentVote()" ${coalSeats < 61 ? "disabled" : ""}>🏛️ Voto Qeverinë në Seancë</button>
+            <div class="grid-2">
+                ${otherParties.map(p => {
+                    let inCoal = state.coalitionParties.includes(p.id);
+                    return `
+                        <div class="card" style="background:#0f172a; margin-bottom:0; border-color:${inCoal ? 'var(--success)' : 'var(--border)'};">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><strong>${p.short}</strong><span class="tag ${p.tagClass}">${p.seats} Ulëse</span></div>
+                            <button class="action-btn btn-outline" style="width:100%; justify-content:center;" onclick="${inCoal ? `removePartnerFromCoalition('${p.id}')` : `openCoalitionRound1('${p.id}')`}">${inCoal ? '✕ Prish Koalicionin' : '🤝 Negocio (1 AP)'}</button>
+                        </div>
+                    `;
+                }).join("")}
+            </div>
+        </div>
+    `;
 }
 
 function renderAssemblySection() {
-    document.getElementById("parliamentSeats").innerHTML = state.mps.map((mp, idx) => `
-        <div class="seat-dot ${mp.rebelRisk ? 'rebel' : ''}" style="background:${state.parties[mp.party].color};" title="#${mp.seatNumber} ${mp.name}" onclick="showToast('Deputeti: ${mp.name} (${mp.party})')"></div>
-    `).join("");
-
+    document.getElementById("parliamentSeats").innerHTML = state.mps.map((mp, idx) => `<div class="seat-dot ${mp.rebelRisk ? 'rebel' : ''}" style="background:${state.parties[mp.party].color};" onclick="openMpProfile(${idx})" title="#${mp.seatNumber} ${mp.name}"></div>`).join("");
+    document.getElementById("parliamentGroupsTable").innerHTML = `
+        <table class="data-table"><thead><tr><th>Grupi</th><th>Ulëse</th><th>Statusi</th></tr></thead>
+        <tbody>${Object.values(state.parties).map(p => `<tr><td><strong>${p.short}</strong></td><td>${p.seats}</td><td><span class="tag ${state.coalitionParties.includes(p.id) ? 'tag-min' : 'tag-sl'}">${state.coalitionParties.includes(p.id) ? "Mazhorancë" : "Opozitë"}</span></td></tr>`).join("")}</tbody></table>
+    `;
     let lawsContainer = document.getElementById("lawsContainer");
     if(lawsContainer) {
         lawsContainer.innerHTML = state.laws.map((law, idx) => `
             <div class="card" style="background:var(--bg-panel); margin-bottom:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <strong style="font-size:0.85rem;">${law.title}</strong><br>
-                        <small style="color:var(--text-muted);">${law.desc} | <span style="color:var(--accent-gold);">Pragu: ${law.requiredVotes}</span></small>
-                    </div>
+                    <div><strong style="font-size:0.85rem;">${law.title}</strong><br><small style="color:var(--text-muted);">${law.desc} | <span style="color:var(--accent-gold);">Pragu: ${law.requiredVotes}</span></small></div>
                     ${law.status === 'PENDING' ? `<button class="action-btn btn-gold" onclick="voteLawInAssemblyAnimated(${idx})">🗳️ Hidh në Votim (2 AP)</button>` : `<span class="tag ${law.status==='PASSED'?'tag-min':'tag-lvv'}">${law.status==='PASSED'?'MIRATUAR':'RRËZUAR'}</span>`}
                 </div>
             </div>
@@ -816,116 +1023,240 @@ function renderGovernmentSection() {
     if(grid) {
         grid.innerHTML = state.ministries.map((m, idx) => `
             <div class="card" style="background:var(--bg-panel); margin-bottom:0;">
-                <div style="display:flex; justify-content:space-between;">
-                    <strong>${m.name}</strong>
-                    <span class="tag ${state.parties[m.party].tagClass}">${m.party}</span>
-                </div>
-                <div style="font-size:0.75rem; color:var(--text-muted); margin:6px 0;">Ministër: ${m.minister} | Kompetenca: ${m.competence}/100</div>
-                <button class="action-btn" style="width:100%; justify-content:center;" onclick="meetMinister(${idx})">🤝 Takim Pune (1 AP)</button>
+                <div style="display:flex; justify-content:space-between;"><strong>${m.name}</strong><span class="tag ${state.parties[m.party].tagClass}">${m.party}</span></div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin:6px 0;">Ministër: ${m.minister} | Kompetenca: ${m.competence}/100<br>Buxheti: €${m.budget}M</div>
+                <button class="action-btn" style="width:100%; justify-content:center;" onclick="openMinisterOneOnOneModal(${idx})">🤝 Takim Pune (1 AP)</button>
             </div>
         `).join("");
     }
-}
-
-function meetMinister(idx) {
-    if (!consumeAP(1)) return;
-    let m = state.ministries[idx];
-    state.approval += 0.5;
-    m.competence = Math.min(100, m.competence + 5);
-    addMediaNews("Qeveria", `Takim produktiv në ${m.name} për përshpejtimin e projekteve.`, "POSITIVE");
-    refreshAllUI();
-    showToast(`Takim me ${m.minister} i suksesshëm. Performanca e ministrisë u rrit.`);
+    document.getElementById("macroEconomyContainer").innerHTML = `
+        <div class="card">
+            <div class="card-header"><div class="card-title">💶 Bilanci Makroekonomik</div></div>
+            <div class="grid-3" style="margin-bottom:14px;">
+                <div class="card" style="background:var(--bg-panel); margin-bottom:0;"><span class="stat-label">Buxheti</span><div style="font-size:1.1rem; font-weight:800; color:var(--accent-gold);">€${state.budgetTotalB.toFixed(2)} Mld</div></div>
+                <div class="card" style="background:var(--bg-panel); margin-bottom:0;"><span class="stat-label">Rritja / Inflacioni</span><div style="font-size:1.1rem; font-weight:800; color:var(--success);">+${state.gdpGrowth}% | ${state.inflation}%</div></div>
+                <div class="card" style="background:var(--bg-panel); margin-bottom:0;"><span class="stat-label">Papunësia</span><div style="font-size:1.1rem; font-weight:800; color:var(--danger);">${state.unemployment}%</div></div>
+            </div>
+        </div>
+    `;
 }
 
 function renderElectionsSection() {
-    let grid = document.getElementById("municipalitiesGrid");
-    let topPanel = document.getElementById("electionsMainPanel");
-    
-    if (topPanel) {
-        topPanel.innerHTML = `
-            <button class="action-btn btn-gold" style="width:100%; justify-content:center; font-size:1.05rem; padding:12px; margin-bottom:15px;" 
-                onclick="startElections('LOCAL')" ${state.elections.active ? 'disabled' : ''}>
-                ${state.elections.active ? '⏳ ZGJEDHJET NË PROCES: ' + state.elections.phase : '🗳️ SHPALL ZGJEDHJET E REJA LOKALE (3 AP)'}
-            </button>
-        `;
-    }
-
-    if(grid) {
-        grid.innerHTML = state.municipalities.map((m) => `
-            <div class="card" style="background:var(--bg-panel); margin-bottom:0;">
-                <div style="display:flex; justify-content:space-between;">
-                    <strong>📍 ${m.name}</strong>
-                    <span class="tag ${state.parties[m.mayorParty] ? state.parties[m.mayorParty].tagClass : 'tag-min'}">${m.mayorParty}</span>
-                </div>
-                <div style="font-size:0.75rem; color:var(--text-muted); margin:6px 0;">Kryetari: ${m.mayorName} | Buxheti: €${m.budgetM}M</div>
-            </div>
-        `).join("");
-    }
+    document.getElementById("electionsMainPanel").innerHTML = `
+        <button class="action-btn btn-gold" style="width:100%; justify-content:center; font-size:1.05rem; padding:12px; margin-bottom:15px;" onclick="startElections('LOCAL')" ${state.elections.active ? 'disabled' : ''}>
+            ${state.elections.active ? '⏳ ZGJEDHJET NË PROCES: ' + state.elections.phase : '🗳️ SHPALL ZGJEDHJET LOKALE KUDO (3 AP)'}
+        </button>
+    `;
+    document.getElementById("municipalitiesGrid").innerHTML = state.municipalities.map(m => `
+        <div class="card" style="background:var(--bg-panel); margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between;"><strong>📍 ${m.name}</strong><span class="tag ${state.parties[m.mayorParty]?state.parties[m.mayorParty].tagClass:'tag-min'}">${m.mayorParty}</span></div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin:6px 0;">Kryetari: ${m.mayorName} | Buxheti: €${m.budgetM}M</div>
+        </div>
+    `).join("");
 }
 
 function renderDiplomacySection() {
-    let dipHtml = Object.keys(state.diplomacy).map(k => {
-        let d = state.diplomacy[k];
-        return `
-            <div class="card" style="background:var(--bg-panel); margin-bottom:8px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <strong>🌍 ${d.name} (${d.city})</strong>
-                    <span class="tag ${d.score >= 75 ? 'tag-min' : 'tag-pdk'}">Raporti: ${d.score}/100</span>
-                </div>
-                <p style="font-size:0.75rem; color:var(--text-muted); margin:6px 0;">Përfaqësuesi: ${d.official}</p>
-                <button class="action-btn btn-outline" style="width:100%; justify-content:center;" onclick="conductBilateralVisit('${k}')">✈️ Zhvillo Vizitë Zyrtare (2 AP)</button>
+    document.getElementById("dialogueBrusselsContainer").innerHTML = `
+        <div class="card">
+            <div class="card-header"><div class="card-title">🇪🇺 Procesi i Dialogut në Bruksel</div><span class="tag tag-pdk">Progresi: ${state.dialogueProgress}%</span></div>
+            <div style="background:var(--bg-panel); padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:12px; font-size:0.82rem;">
+                <strong>Historiku i Negociatave:</strong><br>${state.dialogueNegotiationLog.slice(0, 3).map(l => `• ${l}`).join("<br>")}
             </div>
-        `;
-    }).join("");
+            <button class="action-btn btn-gold" onclick="openInteractiveBrusselsModal()">🇪🇺 Hap Tryezën e Negociatave (2 AP) ▶</button>
+        </div>
+    `;
+    let dipHtml = Object.keys(state.diplomacy).map(k => `
+        <div class="card" style="background:var(--bg-panel); margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><strong>🌍 ${state.diplomacy[k].name}</strong><span class="tag ${state.diplomacy[k].score >= 75 ? 'tag-min' : 'tag-pdk'}">Raporti: ${state.diplomacy[k].score}/100</span></div>
+            <button class="action-btn btn-outline" style="width:100%; justify-content:center; margin-top:8px;" onclick="conductBilateralVisit('${k}')">✈️ Vizitë Zyrtare (2 AP)</button>
+        </div>
+    `).join("");
+    document.getElementById("diplomacyBilateralContainer").innerHTML = `<div class="grid-2">${dipHtml}</div>`;
+}
 
-    let bilatContainer = document.getElementById("diplomacyBilateralContainer");
-    if(bilatContainer) bilatContainer.innerHTML = `<div class="grid-2">${dipHtml}</div>`;
+/* ============================================================================
+   8. FUNKSIONET E NDËRVEPRIMIT DHE KONTROLLIT
+   ============================================================================ */
+function resolveActiveEvent(optIdx) {
+    let ev = DYNAMIC_EVENTS[state.currentEventIndex % DYNAMIC_EVENTS.length];
+    ev.options[optIdx].apply(state);
+    state.currentEventIndex++;
+    showMajorAnnouncement({ badge: ev.category, title: ev.title, reason: ev.cause, immediateImpact: ev.options[optIdx].impactText });
+    advanceTime(1, true);
+}
+
+function renderPMInboxSection() {
+    document.getElementById("pmInboxListContainer").innerHTML = state.pmInboxRequests.map((req, idx) => `
+        <div class="card" style="background:var(--bg-panel); border-left:4px solid var(--danger); margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between;"><strong>${req.title}</strong><span class="tag tag-pdk">Afati: ${req.deadlineWeeks} javë</span></div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin:6px 0;">${req.desc}</p>
+            <button class="action-btn btn-gold" onclick="openPMRequestModal(${idx})">🗂️ Merr Vendim (0 AP) ▶</button>
+        </div>
+    `).join("") || `<div style="font-size:0.82rem; color:var(--text-muted);">Nuk ka kërkesa të pashqyrtuara.</div>`;
+}
+
+function openPMRequestModal(reqIdx) {
+    let req = state.pmInboxRequests[reqIdx];
+    let optsHtml = req.options.map((opt, oIdx) => `<button class="choice-btn" onclick="resolvePMRequest(${reqIdx}, ${oIdx})"><span class="choice-title">${oIdx+1}. ${opt.label}</span></button>`).join("");
+    document.getElementById("interactiveActionModalContent").innerHTML = `
+        <div class="card-header"><div class="card-title">📥 Dosje: ${req.senderName}</div></div>
+        <h3 style="font-size:0.98rem; margin-bottom:8px;">${req.title}</h3>
+        <div class="chat-bubble chat-them">"${req.desc}"</div>
+        <div style="display:flex; flex-direction:column; gap:7px;">${optsHtml}<button class="choice-btn" style="border-color:rgba(239,68,68,0.4);" onclick="rejectPMRequest(${reqIdx})"><span class="choice-title" style="color:var(--danger);">Refuzo Kërkesën</span></button></div>
+    `;
+    toggleModal("interactiveActionModal", true);
+}
+
+function resolvePMRequest(reqIdx, optIdx) {
+    let req = state.pmInboxRequests[reqIdx]; let opt = req.options[optIdx];
+    state.budgetTotalB = +(state.budgetTotalB - (opt.costB || 0)).toFixed(3);
+    state.approval = clamp(state.approval + (opt.appDelta || 1.0), 5, 95);
+    state.pmInboxRequests.splice(reqIdx, 1);
+    toggleModal("interactiveActionModal", false);
+    addMediaNews("ZKM", `Kryeministri zgjidhi kërkesën: ${opt.outcome}`, "POSITIVE");
+    refreshAllUI(); showToast("Vendimi u mor!");
+}
+
+function rejectPMRequest(reqIdx) {
+    state.approval = clamp(state.approval - 1.5, 5, 95); state.pmInboxRequests.splice(reqIdx, 1);
+    toggleModal("interactiveActionModal", false); refreshAllUI(); showToast("Kërkesa u refuzua!");
+}
+
+function openMpProfile(mpIdx) {
+    let mp = state.mps[mpIdx];
+    document.getElementById("interactiveActionModalContent").innerHTML = `
+        <div class="card-header"><div class="card-title">👤 Deputeti #${mp.seatNumber}: ${mp.name} (${mp.party})</div><button class="btn-top" onclick="toggleModal('interactiveActionModal', false)">Mbyll ✕</button></div>
+        <div style="font-size:0.8rem; margin-bottom:10px;">Besnikëria partiake: <strong>${mp.loyalty}%</strong> | Besimi tek ju: <strong>${mp.trustPlayer || 60}/100</strong></div>
+        <button class="action-btn btn-gold" onclick="interactWithMP(${mpIdx}, 'CONVINCE_LAW')">Bind për Votën e Radhës (1 AP)</button>
+    `;
+    toggleModal("interactiveActionModal", true);
+}
+
+function interactWithMP(mpIdx, actionType) {
+    if (!consumeAP(1)) return;
+    let mp = state.mps[mpIdx];
+    mp.trustPlayer = clamp((mp.trustPlayer || 60) + 10, 0, 100);
+    mp.promisedVoteNext = true;
+    toggleModal("interactiveActionModal", false);
+    refreshAllUI(); showToast(`${mp.name} premtoi mbështetje në seancën e radhës!`);
+}
+
+function openMinisterOneOnOneModal(minIdx) {
+    let m = state.ministries[minIdx];
+    document.getElementById("interactiveActionModalContent").innerHTML = `
+        <div class="card-header"><div class="card-title">💼 Takim Pune: ${m.minister} (${m.name})</div><button class="btn-top" onclick="toggleModal('interactiveActionModal', false)">Mbyll ✕</button></div>
+        <div class="chat-bubble chat-them">"Sfida aktuale është: <strong>${m.currentIssue || 'implementimi i planit'}</strong>. Si të veprojmë?"</div>
+        <button class="choice-btn" onclick="resolveMinisterMeeting(${minIdx}, 'EXTRA_BUDGET')"><span class="choice-title">Aprovo €15M buxhet shtesë (1 AP)</span></button>
+        <button class="choice-btn" onclick="resolveMinisterMeeting(${minIdx}, 'REPLACE_CONTRACTOR')"><span class="choice-title">Kërko auditim të brendshëm (1 AP)</span></button>
+    `;
+    toggleModal("interactiveActionModal", true);
+}
+
+function resolveMinisterMeeting(minIdx, choice) {
+    if (!consumeAP(1)) return;
+    let m = state.ministries[minIdx];
+    toggleModal("interactiveActionModal", false);
+    if (choice === "EXTRA_BUDGET") { m.budget += 15; state.budgetTotalB = +(state.budgetTotalB - 0.015).toFixed(3); m.competence = clamp(m.competence + 6, 40, 100); state.approval += 1.8; } 
+    else { m.risk = Math.max(2, m.risk - 8); m.competence = clamp(m.competence + 4, 40, 100); }
+    refreshAllUI(); showToast(`Takimi me ${m.minister} përfundoi me sukses!`);
+}
+
+function openInteractiveBrusselsModal() {
+    document.getElementById("interactiveActionModalContent").innerHTML = `
+        <div class="card-header"><div class="card-title">🇪🇺 Tryeza e Negociatave në Bruksel</div><button class="btn-top" onclick="toggleModal('interactiveActionModal', false)">Mbyll ✕</button></div>
+        <div class="chat-bubble chat-them">"Ndërmjetësuesit kërkojnë që Kosova të paraqesë modelin e kompromisit."</div>
+        <button class="choice-btn" onclick="finalizeBrusselsRound('ACCEPT_SEQUENCING')"><span class="choice-title">Prano planin me garanci nga Gjykata Kushtetuese (2 AP)</span></button>
+        <button class="choice-btn" onclick="finalizeBrusselsRound('STAND_FIRM')"><span class="choice-title">Mbro vijat e kuqe pa kompromis (2 AP)</span></button>
+    `;
+    toggleModal("interactiveActionModal", true);
+}
+
+function finalizeBrusselsRound(choiceCode) {
+    if (!consumeAP(2)) return;
+    toggleModal("interactiveActionModal", false);
+    if (choiceCode === "ACCEPT_SEQUENCING") {
+        state.dialogueProgress = clamp(state.dialogueProgress + 12, 0, 100); state.diplomacy.USA.score += 8; state.budgetTotalB += 0.08;
+        state.dialogueNegotiationLog.unshift(MONTHS_SQ[state.monthIndex] + " " + state.year + ": Arrihet marrëveshje sekuencimi (+€80M grante).");
+    } else {
+        state.approval += 3.2;
+        state.dialogueNegotiationLog.unshift(MONTHS_SQ[state.monthIndex] + " " + state.year + ": Kosova mbron vijat e kuqe, s'ka marrëveshje.");
+    }
+    refreshAllUI(); showToast("Raundi i Brukselit përfundoi.");
 }
 
 function conductBilateralVisit(countryKey) {
     if (!consumeAP(2)) return;
     let d = state.diplomacy[countryKey];
     d.score = Math.min(100, d.score + 8);
-    state.budgetTotalB += 0.05; // Ndihma/Grante
-    addMediaNews("MPJD", `Vizitë e suksesshme shtetërore në ${d.city}. Nënshkruhen marrëveshje bashkëpunimi.`, "POSITIVE");
-    refreshAllUI();
-    showToast(`Vizita në ${d.name} ishte e suksesshme! Raporti diplomatik u rrit.`);
+    state.budgetTotalB += 0.05;
+    addMediaNews("MPJD", `Vizitë e suksesshme në ${d.city}.`, "POSITIVE");
+    refreshAllUI(); showToast(`Vizita në ${d.name} ishte e suksesshme!`);
 }
 
-/* ============================================================================
-   7. UTILITIES DHE BOOTSTRAP
-   ============================================================================ */
-function getCoalitionSeats() { return state.coalitionParties.reduce((sum, p) => sum + (state.parties[p] ? state.parties[p].seats : 0), 0); }
-function generate120MPs(partiesObj) {
-    let mps = []; let seat = 1;
-    Object.keys(partiesObj).forEach(pKey => {
-        for(let i=0; i<partiesObj[pKey].seats; i++) {
-            mps.push({ seatNumber: seat++, party: pKey, name: `Deputeti ${i+1} (${pKey})`, loyalty: 70 + Math.floor(Math.random()*30), rebelRisk: Math.random() < 0.2, promisedVoteNext: false });
-        }
-    });
-    return mps;
+function holdPartyCouncilMeeting() {
+    if (!consumeAP(1)) return;
+    let p = state.parties[state.playerParty];
+    p.partyDiscipline = clamp(p.partyDiscipline + 5, 40, 100);
+    p.internalCohesion = clamp(p.internalCohesion + 5, 40, 100);
+    refreshAllUI(); showToast("Këshilli i Përgjithshëm rriti disiplinën!");
 }
+
+function fundraisePartyDiaspora() {
+    if (!consumeAP(1)) return;
+    state.parties[state.playerParty].partyFunds += 65000;
+    refreshAllUI(); showToast("Mblodhët €65,000 nga mërgata!");
+}
+
+function openCoalitionRound1(targetPartyId) {
+    if (!consumeAP(1)) return;
+    let p = state.parties[targetPartyId];
+    if (!state.coalitionParties.includes(targetPartyId)) state.coalitionParties.push(targetPartyId);
+    if (!state.quorumPledgedParties.includes(targetPartyId)) state.quorumPledgedParties.push(targetPartyId);
+    state.parties[state.playerParty].relations[targetPartyId] += 15;
+    refreshAllUI(); showToast(`Koalicioni me ${p.short} u arrit me sukses!`);
+}
+
+function removePartnerFromCoalition(targetPartyId) {
+    state.coalitionParties = state.coalitionParties.filter(x => x !== targetPartyId);
+    state.quorumPledgedParties = state.quorumPledgedParties.filter(x => x !== targetPartyId);
+    refreshAllUI(); showToast(`Koalicioni me ${state.parties[targetPartyId].short} u prish!`);
+}
+
+function formalizeGovernmentVote() {
+    state.assemblyConstituted = true; state.governmentFormed = true;
+    state.primeMinister = state.parties[state.playerParty].leader;
+    showMajorAnnouncement({ badge: "SEANCË KONSTITUIVE", title: "Votohet Qeveria e Re", reason: "Koalicioni arriti pragun kushtetues.", immediateImpact: "Fillon ekzekutivi!" });
+    refreshAllUI();
+}
+
+function openNewsArticleModal(newsIdx) {
+    let n = state.mediaFeed[newsIdx];
+    document.getElementById("majorEventModalContent").innerHTML = `
+        <div class="card-header"><div class="card-title">📰 ${n.outlet}</div><button class="btn-top" onclick="toggleModal('majorEventModal', false)">Mbyll ✕</button></div>
+        <h3 style="font-size:1.05rem; margin-bottom:10px;">${n.title}</h3>
+        <button class="action-btn btn-outline" onclick="issueQuickPressRelease(${newsIdx})">📝 Lësho Komunikatë Sqaruese (0 AP)</button>
+    `;
+    toggleModal("majorEventModal", true);
+}
+
+function issueQuickPressRelease(newsIdx) {
+    state.approval = clamp(state.approval + 0.8, 5, 95);
+    toggleModal("majorEventModal", false);
+    refreshAllUI(); showToast("Zyra për Media lëshoi komunikatë!");
+}
+
+/* Helper Functions */
+function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+function getCoalitionSeats() { return state.coalitionParties.reduce((sum, p) => sum + (state.parties[p] ? state.parties[p].seats : 0), 0); }
+function generate120MPs(partiesObj) { let mps = []; let seat = 1; Object.keys(partiesObj).forEach(pKey => { for(let i=0; i<partiesObj[pKey].seats; i++) { mps.push({ seatNumber: seat++, party: pKey, name: `Deputeti ${i+1} (${pKey})`, loyalty: 70 + Math.floor(Math.random()*30), rebelRisk: Math.random() < 0.2, promisedVoteNext: false }); } }); return mps; }
+function normalizePartyPolls() { let genKeys = ["LVV", "PDK", "LDK", "AAK"]; let totalGen = genKeys.reduce((acc, k) => acc + state.parties[k].poll, 0); genKeys.forEach(k => { state.parties[k].poll = +((state.parties[k].poll / totalGen) * 90.0).toFixed(2); }); }
 
 function toggleModal(id, show) { let el = document.getElementById(id); if (el) { if (show) el.classList.add("show"); else el.classList.remove("show"); } }
 function showToast(msg) { let t = document.getElementById("toast"); t.textContent = msg; t.style.display = "block"; setTimeout(() => t.style.display = "none", 3500); }
 function addMediaNews(outlet, title, tone) { state.mediaFeed.unshift({ outlet, title, tone }); if(state.mediaFeed.length > 8) state.mediaFeed.pop(); document.getElementById("mediaTickerText").textContent = `[${outlet}] ${title}`; }
 
-function switchMainTab(tabId, btn) {
-    document.querySelectorAll(".tab-view").forEach(e => e.classList.remove("active"));
-    let target = document.getElementById(tabId); if (target) target.classList.add("active");
-    if(btn) { document.querySelectorAll(".bottom-nav .nav-item").forEach(b => b.classList.remove("active")); btn.classList.add("active"); }
-    window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function switchSubTab(prefix, subKey, pillBtn) {
-    if (!pillBtn) return;
-    let parentSection = pillBtn.closest(".tab-view");
-    parentSection.querySelectorAll(".sub-content").forEach(el => el.classList.remove("active"));
-    parentSection.querySelectorAll(".sub-pill").forEach(b => b.classList.remove("active"));
-    let target = document.getElementById(prefix + "-" + subKey);
-    if (target) target.classList.add("active");
-    pillBtn.classList.add("active");
-}
+function switchMainTab(tabId, btn) { document.querySelectorAll(".tab-view").forEach(e => e.classList.remove("active")); let target = document.getElementById(tabId); if (target) target.classList.add("active"); if(btn) { document.querySelectorAll(".bottom-nav .nav-item").forEach(b => b.classList.remove("active")); btn.classList.add("active"); } window.scrollTo({ top: 0, behavior: "smooth" }); }
+function switchSubTab(prefix, subKey, pillBtn) { if (!pillBtn) return; let parentSection = pillBtn.closest(".tab-view"); parentSection.querySelectorAll(".sub-content").forEach(el => el.classList.remove("active")); parentSection.querySelectorAll(".sub-pill").forEach(b => b.classList.remove("active")); let target = document.getElementById(prefix + "-" + subKey); if (target) target.classList.add("active"); pillBtn.classList.add("active"); }
 
 function showMajorAnnouncement(cfg) {
     document.getElementById("majorEventModalContent").innerHTML = `
@@ -944,12 +1275,7 @@ function showMajorAnnouncement(cfg) {
 
 function refreshAllUI() {
     if(!state) return;
-    updateTopBar();
-    renderDashboard();
-    renderAssemblySection();
-    renderGovernmentSection();
-    renderElectionsSection();
-    renderDiplomacySection();
+    updateTopBar(); renderDashboard(); renderPartySection(); renderAssemblySection(); renderGovernmentSection(); renderElectionsSection(); renderDiplomacySection();
     try { localStorage.setItem(STORAGE_KEY_AUTO, JSON.stringify(state)); } catch(e){}
 }
 
@@ -977,12 +1303,4 @@ window.addEventListener("DOMContentLoaded", () => {
     toggleModal("setupModal", true);
 });
 
-function startScenario(pKey) {
-    state = createFreshState("REALITY_OCT2026", pKey);
-    toggleModal("setupModal", false);
-    refreshAllUI();
-    showToast(`Mandati juaj me ${pKey} filloi! Përdorni pikët e veprimit (AP).`);
-}
-</script>
-</body>
-</html>
+function startScenario(pKey) { state = createFreshState("REALITY_OCT2026", pKey); toggleModal("setupModal", false); refreshAllUI(); showToast(`Mandati juaj me ${pKey} filloi! Përdorni pikët e veprimit (AP).`); }
