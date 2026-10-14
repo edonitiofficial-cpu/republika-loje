@@ -344,8 +344,8 @@ const STORAGE_KEY_SLOTS = "republika_ks_2026_slots_v4";
 const MONTHS_SQ = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor"];
 
 let state = null;
-let votingAnimInterval = null; // Variabël globale për FAZËN 3
-let currentVotingData = null;  // Ruan të dhënat e votimit gjatë animacionit
+let votingAnimInterval = null; 
+let currentVotingData = null;  
 
 /* ============================================================================
    FUNKSIONET E EKRANIT FILLESTAR (START SCREEN)
@@ -373,7 +373,7 @@ function loadGameFromScreen() {
 }
 
 /* ============================================================================
-   2. FUNKSIONET E INICIALIZIMIT
+   2. FUNKSIONET E INICIALIZIMIT DHE QASJA FAZA 4 (STATUSI PENDING)
    ============================================================================ */
 
 function getInitialStateSectors() {
@@ -400,6 +400,8 @@ function getInitialPMInbox() {
     return [
         {
             id: "req_init_1",
+            status: "PENDING",
+            outcomeMsg: "",
             senderName: "Liburn Aliu",
             senderRole: "Ministër i Infrastrukturës (MMPHI)",
             category: "TAKIM & VENDIM OPERACIONAL",
@@ -407,7 +409,7 @@ function getInitialPMInbox() {
             deadlineWeeks: 3,
             title: "Vonesa në shpronësimet e rrugës Prishtinë–Podujevë dhe Prishtinë–Mitrovicë",
             desc: "Ministri kërkon takim urgjent me Kryeministrin. Dy kontraktorë kanë ngadalësuar punimet për shkak të kontesteve pronësore dhe rritjes së çmimit të materialeve.",
-            consequenceText: "Nëse nuk veprohet brenda 3 javësh: -2.5% Mbështetje publike dhe vonesa në premtimin e infrastrukturës.",
+            consequenceText: "Nëse nuk veprohet brenda afatit: -2.5% Mbështetje publike dhe vonesa në infrastrukturë.",
             options: [
                 { label: "Mirato €18M shtesë për shpronësime të menjëhershme", costB: 0.018, appDelta: 2.2, secId: "sec_roads", outcome: "U miratuan mjetet për shpronësim; punimet në terren u dyfishuan." },
                 { label: "Shkëput kontratat me kompanitë e papërgjegjshme dhe hap tender të ri", costB: 0, appDelta: 1.5, secId: "sec_roads", outcome: "Kontraktorët që vonuan punimet u penalizuan; procesi po rishikohet." },
@@ -416,6 +418,8 @@ function getInitialPMInbox() {
         },
         {
             id: "req_init_2",
+            status: "PENDING",
+            outcomeMsg: "",
             senderName: "Përparim Rama & Imri Ahmeti",
             senderRole: "Kryetarët e Komunave (Prishtinë & Lipjan)",
             category: "KËRKESË NGA KOMUNAT",
@@ -431,6 +435,8 @@ function getInitialPMInbox() {
         },
         {
             id: "req_init_3",
+            status: "PENDING",
+            outcomeMsg: "",
             senderName: "Ambasadori i SHBA-së & Shefi i Zyrës së BE-së",
             senderRole: "Përfaqësuesit Diplomatikë në Prishtinë (QUINT)",
             category: "FTESË DIPLOMATIKE",
@@ -477,7 +483,7 @@ function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customI
     });
 
     let s = {
-        version: "4.1.2026_Faza3",
+        version: "4.1.2026_Faza4",
         mode: mode,
         year: 2026,
         monthIndex: isPostElectionAlt ? 6 : 9,
@@ -1146,7 +1152,6 @@ function renderSaveSlots() {
         '</div>';
     }).join("");
 }
-
 function getCoalitionSeats() {
     if (!state) return 0;
     return state.coalitionParties.reduce(function(acc, pId) {
@@ -1241,6 +1246,43 @@ function toggleModal(id, show) {
     }
 }
 
+// FAZA 4: Funksioni parandalues i kalimit të kohës
+window.promptAdvanceTime = function(weeks) {
+    if (!state) return;
+    
+    var expiringTasks = (state.pmInboxRequests || []).filter(function(req) {
+        return req.status === "PENDING" && req.deadlineWeeks <= weeks;
+    });
+    
+    var dueMeetings = (state.scheduledMeetings || []).filter(function(m) {
+        return m.status === "SCHEDULED" && m.dueTurn < (state.turnCount + weeks); 
+    });
+
+    if (expiringTasks.length === 0 && dueMeetings.length === 0) {
+        advanceTime(weeks);
+        return;
+    }
+
+    var box = document.getElementById("interactiveActionModalContent");
+    var tasksHtml = expiringTasks.map(function(t) { return '<li><strong>Kërkesë:</strong> ' + t.title + ' (Skadon)</li>'; }).join("");
+    var meetsHtml = dueMeetings.map(function(m) { return '<li><strong>Takim:</strong> ' + m.targetName + ' (Humbet)</li>'; }).join("");
+
+    box.innerHTML = 
+        '<div class="card-header">' +
+            '<div class="card-title">⚠️ Paralajmërim për Kalimin e Kohës (+' + weeks + ' Javë)</div>' +
+            '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
+        '</div>' +
+        '<div style="font-size:0.85rem; margin-bottom:12px; color:#cbd5e1;">Keni detyra ose takime të papërfunduara që do të skadojnë nëse kaloni kohën tani:</div>' +
+        '<ul style="font-size:0.8rem; color:var(--danger); margin-bottom:16px; padding-left:20px; line-height:1.6;">' +
+            tasksHtml + meetsHtml +
+        '</ul>' +
+        '<div style="display:flex; gap:8px; flex-wrap:wrap;">' +
+            '<button class="action-btn btn-outline" onclick="toggleModal(\'interactiveActionModal\', false)">Kthehu dhe kryej detyrat</button>' +
+            '<button class="action-btn btn-danger" onclick="toggleModal(\'interactiveActionModal\', false); advanceTime(' + weeks + ');">Vazhdo gjithsesi (Injoro) ▶</button>' +
+        '</div>';
+    toggleModal("interactiveActionModal", true);
+};
+
 function refreshAllUI() {
     if (!state) return;
     updateTopBar();
@@ -1276,7 +1318,7 @@ function updateTopBar() {
     document.getElementById("dateDisplay").textContent = MONTHS_SQ[state.monthIndex] + " " + state.year + " • Java " + state.week;
     
     var pendingMeets = (state.scheduledMeetings || []).filter(function(m) { return m.status === "SCHEDULED"; }).length;
-    var pendingReqs = (state.pmInboxRequests || []).length;
+    var pendingReqs = (state.pmInboxRequests || []).filter(function(r) { return r.status === "PENDING"; }).length;
 
     document.getElementById("calendarTopBtn").textContent = "📅 Kalendari (" + pendingMeets + ")";
     document.getElementById("inboxTopBtn").textContent = "📥 Kërkesat (" + pendingReqs + ")";
@@ -1333,7 +1375,7 @@ function renderDashboard() {
     var coalNames = state.coalitionParties.map(function(k) { return state.parties[k].short; }).join(" + ");
     var pendingMeetings = (state.scheduledMeetings || []).filter(function(m) { return m.status === "SCHEDULED"; });
     var activeSectorProjs = (state.stateSectors || []).filter(function(s) { return s.active; }).length;
-    var reqCount = (state.pmInboxRequests || []).length;
+    var reqCount = (state.pmInboxRequests || []).filter(function(r) { return r.status === "PENDING"; }).length;
 
     var govStatusHtml = "";
     if (!state.governmentFormed) {
@@ -1356,17 +1398,18 @@ function renderDashboard() {
             '<button class="action-btn btn-outline" onclick="switchMainTab(\'tab-government\'); switchSubTab(\'gov\',\'sectors\', document.querySelectorAll(\'#tab-government .sub-pill\')[1]);">🏗️ 15 Sektorët e Shtetit</button>' +
         '</div>';
 
-    var inboxList = state.pmInboxRequests || [];
+    var inboxList = (state.pmInboxRequests || []).filter(function(r) { return r.status === "PENDING"; });
     document.getElementById("quickInboxPreview").innerHTML = inboxList.length === 0
-        ? '<div style="font-size:0.78rem; color:var(--text-muted);">Të gjitha kërkesat e ministrave, kryetarëve të komunave dhe ambasadorëve janë shqyrtuar!</div>'
-        : inboxList.slice(0, 2).map(function(req, idx) {
+        ? '<div style="font-size:0.78rem; color:var(--text-muted);">Nuk keni kërkesa aktive. Të gjitha janë shqyrtuar!</div>'
+        : inboxList.slice(0, 2).map(function(req) {
+            var realIdx = state.pmInboxRequests.findIndex(function(r) { return r.id === req.id; });
             return '<div style="background:#0f172a; border-left:3px solid var(--accent-gold); padding:8px 10px; border-radius:6px; margin-bottom:8px;">' +
                 '<div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--accent-gold);">' +
                     '<strong>📩 Nga: ' + req.senderName + ' (' + req.senderRole + ')</strong>' +
                     '<span>Afati: ' + req.deadlineWeeks + ' javë</span>' +
                 '</div>' +
                 '<div style="font-size:0.81rem; font-weight:700; margin:3px 0;">' + req.title + '</div>' +
-                '<button class="btn-top" onclick="openPMRequestModal(' + idx + ')">Shqyrto & Vendos ▶</button>' +
+                '<button class="btn-top" onclick="openPMRequestModal(' + realIdx + ')">Shqyrto & Vendos ▶</button>' +
             '</div>';
         }).join("");
 
@@ -1415,41 +1458,52 @@ function resolveActiveEvent(optIdx) {
     advanceTime(1, true);
 }
 
+// FAZA 4: Renderimi i Inbox me Statuse Reale (Pending, Completed, Expired)
 function renderPMInboxSection() {
     var container = document.getElementById("pmInboxListContainer");
     if (!container) return;
     var list = state.pmInboxRequests || [];
 
     if (list.length === 0) {
-        container.innerHTML = '<div style="background:#0f172a; padding:14px; border-radius:8px; font-size:0.82rem; color:var(--text-muted);">Nuk ka kërkesa të pashqyrtuara në tavolinën e Kryeministrit. Klikoni butonin lart ose kaloni në javën tjetër për raportimet e reja.</div>';
+        container.innerHTML = '<div style="background:#0f172a; padding:14px; border-radius:8px; font-size:0.82rem; color:var(--text-muted);">Nuk ka kërkesa në tavolinën e Kryeministrit. Klikoni butonin lart për raportimet e reja.</div>';
         return;
     }
 
     container.innerHTML = list.map(function(req, idx) {
-        var borderCol = req.urgency === "E LARTË" ? "var(--danger)" : "var(--accent-gold)";
-        var tagCls = req.urgency === "E LARTË" ? "tag-lvv" : "tag-gold";
+        var isPending = req.status === "PENDING";
+        var borderCol = isPending ? (req.urgency === "E LARTË" ? "var(--danger)" : "var(--accent-gold)") : (req.status === "COMPLETED" ? "var(--success)" : "#475569");
+        var tagCls = req.status === "COMPLETED" ? "tag-min" : (req.status === "EXPIRED" ? "tag-sl" : (req.urgency === "E LARTË" ? "tag-lvv" : "tag-gold"));
+        var statusTxt = req.status === "COMPLETED" ? "E PËRFUNDUAR" : (req.status === "EXPIRED" ? "E SKADUAR" : req.urgency);
+
+        var actionHtml = "";
+        if (isPending) {
+            actionHtml = '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+                '<button class="action-btn btn-gold" onclick="openPMRequestModal(' + idx + ')">🗂️ Hap Kërkesën & Merr Vendim ▶</button>' +
+                '<button class="action-btn btn-outline" onclick="postponePMRequest(' + idx + ')">⏳ Shtyj për 2 Javë (-0.4% Mbështetje)</button>' +
+            '</div>';
+        } else {
+            actionHtml = '<div style="font-size:0.75rem; color:' + (req.status === "COMPLETED" ? 'var(--success)' : 'var(--danger)') + '; margin-bottom:8px;"><strong>Rezultati:</strong> ' + (req.outcomeMsg || "Nuk u mor asnjë vendim në kohë.") + '</div>' +
+                '<button class="action-btn btn-outline" onclick="archivePMRequest(' + idx + ')">📁 Arkivo Detyrën</button>';
+        }
+
         return '<div class="card" style="background:#0f172a; margin-bottom:10px; border-left:4px solid ' + borderCol + ';">' +
             '<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:6px;">' +
                 '<div>' +
-                    '<span class="tag ' + tagCls + '">' + req.category + ' • Urgjenca: ' + req.urgency + '</span>' +
+                    '<span class="tag ' + tagCls + '">' + req.category + ' • ' + statusTxt + '</span>' +
                     '<h4 style="font-size:0.9rem; margin-top:5px;">' + req.title + '</h4>' +
                     '<div style="font-size:0.75rem; color:var(--accent-gold);">Dërguesi: <strong>' + req.senderName + '</strong> — ' + req.senderRole + '</div>' +
                 '</div>' +
-                '<span class="tag tag-pdk">Afati: ' + req.deadlineWeeks + ' javë</span>' +
+                (isPending ? '<span class="tag tag-pdk">Afati: ' + req.deadlineWeeks + ' javë</span>' : '') +
             '</div>' +
-            '<p style="font-size:0.8rem; color:#cbd5e1; margin-bottom:6px;">' + req.desc + '</p>' +
-            '<div style="font-size:0.74rem; color:var(--danger); margin-bottom:10px;">⚠️ ' + req.consequenceText + '</div>' +
-            '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
-                '<button class="action-btn btn-gold" onclick="openPMRequestModal(' + idx + ')">🗂️ Hap Kërkesën & Merr Vendim ▶</button>' +
-                '<button class="action-btn btn-outline" onclick="postponePMRequest(' + idx + ')">⏳ Shtyj për 2 Javë (-0.4% Mbështetje)</button>' +
-            '</div>' +
+            (isPending ? '<p style="font-size:0.8rem; color:#cbd5e1; margin-bottom:6px;">' + req.desc + '</p><div style="font-size:0.74rem; color:var(--danger); margin-bottom:10px;">⚠️ ' + req.consequenceText + '</div>' : '') +
+            actionHtml +
         '</div>';
     }).join("");
 }
 
 function openPMRequestModal(reqIdx) {
     var req = state.pmInboxRequests[reqIdx];
-    if (!req) return;
+    if (!req || req.status !== "PENDING") return;
     var box = document.getElementById("interactiveActionModalContent");
     var optsHtml = req.options.map(function(opt, oIdx) {
         var costM = ((opt.costB || 0) * 1000).toFixed(0);
@@ -1478,6 +1532,7 @@ function openPMRequestModal(reqIdx) {
     toggleModal("interactiveActionModal", true);
 }
 
+// FAZA 4: Detyrat nuk fshihen menjëherë, marrin status COMPLETED
 function resolvePMRequest(reqIdx, optIdx) {
     var req = state.pmInboxRequests[reqIdx];
     var opt = req.options[optIdx];
@@ -1493,21 +1548,26 @@ function resolvePMRequest(reqIdx, optIdx) {
         if (sec) sec.score = clamp(sec.score + 5, 10, 100);
     }
 
-    state.pmInboxRequests.splice(reqIdx, 1);
+    req.status = "COMPLETED";
+    req.outcomeMsg = opt.outcome;
+
     toggleModal("interactiveActionModal", false);
     addMediaNews("Kryeministria / RTK", "Kryeministri shqyrton kërkesën e " + req.senderName + ": " + opt.outcome, "POSITIVE");
     refreshAllUI();
-    showToast("Vendimi u mor! " + opt.outcome);
+    showToast("Vendimi u mor dhe detyra u shënua e përfunduar!");
 }
 
 function rejectPMRequest(reqIdx) {
     var req = state.pmInboxRequests[reqIdx];
     state.approval = clamp(state.approval - 1.5, 5, 95);
-    state.pmInboxRequests.splice(reqIdx, 1);
+    
+    req.status = "COMPLETED";
+    req.outcomeMsg = "Kërkesa u refuzua zyrtarisht.";
+
     toggleModal("interactiveActionModal", false);
     addMediaNews("Gazeta Express", "Kryeministri refuzon kërkesën e " + req.senderName + " për \"" + req.title + "\".", "CRITICAL");
     refreshAllUI();
-    showToast("Kërkesa e " + req.senderName + " u refuzua!");
+    showToast("Kërkesa u refuzua!");
 }
 
 function postponePMRequest(reqIdx) {
@@ -1516,6 +1576,11 @@ function postponePMRequest(reqIdx) {
     state.approval = clamp(state.approval - 0.4, 5, 95);
     refreshAllUI();
     showToast("Shqyrtimi i kërkesës u shty për 2 javë.");
+}
+
+function archivePMRequest(idx) {
+    state.pmInboxRequests.splice(idx, 1);
+    refreshAllUI();
 }
 
 function generateDynamicIncomingRequest(manualTrigger) {
@@ -1580,6 +1645,8 @@ function generateDynamicIncomingRequest(manualTrigger) {
 
     var pick = JSON.parse(JSON.stringify(templates[(state.turnCount + state.pmInboxRequests.length) % templates.length]));
     pick.id = "req_" + Date.now();
+    pick.status = "PENDING";
+    pick.outcomeMsg = "";
     state.pmInboxRequests.unshift(pick);
     if (manualTrigger) {
         refreshAllUI();
@@ -1596,22 +1663,31 @@ function renderCalendarMeetings() {
         return;
     }
 
+    // FAZA 4: Renderimi me statuset e reja (SCHEDULED, COMPLETED, MISSED)
     container.innerHTML = list.map(function(m, idx) {
         var isReady = m.dueTurn <= state.turnCount && m.status === "SCHEDULED";
-        var tagCls = m.status === "COMPLETED" ? "tag-min" : (isReady ? "tag-gold" : "tag-pdk");
-        var tagTxt = m.status === "COMPLETED" ? "✔ I PËRFUNDUAR" : (isReady ? "🔴 KOHA PËR TAKIM TANI" : ("Planifikuar për Javën #" + m.dueTurn + " (" + m.hour + ")"));
-        return '<div class="card" style="background:#0f172a; margin-bottom:8px; border-color:' + (isReady ? 'var(--accent-gold)' : 'var(--border)') + ';">' +
+        var isMissed = m.status === "MISSED";
+        var isCompleted = m.status === "COMPLETED";
+
+        var tagCls = isCompleted ? "tag-min" : (isMissed ? "tag-sl" : (isReady ? "tag-gold" : "tag-pdk"));
+        var tagTxt = isCompleted ? "✔ I PËRFUNDUAR" : (isMissed ? "✕ I HUMBUR / SKADUAR" : (isReady ? "🔴 KOHA PËR TAKIM TANI" : ("Planifikuar për Javën #" + m.dueTurn + " (" + m.hour + ")")));
+        var borderCol = isReady ? 'var(--accent-gold)' : (isCompleted ? 'var(--success)' : (isMissed ? 'var(--danger)' : 'var(--border)'));
+
+        var actionHtml = "";
+        if (m.status === "SCHEDULED") {
+            actionHtml = '<button class="action-btn ' + (isReady ? 'btn-gold' : '') + '" onclick="conductScheduledMeeting(' + idx + ')">' + (isReady ? '▶ Hyr në Takim Tani' : '⏩ Zhvillo para afatit') + '</button>';
+        }
+
+        return '<div class="card" style="background:#0f172a; margin-bottom:8px; border-color:' + borderCol + ';">' +
             '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
                 '<div>' +
                     '<span class="tag ' + tagCls + '">' + tagTxt + '</span>' +
                     '<div style="font-size:0.88rem; font-weight:700; margin-top:4px;">🤝 Takim me: ' + m.targetName + '</div>' +
                     '<div style="font-size:0.74rem; color:var(--accent-gold);">' + m.category + '</div>' +
                     '<div style="font-size:0.75rem; color:var(--text-muted);">Tema: ' + m.topic + ' • Qëllimi: ' + m.goal + '</div>' +
-                    (m.outcome ? '<div style="font-size:0.76rem; color:var(--success); margin-top:4px;">Rezultati: ' + m.outcome + '</div>' : '') +
+                    (m.outcome ? '<div style="font-size:0.76rem; color:' + (isCompleted ? 'var(--success)' : 'var(--danger)') + '; margin-top:4px;">Rezultati: ' + m.outcome + '</div>' : '') +
                 '</div>' +
-                '<div>' +
-                    (m.status === "SCHEDULED" ? '<button class="action-btn ' + (isReady ? 'btn-gold' : '') + '" onclick="conductScheduledMeeting(' + idx + ')">' + (isReady ? '▶ Hyr në Takim Tani' : '⏩ Zhvillo para afatit') + '</button>' : '') +
-                '</div>' +
+                '<div>' + actionHtml + '</div>' +
             '</div>' +
         '</div>';
     }).join("");
@@ -1759,7 +1835,7 @@ function confirmScheduleMeeting() {
         goal: goal,
         hour: offset === 0 ? "16:30" : "10:00",
         dueTurn: state.turnCount + offset,
-        status: "SCHEDULED",
+        status: "SCHEDULED", // FAZA 4 status
         outcome: null
     };
     state.scheduledMeetings.unshift(newMeet);
@@ -1772,9 +1848,10 @@ function confirmScheduleMeeting() {
     }
 }
 
+// FAZA 4: Lojtari hyn vetë në takim dhe vendos për ta përfunduar
 function conductScheduledMeeting(meetIdx) {
     var m = state.scheduledMeetings[meetIdx];
-    if (!m) return;
+    if (!m || m.status !== "SCHEDULED") return;
     var box = document.getElementById("interactiveActionModalContent");
     box.innerHTML =
         '<div class="card-header">' +
@@ -1810,7 +1887,8 @@ function conductScheduledMeeting(meetIdx) {
 function finalizeScheduledMeeting(meetIdx, decisionCode) {
     var m = state.scheduledMeetings[meetIdx];
     var customMsg = document.getElementById("customMeetingMessage") ? document.getElementById("customMeetingMessage").value.trim() : "";
-    m.status = "COMPLETED";
+    
+    m.status = "COMPLETED"; // FAZA 4: Takimi shënohet si i përfunduar
 
     if (decisionCode === "COMPROMISE") {
         m.outcome = "U arrit dakordim dhe koordinim institucional me " + m.targetName + "." + (customMsg ? (" (\"" + customMsg + "\")") : "");
@@ -1834,7 +1912,6 @@ function finalizeScheduledMeeting(meetIdx, decisionCode) {
     refreshAllUI();
     showToast("Takimi përfundoi dhe u regjistrua në procesverbalin e Kalendarit!");
 }
-
 function startPressConference() {
     var topic = document.getElementById("pressTopicSelect").value;
     var tone = document.getElementById("pressToneSelect").value;
@@ -1989,6 +2066,7 @@ function fulfillPromiseNow(idx) {
     refreshAllUI();
     showToast("Premtimi u realizua! Besueshmëria e qytetarëve u rrit me +4.2%.");
 }
+
 function renderPartySection() {
     var p = state.parties[state.playerParty];
     document.getElementById("partyDetailsContainer").innerHTML =
@@ -2353,10 +2431,6 @@ function removePartnerFromCoalition(targetPartyId) {
     refreshAllUI();
 }
 
-/* ============================================================================
-   FAZA 3: MOTORI I ANIMACIONIT TË VOTIMIT & LOGJIKA STRIKTE MATEMATIKORE
-   ============================================================================ */
-
 function startVotingAnimation(title, desc, voteData, onComplete) {
     document.getElementById("votingModalTitle").innerHTML = title;
     document.getElementById("votingModalDesc").innerHTML = desc;
@@ -2385,7 +2459,7 @@ function startVotingAnimation(title, desc, voteData, onComplete) {
     };
     
     clearInterval(votingAnimInterval);
-    votingAnimInterval = setInterval(animateVoteStep, 35); // 35ms per vote
+    votingAnimInterval = setInterval(animateVoteStep, 35);
 }
 
 function animateVoteStep() {
@@ -2457,10 +2531,8 @@ function finishVotingProcess() {
 
 function formalizeGovernmentVote() {
     var seats = getCoalitionSeats();
-    
     var pro = 0, kunder = 0, abstenim = 0, mungese = 0;
     
-    // FAZA 3: Llogaritja strikte për 120 deputetë
     state.mps.forEach(function(mp) {
         var inCoal = state.coalitionParties.includes(mp.party);
         if (inCoal) {
@@ -2474,11 +2546,8 @@ function formalizeGovernmentVote() {
         }
     });
     
-    // Sigurohemi që asnjë deputet nuk humbet ose nuk dyfishohet
     var total = pro + kunder + abstenim + mungese;
-    if(total !== 120) {
-        kunder += (120 - total); 
-    }
+    if(total !== 120) { kunder += (120 - total); }
 
     var passed = pro >= 61;
     var resHtml = passed 
@@ -3946,6 +4015,7 @@ function executeNorthSecurityOperation() {
     showToast("Siguria dhe funksionaliteti institucional në veri u rritën me +6%!");
 }
 
+// FAZA 4: Funksioni kryesor thelbësor i menaxhimit të kohës dhe skadimit të detyrave
 function advanceTime(weeksCount, silentToast) {
     if (typeof weeksCount === "undefined") weeksCount = 1;
     if (typeof silentToast === "undefined") silentToast = false;
@@ -3968,6 +4038,7 @@ function advanceTime(weeksCount, silentToast) {
             }
         }
 
+        // Sektorët Shtetërorë
         (state.stateSectors || []).forEach(function(sec) {
             if (sec.active && sec.weeksLeft > 0) {
                 sec.weeksLeft--;
@@ -3981,6 +4052,7 @@ function advanceTime(weeksCount, silentToast) {
             }
         });
 
+        // Projektet Komunale
         state.municipalities.forEach(function(m) {
             if (!m.projects) return;
             m.projects.forEach(function(pr) {
@@ -3996,28 +4068,42 @@ function advanceTime(weeksCount, silentToast) {
             });
         });
 
-        for (var r = (state.pmInboxRequests || []).length - 1; r >= 0; r--) {
-            var req = state.pmInboxRequests[r];
-            req.deadlineWeeks--;
-            if (req.deadlineWeeks <= 0) {
-                state.approval = clamp(state.approval - 2.2, 5, 95);
-                addMediaNews("Kallxo / Koha", "Skadon afati i kërkesës së " + req.senderName + " (\"" + req.title + "\") pa vendim të Kryeministrit (-2.2% Mbështetje)!", "CRITICAL");
-                state.pmInboxRequests.splice(r, 1);
+        // FAZA 4: Detyrat e Inbox - Skadojnë me pasoja pa u zhdukur nga lista
+        (state.pmInboxRequests || []).forEach(function(req) {
+            if (req.status === "PENDING") {
+                req.deadlineWeeks--;
+                if (req.deadlineWeeks <= 0) {
+                    req.status = "EXPIRED";
+                    req.outcomeMsg = "Afati kaloi pa u marrë asnjë vendim.";
+                    state.approval = clamp(state.approval - 2.2, 5, 95);
+                    addMediaNews("Kallxo / Koha", "Skadon afati i kërkesës së " + req.senderName + " (\"" + req.title + "\") pa vendim të Kryeministrit (-2.2% Mbështetje)!", "CRITICAL");
+                }
             }
-        }
+        });
 
-        if (state.turnCount % 2 === 0 && (state.pmInboxRequests || []).length < 4) {
+        // Inbox Dinamik
+        if (state.turnCount % 2 === 0 && (state.pmInboxRequests || []).filter(function(r){return r.status==="PENDING";}).length < 4) {
             generateDynamicIncomingRequest(false);
         }
 
+        // FAZA 4: Takimet - Humben nëse afati i tyre mbetet pas
         if (state.scheduledMeetings) {
             state.scheduledMeetings.forEach(function(m, idx) {
-                if (m.status === "SCHEDULED" && m.dueTurn <= state.turnCount && dueMeetingIdx === -1) {
+                if (m.status === "SCHEDULED" && m.dueTurn < state.turnCount) {
+                    m.status = "MISSED";
+                    m.outcome = "Takimi u anashkalua dhe nuk u mbajt.";
+                }
+            });
+            
+            // Hap takimin e parë që është GATI vetëm nëse s'kemi asnjë tjetër radhazi
+            state.scheduledMeetings.forEach(function(m, idx) {
+                if (m.status === "SCHEDULED" && m.dueTurn === state.turnCount && dueMeetingIdx === -1) {
                     dueMeetingIdx = idx;
                 }
             });
         }
 
+        // Zgjedhja e Presidentit
         if (!state.presidentElected) {
             state.presidentialDeadlineWeeks--;
             if (state.presidentialDeadlineWeeks <= 0) {
@@ -4027,6 +4113,7 @@ function advanceTime(weeksCount, silentToast) {
             }
         }
 
+        // Premtimet Politike
         state.promises.forEach(function(pr) {
             if (!pr.fulfilled) {
                 pr.deadlineWeeks--;
