@@ -12,7 +12,6 @@
      EKRANI FILLESTAR (START SCREEN)
      ============================================================ -->
 <div id="startScreen" class="start-screen">
-    <!-- Sfond dinamik me 6 fotografi (rrotullohen me Ken Burns) -->
     <div class="start-bg">
         <div class="start-bg-slide" style="background-image: url('images/kuvendi.jpg');"></div>
         <div class="start-bg-slide" style="background-image: url('images/qeveria.jpg');"></div>
@@ -23,7 +22,6 @@
     </div>
     <div class="start-overlay"></div>
 
-    <!-- Përmbajtja qendrore -->
     <div class="start-content">
         <div class="start-crest">🇽🇰</div>
         <h1 class="start-title">REPUBLIKA</h1>
@@ -192,7 +190,6 @@
             <button class="btn-top" onclick="switchMainTab('tab-dashboard'); switchSubTab('dash', 'inbox', document.querySelectorAll('#tab-dashboard .sub-pill')[1])" id="inboxTopBtn" style="border-color:var(--accent-gold);">📥 Kërkesat (0)</button>
             <button class="btn-top" onclick="switchMainTab('tab-dashboard'); switchSubTab('dash', 'calendar', document.querySelectorAll('#tab-dashboard .sub-pill')[2])" id="calendarTopBtn">📅 Kalendari (0)</button>
             <button class="btn-top" onclick="toggleModal('saveModal', true)">💾 Ruajtjet</button>
-            <!-- FAZA 4: Lidhja e re për paralajmërimin e kalimit të kohës -->
             <button class="next-turn-btn" onclick="promptAdvanceTime(1)">Java Tjetër ▶</button>
             <button class="btn-top" onclick="promptAdvanceTime(4)" title="Kalo 1 Muaj">+4 Javë ⏩</button>
         </div>
@@ -241,7 +238,8 @@
             <button class="sub-pill active" onclick="switchSubTab('dash', 'overview', this)">📊 Qendra e Situatës</button>
             <button class="sub-pill" onclick="switchSubTab('dash', 'inbox', this)">📥 Agjenda e KM: Kërkesat & Detyrat</button>
             <button class="sub-pill" onclick="switchSubTab('dash', 'calendar', this)">📅 Kalendari & Takimet Zyrtare</button>
-            <button class="sub-pill" onclick="switchSubTab('dash', 'press', this)">🎙️ Konferencë për Media</button>
+            <!-- FAZA 5: Ndryshim emri i tabit -->
+            <button class="sub-pill" onclick="switchSubTab('dash', 'press', this)">🎙️ Komunikimi Publik & Media</button>
             <button class="sub-pill" onclick="switchSubTab('dash', 'promises', this)">📌 Premtimet & Llogaridhënia</button>
             <button class="sub-pill" onclick="switchSubTab('dash', 'history', this)">📜 Arkivi i Vendimeve</button>
         </div>
@@ -312,44 +310,71 @@
             </div>
         </div>
 
+        <!-- FAZA 5: Sistemi i Komunikimit Publik (Konferenca, Komunikata, Deklarata) -->
         <div id="dash-press" class="sub-content" style="display:none;">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">🎙️ Salla e Konferencave për Media — Kryeministria (Me Pyetje Radhazi)</div>
-                    <span class="tag tag-pdk" id="pressCooldownTag">Gati për deklaratë</span>
-                </div>
-                <div class="grid-3" style="margin-bottom:12px;">
-                    <div>
-                        <label style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:4px;">Tema Kryesore e Konferencës:</label>
-                        <select id="pressTopicSelect" style="width:100%;">
-                            <option value="ECONOMY">Paketa Ekonomike, Pagat dhe Inflacioni</option>
-                            <option value="DIALOGUE">Dialogu në Bruksel dhe Siguria në Veri</option>
-                            <option value="COALITION">Stabiliteti i Koalicionit dhe Puna e Kuvendit</option>
-                            <option value="ANTICORRUPTION">Sundimi i Ligjit, Vetingu dhe Lufta ndaj Korrupsionit</option>
-                            <option value="ENERGY">Furnizimi me Energji (KEK) dhe Investimet Kapitale</option>
-                        </select>
+            <div class="grid-2">
+                <!-- Paneli 1: Konferenca për Media -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">🎙️ Konferencë për Media</div>
                     </div>
-                    <div>
-                        <label style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:4px;">Toni i Komunikimit:</label>
-                        <select id="pressToneSelect" style="width:100%;">
-                            <option value="INSTITUTIONAL">Institucional, teknik dhe me shifra</option>
-                            <option value="POPULIST">Mobilizues dhe i ashpër ndaj opozitës</option>
-                            <option value="COOPERATIVE">Bashkëpunues dhe ftesë për konsensus</option>
-                            <option value="DIPLOMATIC">I matur dhe i koordinuar me QUINT-in</option>
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:4px;">Tema e Konferencës:</label>
+                        <select id="pressTopicSelect" style="width:100%; margin-bottom:8px;">
+                            <option value="Paketa Ekonomike, Pagat dhe Inflacioni">Paketa Ekonomike dhe Buxheti</option>
+                            <option value="Dialogu në Bruksel dhe Siguria në Veri">Dialogu dhe Siguria në Veri</option>
+                            <option value="Stabiliteti i Koalicionit dhe Puna e Kuvendit">Stabiliteti i Koalicionit / Qeveria</option>
+                            <option value="Sundimi i Ligjit, Vetingu dhe Drejtësia">Sundimi i Ligjit dhe Vetingu</option>
+                            <option value="Furnizimi me Energji (KEK) dhe Projektet Kapitale">Energjia dhe Investimet Kapitale</option>
                         </select>
-                    </div>
-                    <div>
-                        <label style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:4px;">Formati i Konferencës:</label>
+
+                        <label style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:4px;">Toni / Qëllimi i Komunikimit:</label>
+                        <select id="pressToneSelect" style="width:100%; margin-bottom:8px;">
+                            <option value="INSTITUTIONAL">Institucional dhe sqarues</option>
+                            <option value="POPULIST">Kritik ndaj opozitës dhe mobilizues</option>
+                            <option value="COOPERATIVE">Bashkëpunues me theks te konsensusi</option>
+                        </select>
+                        
+                        <label style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:4px;">Përfaqësimi (Formati):</label>
                         <select id="pressPartnerSelect" style="width:100%;">
-                            <option value="SOLO">Vetëm Kryeministri / Lideri i Partisë</option>
-                            <option value="MINISTER">Me Ministrin e Financave / Ekonomisë</option>
-                            <option value="COALITION">Me Partnerët e Koalicionit Qeverisës</option>
+                            <option value="SOLO">Paraqitje e vetme e Liderit</option>
+                            <option value="MINISTER">Së bashku me një Ministër të Linjës</option>
                         </select>
                     </div>
+                    <button class="action-btn btn-gold" onclick="startPressConference()">Thirr Konferencën & Hyr në Pyetje ▶</button>
                 </div>
-                <button class="action-btn btn-gold" onclick="startPressConference()">Dil para Gazetarëve dhe Hap Raundin e Pyetjeve ▶</button>
+
+                <div>
+                    <!-- Paneli 2: Komunikatë Zyrtare -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📜 Publiko Komunikatë Zyrtare</div>
+                        </div>
+                        <div style="display:flex; gap:6px; flex-direction:column; margin-bottom:12px;">
+                            <input type="text" id="prTitle" placeholder="Titulli i komunikatës (p.sh. Njoftim për Pakon e Re)..." style="width:100%;">
+                            <select id="prCategory" style="width:100%;">
+                                <option value="Vendim Qeveritar">Vendim i Qeverisë</option>
+                                <option value="Reagim Institucional">Reagim ndaj zhvillimeve / opozitës</option>
+                                <option value="Vizitë Ndërkombëtare">Raport i Takimit Diplomatik</option>
+                            </select>
+                        </div>
+                        <button class="action-btn btn-outline" onclick="publishPressRelease()">Publiko Komunikatën Zyrtare</button>
+                    </div>
+
+                    <!-- Paneli 3: Deklaratë e Shpejtë (Social Media / Publik) -->
+                    <div class="card" style="margin-bottom:0;">
+                        <div class="card-header">
+                            <div class="card-title">💬 Deklaratë Publike (Reagim)</div>
+                        </div>
+                        <div style="display:flex; gap:6px; margin-bottom:12px;">
+                            <input type="text" id="psText" placeholder="Mesazhi yt i shkurtër për qytetarët..." style="width:100%;">
+                        </div>
+                        <button class="action-btn btn-outline" onclick="issuePublicStatement()">Lësho Deklaratën</button>
+                    </div>
+                </div>
             </div>
-            <div id="pressLiveStage" class="card" style="display:none; border-color:var(--accent-gold);"></div>
+            <!-- Hapësira ku zhvillohet Konferenca Live -->
+            <div id="pressLiveStage" class="card" style="display:none; border-color:var(--accent-gold); margin-top:14px;"></div>
         </div>
 
         <div id="dash-promises" class="sub-content" style="display:none;">
@@ -372,6 +397,7 @@
                         <option value="Qeveri">Vendimet e Qeverisë & Sektorët</option>
                         <option value="Koalicion">Marrëveshjet & Takimet</option>
                         <option value="Bruksel">Dialogu & Vizitat Diplomatike</option>
+                        <option value="Media">Komunikimi dhe Media</option>
                     </select>
                 </div>
                 <div id="historyLogContainer" style="max-height:480px; overflow-y:auto;"></div>
