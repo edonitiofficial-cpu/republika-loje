@@ -339,6 +339,16 @@ const INITIAL_POLITICAL_DB = {
     ]
 };
 
+// FAZA 6: Strukturat e Reja për BE-në dhe Reformat
+function getInitialEUReforms() {
+    return [
+        { id: "eu_rol", title: "Sundimi i Ligjit dhe Lufta kundër Korrupsionit", progress: 42, target: 80, desc: "Miratimi i Vetingut, Byrosë për Konfiskim dhe ulja e lëndëve në gjykata." },
+        { id: "eu_pa", title: "Reforma në Administratën Publike", progress: 55, target: 85, desc: "Ligji i Pagave, vlerësimi i performancës dhe digjitalizimi i e-Kosova." },
+        { id: "eu_econ", title: "Ekonomia dhe Tregu i Përbashkët Rajonal", progress: 48, target: 80, desc: "Zhvillimi i sektorit privat, CEFTA dhe zbatimi i Planit të Rritjes." },
+        { id: "eu_rights", title: "Të Drejtat Themelore dhe Komunitetet", progress: 60, target: 90, desc: "Përfshirja e komuniteteve, buxheti komunal dhe liria e mediave." }
+    ];
+}
+
 const STORAGE_KEY_AUTO = "republika_ks_2026_autosave_v4";
 const STORAGE_KEY_SLOTS = "republika_ks_2026_slots_v4";
 const MONTHS_SQ = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor"];
@@ -346,35 +356,6 @@ const MONTHS_SQ = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik
 let state = null;
 let votingAnimInterval = null; 
 let currentVotingData = null;  
-
-/* ============================================================================
-   FUNKSIONET E EKRANIT FILLESTAR (START SCREEN)
-   ============================================================================ */
-function showStartScreen() {
-    var ss = document.getElementById("startScreen");
-    if (ss) ss.classList.remove("hidden");
-    document.body.classList.add("start-screen-active");
-}
-
-function hideStartScreen() {
-    var ss = document.getElementById("startScreen");
-    if (ss) ss.classList.add("hidden");
-    document.body.classList.remove("start-screen-active");
-}
-
-function startNewGameFromScreen() {
-    hideStartScreen();
-    openNewScenarioModal();
-}
-
-function loadGameFromScreen() {
-    hideStartScreen();
-    toggleModal("saveModal", true);
-}
-
-/* ============================================================================
-   2. FUNKSIONET E INICIALIZIMIT DHE QASJA FAZA 4 (STATUSI PENDING)
-   ============================================================================ */
 
 function getInitialStateSectors() {
     return [
@@ -432,23 +413,6 @@ function getInitialPMInbox() {
                 { label: "Prano takimin dhe nënshkruaj memorandum bashkëfinancimi (-€15M)", costB: 0.015, appDelta: 2.5, secId: "sec_local", outcome: "Kryetarët e komunave përshëndetën bashkëpunimin institucional me Qeverinë." },
                 { label: "Kërko fillimisht auditim të projekteve komunale nga MAPL", costB: 0, appDelta: 0.5, secId: "sec_local", outcome: "MAPL nisi verifikimin ligjor të projekteve komunale." }
             ]
-        },
-        {
-            id: "req_init_3",
-            status: "PENDING",
-            outcomeMsg: "",
-            senderName: "Ambasadori i SHBA-së & Shefi i Zyrës së BE-së",
-            senderRole: "Përfaqësuesit Diplomatikë në Prishtinë (QUINT)",
-            category: "FTESË DIPLOMATIKE",
-            urgency: "E LARTË",
-            deadlineWeeks: 2,
-            title: "Kërkesë për Konsultim Paraprak para Raundit të Radhës në Bruksel",
-            desc: "Ambasadorët e QUINT-it kërkojnë takim pune në Kryeministri për të harmonizuar propozimet mbi sigurinë në veri dhe Planin e Rritjes të BE-së.",
-            consequenceText: "Refuzimi ose vonesa ul pikët diplomatike me SHBA dhe BE (-5 pikë).",
-            options: [
-                { label: "Prit ambasadorët në takim dhe prezanto planin kushtetues të Kosovës", costB: 0, appDelta: 1.8, dipBonus: 5, outcome: "Takim konstruktiv në Kryeministri; QUINT-i vlerësoi transparencën e Qeverisë." },
-                { label: "Dërgo Zëvendëskryeministrin / MPJD në takim me ambasadorët", costB: 0, appDelta: 0.8, dipBonus: 2, outcome: "MPJD zhvilloi konsultimet teknike me ambasadorët." }
-            ]
         }
     ];
 }
@@ -483,7 +447,7 @@ function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customI
     });
 
     let s = {
-        version: "4.1.2026_Faza5",
+        version: "4.1.2026_Faza6",
         mode: mode,
         year: 2026,
         monthIndex: isPostElectionAlt ? 6 : 9,
@@ -532,12 +496,13 @@ function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customI
         diplomacy: {
             USA: { name: "Shtetet e Bashkuara të Amerikës (SHBA)", city: "Uashington D.C.", official: "Sekretari i Shtetit & Ndihmës Sekretari për Evropën", score: 78, status: "Partneritet Strategjik", note: "Kërkon koordinim për veprimet në veri dhe zbatim të marrëveshjeve." },
             EU: { name: "Bashkimi Evropian (BE)", city: "Bruksel", official: "Presidentja e Komisionit Evropian & Përfaqësuesi i Lartë", score: 74, status: "Kandidat Potencial / Plani i Rritjes", note: "Kushtëzon fondet e Planit të Rritjes me progresin në dialog." },
-            GERMANY: { name: "Gjermania & Franca (Boshti Franko-Gjerman)", city: "Berlin & Paris", official: "Kancelari Federal i Gjermanisë & Këshilltarët Diplomatikë", score: 76, status: "Mbështetje për Procesin e Berlinit", note: "Mbështet tregun e përbashkët regional dhe integrimin evropian." },
+            GERMANY: { name: "Gjermania & Franca (Boshti Franko-Gjerman)", city: "Berlin & Paris", official: "Kancelari Federal i Gjermanisë & Këshilltarët Diplomatikë", score: 76, status: "Mbështetje për Procesin e Berlinit", note: "Mbështet tregun e përbashkët rajonal dhe integrimin evropian." },
             UK: { name: "Mbretëria e Bashkuar (Britania e Madhe)", city: "Londër", official: "Sekretari i Jashtëm Britanik & Emisari për Ballkanin Perëndimor", score: 88, status: "Aleat i Fortë i Sigurisë", note: "Mbështet fuqishëm FSK-në, sundimin e ligjit dhe sigurinë kufitare." },
             ALBANIA: { name: "Republika e Shqipërisë", city: "Tiranë", official: "Kryeministri i Shqipërisë & Kabinetet ndërqeveritare", score: 92, status: "Vëllazëror & Marrëveshje të Përbashkëta", note: "Projektet e hekurudhës Durrës–Prishtinë dhe tregu unik energjetik." },
             TURKEY: { name: "Republika e Turqisë", city: "Ankara & Stamboll", official: "Presidenti & Ministri i Mbrojtjes dhe Tregtisë", score: 85, status: "Bashkëpunim Ekonomik & Ushtarak", note: "Furnizim me sisteme mbrojtëse dhe investime në energji." }
         },
 
+        // FAZA 6: Strukturat e Reja Diplomatike
         dialogueProgress: 52,
         dialogueChronologyStep: 1,
         dialogueDraftProposal: null,
@@ -545,6 +510,9 @@ function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customI
         dialogueNegotiationLog: [
             "Korrik 2026: BE dhe SHBA kërkojnë rifillimin e dialogut pas zgjedhjeve në Kosovë."
         ],
+        euReforms: getInitialEUReforms(),
+        diplomaticAgreements: [],
+        activeCrises: [],
 
         scheduledMeetings: [],
         pmInboxRequests: getInitialPMInbox(),
@@ -568,23 +536,10 @@ function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customI
                 time: "Tetor 2026",
                 fullBody: "Pas certifikimit të rezultateve nga KQZ-ja, 120 deputetët e Legjislaturës së XI-të janë mbledhur në seancë plenare. Analistët politikë vlerësojnë se testi kryesor i shumicës do të jetë kalimi i marrëveshjeve ndërkombëtare që kërkojnë 80 vota dhe përmirësimi i 15 sektorëve publikë.",
                 reactions: "Mazhoranca zotohet për zhvillim ekonomik dhe sovranitet, ndërsa PDK, LDK dhe AAK paralajmërojnë opozitarizëm të rreptë."
-            },
-            {
-                id: "news_init_2",
-                outlet: "Betimi për Drejtësi",
-                title: "Kuvendi dhe sfidat e shumicës së cilësuar: Si ndahen 120 ulëset dhe kuorumi kushtetues.",
-                tone: "POSITIVE",
-                time: "Tetor 2026",
-                fullBody: "Ekspertët e së drejtës kushtetuese rikujtojnë se sipas aktgjykimeve të Gjykatës Kushtetuese të Republikës së Kosovës, dallimi mes kuorumit (pranisë së 80 deputetëve në votim) dhe votave pro është vendimtar për stabilitetin institucional.",
-                reactions: "Shoqëria civile dhe IKD kërkojnë respektim të plotë të procedurave parlamentare dhe transparencë në hartimin e projektligjeve."
             }
         ],
         historyLog: [
-            "7 Qershor 2026 [Kuvend]: Mbahen zgjedhjet e parakohshme parlamentare (LVV 53, PDK 22, LDK 18, AAK 7, Komunitetet 20).",
-            "8 Korrik 2026 [Kuvend]: KQZ certifikon rezultatet përfundimtare të Legjislaturës XI.",
-            isPostElectionAlt
-                ? "Korrik 2026 [Koalicion]: Hapen negociatat zyrtare me raunde për konstituimin e Kuvendit, Qeverisë dhe Presidentit."
-                : "Tetor 2026 [Qeveri]: Votohet Qeveria Kurti 4 (62 vota) dhe zgjidhet Presidentja Justina Shiroka-Pula (81 vota)."
+            "7 Qershor 2026 [Kuvend]: Mbahen zgjedhjet e parakohshme parlamentare (LVV 53, PDK 22, LDK 18, AAK 7, Komunitetet 20)."
         ],
         currentEventIndex: 0,
         lastPressTurn: 0
@@ -612,9 +567,7 @@ function generate120MPs(partiesObj, playerPartyKey) {
     const stances = [
         "Modeluar: Fokus në zhvillimin ekonomik rajonal dhe buxhetin",
         "Modeluar: Fokus në sundimin e ligjit, Vetingun dhe drejtësinë",
-        "Modeluar: Qëndrim konservator për Kodin Civil dhe traditën",
-        "Modeluar: Prioritet integrimi Euro-Atlantik dhe aleanca me SHBA",
-        "Modeluar: Prioritet arsimi publik, shëndetësia dhe skemat sociale"
+        "Modeluar: Qëndrim konservator për Kodin Civil dhe traditën"
     ];
 
     order.forEach(function(pKey) {
@@ -640,7 +593,7 @@ function generate120MPs(partiesObj, playerPartyKey) {
                 trustPlayer: baseTrust + (i % 10),
                 role: mpRole,
                 stance: stances[seatCounter % stances.length],
-                ambition: i < 6 ? "Lidership në Komision Parlamentar / Ekzekutiv" : ("Investime kapitale në rajonin " + mpRegion),
+                ambition: i < 6 ? "Lidership në Komision Parlamentar" : "Investime kapitale",
                 rebelRisk: mpLoyalty < 82,
                 promisedVoteNext: false,
                 votingHistory: ["Seanca Konstituive: Pjesëmarrës"],
@@ -650,7 +603,6 @@ function generate120MPs(partiesObj, playerPartyKey) {
     });
     return allMps;
 }
-
 function getInitialLaws() {
     return [
         {
@@ -1173,6 +1125,11 @@ function initApp() {
             if (!state.customPresCandidates) state.customPresCandidates = {};
             if (!state.dialogueNegotiationLog) state.dialogueNegotiationLog = [];
             
+            // FAZA 6: Siguria e përputhshmërisë për ruajtjet e vjetra
+            if (!state.euReforms) state.euReforms = getInitialEUReforms();
+            if (!state.diplomaticAgreements) state.diplomaticAgreements = [];
+            if (!state.activeCrises) state.activeCrises = [];
+            
             if (!state.winningParty) state.winningParty = "LVV";
             if (!state.mandatar) state.mandatar = state.winningParty;
 
@@ -1246,6 +1203,7 @@ function toggleModal(id, show) {
     }
 }
 
+// FAZA 6: Sistemi parandalues përfshin tani edhe Marrëveshjet Diplomatike me afat
 window.promptAdvanceTime = function(weeks) {
     if (!state) return;
     
@@ -1257,7 +1215,11 @@ window.promptAdvanceTime = function(weeks) {
         return m.status === "SCHEDULED" && m.dueTurn < (state.turnCount + weeks); 
     });
 
-    if (expiringTasks.length === 0 && dueMeetings.length === 0) {
+    var expiringAgreements = (state.diplomaticAgreements || []).filter(function(a) {
+        return a.status === "PENDING" && a.deadlineWeeks <= weeks;
+    });
+
+    if (expiringTasks.length === 0 && dueMeetings.length === 0 && expiringAgreements.length === 0) {
         advanceTime(weeks);
         return;
     }
@@ -1265,18 +1227,19 @@ window.promptAdvanceTime = function(weeks) {
     var box = document.getElementById("interactiveActionModalContent");
     var tasksHtml = expiringTasks.map(function(t) { return '<li><strong>Kërkesë:</strong> ' + t.title + ' (Skadon)</li>'; }).join("");
     var meetsHtml = dueMeetings.map(function(m) { return '<li><strong>Takim:</strong> ' + m.targetName + ' (Humbet)</li>'; }).join("");
+    var agreementsHtml = expiringAgreements.map(function(a) { return '<li><strong>Marrëveshje:</strong> ' + a.title + ' (Rrezikon Krizë Diplomatike)</li>'; }).join("");
 
     box.innerHTML = 
         '<div class="card-header">' +
             '<div class="card-title">⚠️ Paralajmërim për Kalimin e Kohës (+' + weeks + ' Javë)</div>' +
             '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
         '</div>' +
-        '<div style="font-size:0.85rem; margin-bottom:12px; color:#cbd5e1;">Keni detyra ose takime të papërfunduara që do të skadojnë nëse kaloni kohën tani:</div>' +
+        '<div style="font-size:0.85rem; margin-bottom:12px; color:#cbd5e1;">Keni ngjarje që do të skadojnë nëse kaloni kohën tani pa vepruar:</div>' +
         '<ul style="font-size:0.8rem; color:var(--danger); margin-bottom:16px; padding-left:20px; line-height:1.6;">' +
-            tasksHtml + meetsHtml +
+            tasksHtml + meetsHtml + agreementsHtml +
         '</ul>' +
         '<div style="display:flex; gap:8px; flex-wrap:wrap;">' +
-            '<button class="action-btn btn-outline" onclick="toggleModal(\'interactiveActionModal\', false)">Kthehu dhe kryej detyrat</button>' +
+            '<button class="action-btn btn-outline" onclick="toggleModal(\'interactiveActionModal\', false)">Kthehu dhe vepro</button>' +
             '<button class="action-btn btn-danger" onclick="toggleModal(\'interactiveActionModal\', false); advanceTime(' + weeks + ');">Vazhdo gjithsesi (Injoro) ▶</button>' +
         '</div>';
     toggleModal("interactiveActionModal", true);
@@ -1555,6 +1518,23 @@ function resolvePMRequest(reqIdx, optIdx) {
 
     toggleModal("interactiveActionModal", false);
     addMediaNews("Kryeministria / RTK", "Kryeministri shqyrton kërkesën e " + req.senderName + ": " + opt.outcome, "POSITIVE");
+    
+    // FAZA 6: Nëse detyra ishte diplomatike (Marrëveshje), zbatoje atë
+    if (req.isDiplomaticAgreement && opt.isFavorable) {
+        var ag = state.diplomaticAgreements.find(function(a) { return a.id === req.agreementId; });
+        if (ag) {
+            ag.status = "IMPLEMENTED";
+            state.gdpGrowth = +(state.gdpGrowth + (ag.gdpBoost || 0)).toFixed(1);
+            showToast("Marrëveshja diplomatike u zbatua me sukses!");
+        }
+    } else if (req.isDiplomaticAgreement && !opt.isFavorable) {
+        var agRej = state.diplomaticAgreements.find(function(a) { return a.id === req.agreementId; });
+        if (agRej) {
+            agRej.status = "BLOCKED";
+            triggerDiplomaticCrisis("Bllokimi i Marrëveshjes me " + agRej.partner, "U refuzua zbatimi i marrëveshjes së arritur (" + agRej.title + ").", agRej.partner);
+        }
+    }
+
     refreshAllUI();
     showToast("Vendimi u mor dhe detyra u shënua e përfunduar!");
 }
@@ -1565,6 +1545,15 @@ function rejectPMRequest(reqIdx) {
     
     req.status = "COMPLETED";
     req.outcomeMsg = "Kërkesa u refuzua zyrtarisht.";
+
+    // FAZA 6: Nëse po refuzojmë një detyrë zbatimi diplomatik
+    if (req.isDiplomaticAgreement) {
+        var ag = state.diplomaticAgreements.find(function(a) { return a.id === req.agreementId; });
+        if (ag) {
+            ag.status = "BLOCKED";
+            triggerDiplomaticCrisis("Refuzimi i Marrëveshjes me " + ag.partner, "Kryeministria njoftoi se nuk ka kushte për zbatimin e marrëveshjes (" + ag.title + ").", ag.partner);
+        }
+    }
 
     toggleModal("interactiveActionModal", false);
     addMediaNews("Gazeta Express", "Kryeministri refuzon kërkesën e " + req.senderName + " për \"" + req.title + "\".", "CRITICAL");
@@ -1912,6 +1901,7 @@ function finalizeScheduledMeeting(meetIdx, decisionCode) {
     refreshAllUI();
     showToast("Takimi përfundoi dhe u regjistrua në procesverbalin e Kalendarit!");
 }
+
 function startPressConference() {
     var topic = document.getElementById("pressTopicSelect").value;
     var tone = document.getElementById("pressToneSelect").value;
@@ -2032,47 +2022,28 @@ function finishFullPressConference() {
     });
 }
 
-// FAZA 5: Publikimi i Komunikatës Zyrtare
 function publishPressRelease() {
     var title = document.getElementById("prTitle").value.trim();
     var category = document.getElementById("prCategory").value;
-    
-    if (!title) {
-        showToast("Ju lutem shkruani një titull për komunikatën zyrtare!");
-        return;
-    }
-
-    // Ndikimi i balancuar sipas kërkesave (Nuk bën hove të mëdha joreale)
+    if (!title) { showToast("Shkruani një titull!"); return; }
     state.approval = clamp(state.approval + 0.8, 5, 95);
-    
     var fullBodyText = "Zyra për Komunikim e ka shpërndarë këtë njoftim tek të gjitha mediat vendore dhe ndërkombëtare. Qëndrimi i qartë institucional pritet të ndikojë në uljen e paqartësive rreth kësaj teme.";
-    
-    addMediaNews("Komunikatë Zyrtare", "[" + category + "] " + title, "POSITIVE", fullBodyText, "Opozita ka marrë shënim dhe mediat po analizojnë deklaratën e lëshuar.");
-    
+    addMediaNews("Komunikatë Zyrtare", "[" + category + "] " + title, "POSITIVE", fullBodyText, "Opozita ka marrë shënim dhe mediat po analizojnë deklaratën.");
     document.getElementById("prTitle").value = "";
     refreshAllUI();
     showToast("Komunikata u publikua dhe u shpërnda te mediat!");
 }
 
-// FAZA 5: Lëshimi i Deklaratës së Shpejtë (Social Media / Publik)
 function issuePublicStatement() {
     var text = document.getElementById("psText").value.trim();
-    
-    if (!text) {
-        showToast("Ju lutem shkruani mesazhin e deklaratës suaj!");
-        return;
-    }
-
-    // Ndikimi i një deklarate është i vogël dhe rrit pak kohezionin
+    if (!text) { showToast("Shkruani mesazhin!"); return; }
     state.approval = clamp(state.approval + 0.4, 5, 95);
     var myP = state.parties[state.playerParty];
     myP.internalCohesion = clamp(myP.internalCohesion + 1, 0, 100);
-
-    addMediaNews("Deklaratë e Shpejtë", "Reagim: " + text.substring(0, 50) + (text.length > 50 ? "..." : ""), "NEUTRAL", text, "Qytetarët dhe mbështetësit po reagojnë në rrjetet sociale.");
-    
+    addMediaNews("Deklaratë e Shpejtë", "Reagim: " + text.substring(0, 50) + (text.length > 50 ? "..." : ""), "NEUTRAL", text, "Qytetarët po reagojnë në rrjetet sociale.");
     document.getElementById("psText").value = "";
     refreshAllUI();
-    showToast("Deklarata juaj publike u lëshua me sukses!");
+    showToast("Deklarata publike u lëshua me sukses!");
 }
 
 function renderPromisesList() {
@@ -3180,7 +3151,7 @@ function renderOppositionSection() {
                         '<span class="choice-title">Mobilizo Protestë Qytetare / Tubim në Sheshin Skënderbeu</span>' +
                         '<span class="choice-impact">Ndikon në sondazhet e partive dhe presionin publik</span>' +
                     '</button>' +
-                '</div>' +
+                </div>' +
                 '<div class="card" style="background:#0f172a; margin-bottom:0;">' +
                     '<h4 style="font-size:0.85rem; margin-bottom:8px; color:var(--danger);">Mocioni i Mosbesimit ndaj Qeverisë</h4>' +
                     '<button class="action-btn btn-danger" onclick="voteNoConfidenceMotion()">🗳️ Procedo Votimin e Mocionit të Mosbesimit në Kuvend</button>' +
@@ -3245,7 +3216,6 @@ function voteNoConfidenceMotion() {
         }
     });
 }
-
 function renderGovernmentSection() {
     document.getElementById("ministriesGrid").innerHTML = state.ministries.map(function(m, idx) {
         var p = state.parties[m.party] || { tagClass: 'tag-sl', short: 'Bosh' };
@@ -3431,7 +3401,7 @@ function renderStateSectorsGrid() {
                 '• Problemi: ' + sec.problem +
             '</div>' +
             '<div class="prog-row" style="margin-bottom:8px;">' +
-                '<div class="prog-label"><span>Gjendja e Sektorit</span><span>' + sec.score + '%</span></div>' +
+                '<div class="prog-label"><span>Gjendja e Sektori</span><span>' + sec.score + '%</span></div>' +
                 '<div class="prog-track"><div class="prog-fill" style="width:' + sec.score + '%; background:var(--success);"></div></div>' +
             '</div>' +
             (sec.active
@@ -3779,7 +3749,9 @@ function triggerSnapElection(reasonText) {
     });
 }
 
+// FAZA 6: Sistemi i zgjeruar Diplomatik
 function renderDiplomacySection() {
+    // 1. Dialogu & Rruga Evropiane (Skeda 1)
     var step = state.dialogueChronologyStep || 1;
     var stepLabels = [
         "1. Konteksti & Ftesa nga BE/SHBA",
@@ -3821,32 +3793,163 @@ function renderDiplomacySection() {
             '</div>' +
         '</div>';
 
+    // Rruga Evropiane (Sistemi i Progresit të Reformave)
+    document.getElementById("euReformsContainer").innerHTML =
+        '<div class="card">' +
+            '<div class="card-header"><div class="card-title">🇪🇺 Agjenda Evropiane (Reformat e Kërkuara nga BE)</div></div>' +
+            '<p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">Përmbushja e këtyre objektivave rrit mundësinë për marrjen e statusit të vendit kandidat dhe zhbllokon fondet evropiane (IPA).</p>' +
+            '<div class="grid-2">' +
+                (state.euReforms || []).map(function(ref, rIdx) {
+                    var isDone = ref.progress >= ref.target;
+                    return '<div style="background:#0f172a; border:1px solid ' + (isDone ? 'var(--success)' : 'var(--border)') + '; padding:10px; border-radius:8px;">' +
+                        '<div style="display:flex; justify-content:space-between; margin-bottom:6px;">' +
+                            '<strong style="font-size:0.82rem;">' + ref.title + '</strong>' +
+                            '<span class="tag ' + (isDone ? 'tag-min' : 'tag-sl') + '">' + ref.progress + ' / ' + ref.target + '</span>' +
+                        '</div>' +
+                        '<div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:8px;">' + ref.desc + '</div>' +
+                        '<div class="prog-track" style="margin-bottom:8px;"><div class="prog-fill" style="width:' + Math.min(100, (ref.progress/ref.target)*100) + '%; background:var(--accent-blue);"></div></div>' +
+                        (!isDone ? '<button class="action-btn btn-outline" style="width:100%; justify-content:center;" onclick="startEUReform(' + rIdx + ')">Financo Reformën Ligjore (-€12M) ▶</button>' : '<span style="color:var(--success); font-size:0.75rem;">✔ Kushti Evropian u përmbush</span>') +
+                    '</div>';
+                }).join("") +
+            '</div>' +
+        '</div>';
+
+    // 2. Marrëdhëniet Bilaterale (Skeda 2)
     var bilatHtml = Object.entries(state.diplomacy).map(function(entry) {
-        var k = entry[0];
-        var d = entry[1];
-        var tagCls = d.score >= 75 ? "tag-min" : "tag-aak";
+        var k = entry[0]; var d = entry[1];
+        
+        // Përditësim dinamik i statusit bazuar në pikë
+        if (d.score >= 85) d.status = "Shumë e mirë / Partneritet Strategjik";
+        else if (d.score >= 60) d.status = "E mirë / Normale";
+        else if (d.score >= 40) d.status = "Neutrale / Me rezerva";
+        else d.status = "E tensionuar / Ftohje diplomatike";
+
+        var tagCls = d.score >= 85 ? "tag-success" : (d.score >= 60 ? "tag-min" : (d.score >= 40 ? "tag-warning" : "tag-danger"));
         var cityTxt = d.city || "Kryeqytet";
         var offTxt = d.official || "Homologu";
+
         return '<div class="card" style="background:#0f172a; margin-bottom:0;">' +
             '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
                 '<strong>' + d.name + '</strong>' +
-                '<span class="tag ' + tagCls + '">' + d.score + ' / 100</span>' +
+                '<span class="tag ' + tagCls + '">Raporti: ' + d.score + ' / 100 (' + d.status + ')</span>' +
             '</div>' +
             '<div style="font-size:0.74rem; color:var(--accent-gold); margin-bottom:4px;">📍 Kryeqyteti: ' + cityTxt + ' • Zyrtari: ' + offTxt + '</div>' +
             '<p style="font-size:0.76rem; color:var(--text-muted); margin-bottom:10px;">' + d.note + '</p>' +
-            '<button class="action-btn btn-gold" onclick="openBilateralVisitModal(\'' + k + '\')">✈️ Planifiko & Zhvillo Vizitë Zyrtare në ' + cityTxt + ' ▶</button>' +
+            '<button class="action-btn btn-gold" onclick="openBilateralVisitModal(\'' + k + '\')">✈️ Zhvillo Vizitë & Negocio Marrëveshje në ' + cityTxt + ' ▶</button>' +
         '</div>';
     }).join("");
 
     document.getElementById("diplomacyBilateralContainer").innerHTML = '<div class="grid-2">' + bilatHtml + '</div>';
+
+    // 3. Marrëveshjet dhe Krizat (Skeda 3)
+    renderAgreementsCrises();
 }
 
-function consultAlliesOffTable() {
-    state.dialogueAlliesConsulted = true;
-    state.diplomacy.USA.score = clamp(state.diplomacy.USA.score + 4, 10, 100);
-    state.dialogueNegotiationLog.unshift(MONTHS_SQ[state.monthIndex] + " " + state.year + ": Konsultim dypalësh me SHBA dhe QUINT para takimit në Bruksel.");
+function renderAgreementsCrises() {
+    var container = document.getElementById("agreementsCrisesContainer");
+    if (!container) return;
+
+    var agHtml = (state.diplomaticAgreements || []).length === 0 
+        ? '<div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Nuk ka marrëveshje aktive. Krijoni marrëveshje gjatë vizitave bilaterale.</div>'
+        : (state.diplomaticAgreements || []).map(function(a, idx) {
+            var badge = a.status === "PENDING" ? '<span class="tag tag-pdk">Në Pritje (Afati: ' + a.deadlineWeeks + 'j)</span>' : (a.status === "IMPLEMENTED" ? '<span class="tag tag-min">✔ E Zbatuar</span>' : '<span class="tag tag-lvv">✕ E Bllokuar</span>');
+            return '<div style="background:#0f172a; padding:10px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px;">' +
+                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;"><strong style="font-size:0.84rem;">' + a.title + '</strong>' + badge + '</div>' +
+                '<div style="font-size:0.74rem; color:var(--text-muted);">Partneri: <strong>' + a.partner + '</strong> | Detyrimi: Kërkon Zbatim Ekzekutiv nga Qeveria</div>' +
+            '</div>';
+        }).join("");
+
+    var crHtml = (state.activeCrises || []).length === 0
+        ? '<div style="font-size:0.8rem; color:var(--success);">Nuk ka asnjë krizë diplomatike aktive!</div>'
+        : (state.activeCrises || []).map(function(c, idx) {
+            return '<div style="background:rgba(239,68,68,0.1); padding:10px; border:1px solid var(--danger); border-radius:8px; margin-bottom:8px;">' +
+                '<div style="font-size:0.86rem; font-weight:bold; color:var(--danger); margin-bottom:4px;">⚠️ ' + c.title + '</div>' +
+                '<div style="font-size:0.75rem; color:#fff; margin-bottom:8px;">Shteti: ' + c.partner + ' — ' + c.desc + '</div>' +
+                '<button class="action-btn btn-danger" onclick="resolveDiplomaticCrisis(' + idx + ')">📞 Përgjigju Krizës (Nis Negociatat Urgjente) ▶</button>' +
+            '</div>';
+        }).join("");
+
+    container.innerHTML = 
+        '<div class="grid-2">' +
+            '<div class="card"><div class="card-header"><div class="card-title">📜 Marrëveshjet Aktive Ndërkombëtare</div></div>' + agHtml + '</div>' +
+            '<div class="card"><div class="card-header"><div class="card-title">🚨 Krizat Diplomatike (Tensionet)</div></div>' + crHtml + '</div>' +
+        '</div>';
+}
+
+function startEUReform(idx) {
+    var ref = state.euReforms[idx];
+    if (state.budgetTotalB < 0.012) { showToast("Buxhet i pamjaftueshëm për këtë reformë!"); return; }
+    
+    state.budgetTotalB = +(state.budgetTotalB - 0.012).toFixed(3);
+    ref.progress = clamp(ref.progress + Math.floor(Math.random() * 8) + 5, 0, ref.target);
+    
+    if (ref.progress >= ref.target) {
+        state.diplomacy.EU.score = clamp(state.diplomacy.EU.score + 6, 0, 100);
+        state.approval = clamp(state.approval + 2.5, 5, 95);
+        addMediaNews("Zyrja e BE-së", "Kosova përmbush kriteret për: " + ref.title + ". Ky është një hap pozitiv drejt integrimit evropian.", "POSITIVE");
+    } else {
+        showToast("Progres i ri në " + ref.title + "! Dërguar raport në Bruksel.");
+    }
     refreshAllUI();
-    showToast("U zhvilluan konsultimet paraprake me SHBA-në dhe QUINT-in! Pozicioni negociues i Kosovës në Bruksel u forcua.");
+}
+
+function triggerDiplomaticCrisis(title, desc, partner) {
+    state.activeCrises.push({ title: title, desc: desc, partner: partner });
+    // Dënim i rëndë automatik te shteti përkatës
+    var dipKey = Object.keys(state.diplomacy).find(function(k) { return state.diplomacy[k].name.includes(partner) || state.diplomacy[k].city.includes(partner); });
+    if (dipKey) {
+        state.diplomacy[dipKey].score = clamp(state.diplomacy[dipKey].score - 15, 0, 100);
+    }
+    state.approval = clamp(state.approval - 3.5, 5, 95);
+    addMediaNews("Reuters / RTK", "Krizë Diplomatike: " + title + ". Raportet me " + partner + " arrijnë pikën më të ulët.", "CRITICAL");
+    refreshAllUI();
+}
+
+function resolveDiplomaticCrisis(idx) {
+    var c = state.activeCrises[idx];
+    var box = document.getElementById("interactiveActionModalContent");
+    
+    box.innerHTML =
+        '<div class="card-header">' +
+            '<div class="card-title">🚨 Zgjidhja e Krizës: ' + c.title + '</div>' +
+            '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
+        '</div>' +
+        '<div style="font-size:0.8rem; margin-bottom:12px; line-height:1.5;">Përfaqësuesit nga <strong>' + c.partner + '</strong> kanë bllokuar komunikimin zyrtar dhe kërkojnë sqarim urgjent lidhur me: <em>' + c.desc + '</em></div>' +
+        '<div style="display:flex; flex-direction:column; gap:8px;">' +
+            '<button class="choice-btn" onclick="executeCrisisDecision(' + idx + ', \'APOLOGIZE\')">' +
+                '<span class="choice-title">1. Kërko falje diplomatike dhe zotohu për zbatim të menjëhershëm</span>' +
+                '<span class="choice-impact">Kthen marrëdhëniet pjesërisht (+8 pikë), por ulesh para opinionit publik (-2% Mbështetje)</span>' +
+            '</button>' +
+            '<button class="choice-btn" onclick="executeCrisisDecision(' + idx + ', \'JUSTIFY\')">' +
+                '<span class="choice-title">2. Lësho Komunikatë Zyrtare për t\'u shfajësuar publikisht</span>' +
+                '<span class="choice-impact">Partneri mund të mos mjaftohet (Shans 50/50), ruan dinjitetin vendor</span>' +
+            '</button>' +
+        '</div>';
+    toggleModal("interactiveActionModal", true);
+}
+
+function executeCrisisDecision(idx, dec) {
+    var c = state.activeCrises[idx];
+    var dipKey = Object.keys(state.diplomacy).find(function(k) { return state.diplomacy[k].name.includes(c.partner) || state.diplomacy[k].city.includes(c.partner); });
+
+    if (dec === "APOLOGIZE") {
+        if (dipKey) state.diplomacy[dipKey].score = clamp(state.diplomacy[dipKey].score + 8, 0, 100);
+        state.approval = clamp(state.approval - 2.0, 5, 95);
+        addMediaNews("MPJD", "Kryeministria dërgon letër sqaruese për " + c.partner + " duke rikonfirmuar zotimet.", "NEUTRAL");
+    } else {
+        if (Math.random() > 0.5) {
+            if (dipKey) state.diplomacy[dipKey].score = clamp(state.diplomacy[dipKey].score + 5, 0, 100);
+            addMediaNews("Komunikatë Zyrtare", "Sqarimi i Qeverisë pranohet me rezerva nga " + c.partner + ".", "NEUTRAL");
+        } else {
+            state.approval = clamp(state.approval + 1.5, 5, 95);
+            addMediaNews("T7", "Përplasje e hapur! " + c.partner + " hedh poshtë arsyetimet publike të Qeverisë.", "CRITICAL");
+        }
+    }
+    
+    state.activeCrises.splice(idx, 1);
+    toggleModal("interactiveActionModal", false);
+    refreshAllUI();
+    showToast("Reaguat ndaj krizës!");
 }
 
 function openBilateralVisitModal(countryKey) {
@@ -3859,64 +3962,70 @@ function openBilateralVisitModal(countryKey) {
             '<div class="card-title">✈️ Vizitë Zyrtare Shtetërore: ' + cityTxt + ' (' + d.name + ')</div>' +
             '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
         '</div>' +
-        '<div style="font-size:0.78rem; color:var(--accent-gold); margin-bottom:8px;">Pritësi Zyrtar: <strong>' + offTxt + '</strong> • Raporti aktual: <strong>' + d.score + '/100</strong></div>' +
-        '<div class="chat-bubble chat-them"><strong>' + offTxt + ' (' + cityTxt + '):</strong> "Mirë se vini në ' + cityTxt + '. Në agjendën e takimit tonë dypalësh kemi bashkëpunimin ekonomik, sigurinë rajonale dhe mbështetjen ndërkombëtare për Kosovën. Cila është marrëveshja prioritare që kërkon delegacioni juaj sot?"</div>' +
-        '<div style="margin-bottom:10px;">' +
-            '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">Zgjidh përbërjen e delegacionit shoqërues:</label>' +
-            '<select id="visitDelegationSelect" style="width:100%;">' +
-                '<option value="ECON_DEF">Kryeministri + Ministri i Mbrojtjes dhe Ministri i Ekonomisë</option>' +
-                '<option value="DIPLO_FULL">Kryeministri + MPJD dhe Oda Ekonomike (Forum Biznesi)</option>' +
-            '</select>' +
-        '</div>' +
-        '<div style="display:flex; flex-direction:column; gap:7px;">' +
+        '<div style="font-size:0.78rem; color:var(--accent-gold); margin-bottom:8px;">Pritësi Zyrtar: <strong>' + offTxt + '</strong> • Raporti aktual: <strong>' + d.score + '/100 (' + d.status + ')</strong></div>' +
+        '<div class="chat-bubble chat-them"><strong>' + offTxt + ' (' + cityTxt + '):</strong> "Mirë se vini në ' + cityTxt + '. Në agjendën e takimit tonë dypalësh kemi bashkëpunimin ekonomik, sigurinë rajonale dhe mbështetjen ndërkombëtare për Kosovën. Jemi të gatshëm të nënshkruajmë marrëveshje, por kjo kërkon zbatim rigoroz nga Qeveria juaj."</div>' +
+        '<div style="display:flex; flex-direction:column; gap:7px; margin-top:12px;">' +
             '<button class="choice-btn" onclick="finalizeBilateralVisit(\'' + countryKey + '\', \'DEFENSE_SECURITY\')">' +
-                '<span class="choice-title">1. Nënshkruaj Marrëveshje për Mbrojtjen, Sigurinë dhe Trajnimin e FSK-së (-€10M bashkëfinancim)</span>' +
-                '<span class="choice-impact">+10 pikë marrëdhënie me ' + d.name + ', +5 Sektorët e Sigurisë & FSK, Konferencë e përbashkët</span>' +
+                '<span class="choice-title">1. Nënshkruaj Marrëveshje për Mbrojtjen dhe Trajnimin e FSK-së (-€10M)</span>' +
+                '<span class="choice-impact">Shton marrëveshjen në Inbox si Detyrë zbatimi për 4 javë (+10 pikë raporti nëse zbatohet)</span>' +
             '</button>' +
             '<button class="choice-btn" onclick="finalizeBilateralVisit(\'' + countryKey + '\', \'TRADE_INVESTMENT\')">' +
-                '<span class="choice-title">2. Nënshkruaj Memorandum për Investime Direkte, Energji dhe Tregti (+€40M grante/investime)</span>' +
-                '<span class="choice-impact">+8 pikë marrëdhënie bilaterale, +0.2% Rritje e BPV-së, +€0.04 Mld Buxhet</span>' +
-            '</button>' +
-            '<button class="choice-btn" onclick="finalizeBilateralVisit(\'' + countryKey + '\', \'DIPLOMATIC_LOBBY\')">' +
-                '<span class="choice-title">3. Kërko mbështetje politike për anëtarësim në Këshillin e Evropës dhe organizata ndërkombëtare</span>' +
-                '<span class="choice-impact">+9 pikë diplomaci, +2.0% Mbështetje publike në Kosovë (-€5M kosto protokolli)</span>' +
+                '<span class="choice-title">2. Nënshkruaj Memorandum për Investime të Huaja (FDI) dhe Energji</span>' +
+                '<span class="choice-impact">Shtohet si kërkesë zbatimi buxhetor për 6 javë (+Ekonomi nëse zbatohet)</span>' +
             '</button>' +
         '</div>';
     toggleModal("interactiveActionModal", true);
 }
 
+// FAZA 6: Zëvendësimi i pikëve automatike me krijimin e Marrëveshjeve me Afat
 function finalizeBilateralVisit(countryKey, dealType) {
     var d = state.diplomacy[countryKey];
     var cityTxt = d.city || d.name;
     var offTxt = d.official || "Homologu";
     toggleModal("interactiveActionModal", false);
 
-    var achievedText = "";
-    if (dealType === "DEFENSE_SECURITY") {
-        state.budgetTotalB = +(state.budgetTotalB - 0.010).toFixed(3);
-        d.score = clamp(d.score + 10, 10, 100);
-        state.securityNorth = clamp(state.securityNorth + 4, 10, 100);
-        achievedText = "Nënshkrimi i Marrëveshjes së Bashkëpunimit në Mbrojtje dhe Siguri në " + cityTxt + ".";
-    } else if (dealType === "TRADE_INVESTMENT") {
-        state.budgetTotalB = +(state.budgetTotalB + 0.040).toFixed(3);
-        state.gdpGrowth = +(state.gdpGrowth + 0.2).toFixed(1);
-        d.score = clamp(d.score + 8, 10, 100);
-        achievedText = "Memorandum Ekonomik dhe Investime prej €40M nga vizita në " + cityTxt + ".";
-    } else {
-        state.budgetTotalB = +(state.budgetTotalB - 0.005).toFixed(3);
-        d.score = clamp(d.score + 9, 10, 100);
-        state.approval = clamp(state.approval + 2.0, 5, 95);
-        achievedText = "Garanci për mbështetjen e anëtarësimit të Kosovës në mekanizmat euro-atlantikë.";
-    }
+    var agId = "ag_" + Date.now();
+    var agTitle = dealType === "DEFENSE_SECURITY" ? ("Marrëveshja e Sigurisë (FSK) me " + d.name) : ("Memorandumi i Investimeve (FDI) me " + d.name);
+    var dWeeks = dealType === "DEFENSE_SECURITY" ? 4 : 6;
+    var gBoost = dealType === "TRADE_INVESTMENT" ? 0.3 : 0;
+    
+    // Krijo objektin e Marrëveshjes në listë
+    state.diplomaticAgreements.push({
+        id: agId,
+        title: agTitle,
+        partner: d.name,
+        status: "PENDING", // Do të bëhet IMPLEMENTED ose BLOCKED përmes Inbox
+        deadlineWeeks: dWeeks,
+        gdpBoost: gBoost
+    });
 
-    addMediaNews("MPJD / RTK", "Përfundon vizita zyrtare në " + cityTxt + " (" + d.name + "): " + achievedText, "POSITIVE");
+    // Dërgoje në tavolinën e KM (Inbox) si kërkesë ekzekutive
+    state.pmInboxRequests.unshift({
+        id: "req_" + Date.now(),
+        status: "PENDING",
+        outcomeMsg: "",
+        senderName: offTxt + " (" + d.name + ")",
+        senderRole: "Partneri Ndërkombëtar",
+        category: "ZBATIM I MARRËVESHJES DIPLOMATIKE",
+        urgency: "E LARTË",
+        deadlineWeeks: dWeeks,
+        title: "Ratifikimi Ekzekutiv: " + agTitle,
+        desc: "Gjatë vizitës suaj në " + cityTxt + ", nënshkruat këtë dokument zyrtar. Tani kërkohet veprimi nga Qeveria ose Ministria e Financave për të alokuar mjetet teknike dhe për ta jetësuar atë.",
+        consequenceText: "Nëse afati skadon pa u zbatuar marrëveshja, do të shkaktohet Krizë Diplomatike dhe rënie e ashpër e raporteve bilaterale!",
+        isDiplomaticAgreement: true,
+        agreementId: agId,
+        options: [
+            { label: "Mirato planin e zbatimit dhe ndaj buxhetin e kërkuar (-€10M)", costB: 0.010, appDelta: 2.0, dipBonus: 10, isFavorable: true, outcome: "Marrëveshja diplomatike filloi zbatimin. Partnerët thelluan besimin te shteti i Kosovës." }
+        ]
+    });
+
+    addMediaNews("RTK / MPJD", "Përfundon vizita në " + cityTxt + ". Nënshkruhet '" + agTitle + "'; kërkohet zbatim nga Kabineti.", "POSITIVE");
     refreshAllUI();
     showMajorAnnouncement({
-        badge: "RAPORT PËRFUNDIMTAR I VIZITËS ZYRTARE — " + cityTxt.toUpperCase(),
-        title: "Takim Dypalësh me " + offTxt,
-        reason: "Vizitë shtetërore dhe konferencë e përbashkët për media në " + cityTxt + " (" + d.name + ").",
-        immediateImpact: achievedText + " Marrëdhëniet bilaterale u rritën në " + d.score + "/100.",
-        futureImpact: "Ministritë e linjës kanë marrë detyrat për zbatimin e memorandumeve të nënshkruara."
+        badge: "NËNSHKRIMI I MARRËVESHJES NË " + cityTxt.toUpperCase(),
+        title: agTitle,
+        reason: "Vizita shtetërore e Kryeministrit në " + d.name + " rezultoi me një dokument konkret obligativ.",
+        immediateImpact: "Marrëveshja u dërgua te 'Agjenda e KM (Inbox)' për zbatim ekzekutiv brenda " + dWeeks + " javëve."
     });
 }
 
@@ -4108,15 +4217,32 @@ function advanceTime(weeksCount, silentToast) {
             });
         });
 
+        // FAZA 6: Menaxhimi i skadimit të Detyrave Diplomatike në Inbox
         (state.pmInboxRequests || []).forEach(function(req) {
             if (req.status === "PENDING") {
                 req.deadlineWeeks--;
                 if (req.deadlineWeeks <= 0) {
                     req.status = "EXPIRED";
                     req.outcomeMsg = "Afati kaloi pa u marrë asnjë vendim.";
-                    state.approval = clamp(state.approval - 2.2, 5, 95);
-                    addMediaNews("Kallxo / Koha", "Skadon afati i kërkesës së " + req.senderName + " (\"" + req.title + "\") pa vendim të Kryeministrit (-2.2% Mbështetje)!", "CRITICAL");
+                    
+                    if (req.isDiplomaticAgreement) {
+                        var ag = state.diplomaticAgreements.find(function(a) { return a.id === req.agreementId; });
+                        if (ag) {
+                            ag.status = "BLOCKED";
+                            triggerDiplomaticCrisis("Skadimi i Marrëveshjes me " + ag.partner, "Afati " + ag.deadlineWeeks + "-javor për zbatimin e marrëveshjes kaloi. Partneri është tërhequr.", ag.partner);
+                        }
+                    } else {
+                        state.approval = clamp(state.approval - 2.2, 5, 95);
+                        addMediaNews("Kallxo / Koha", "Skadon afati i kërkesës së " + req.senderName + " (\"" + req.title + "\") pa vendim të Kryeministrit (-2.2% Mbështetje)!", "CRITICAL");
+                    }
                 }
+            }
+        });
+
+        // Rënia graduale e afatit të marrëveshjeve për UI
+        (state.diplomaticAgreements || []).forEach(function(a) {
+            if (a.status === "PENDING" && a.deadlineWeeks > 0) {
+                a.deadlineWeeks--;
             }
         });
 
