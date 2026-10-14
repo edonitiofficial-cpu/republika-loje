@@ -192,8 +192,9 @@
             <button class="btn-top" onclick="switchMainTab('tab-dashboard'); switchSubTab('dash', 'inbox', document.querySelectorAll('#tab-dashboard .sub-pill')[1])" id="inboxTopBtn" style="border-color:var(--accent-gold);">📥 Kërkesat (0)</button>
             <button class="btn-top" onclick="switchMainTab('tab-dashboard'); switchSubTab('dash', 'calendar', document.querySelectorAll('#tab-dashboard .sub-pill')[2])" id="calendarTopBtn">📅 Kalendari (0)</button>
             <button class="btn-top" onclick="toggleModal('saveModal', true)">💾 Ruajtjet</button>
-            <button class="next-turn-btn" onclick="advanceTime(1)">Java Tjetër ▶</button>
-            <button class="btn-top" onclick="advanceTime(4)" title="Kalo 1 Muaj">+4 Javë ⏩</button>
+            <!-- FAZA 4: Lidhja e re për paralajmërimin e kalimit të kohës -->
+            <button class="next-turn-btn" onclick="promptAdvanceTime(1)">Java Tjetër ▶</button>
+            <button class="btn-top" onclick="promptAdvanceTime(4)" title="Kalo 1 Muaj">+4 Javë ⏩</button>
         </div>
     </div>
 
@@ -268,7 +269,7 @@
 
                     <div class="card">
                         <div class="card-header">
-                            <div class="card-title">📺 Raportimi Interaktiv i Mediave (KKlikoni lajmin)</div>
+                            <div class="card-title">📺 Raportimi Interaktiv i Mediave (Kliko lajmin)</div>
                             <button class="action-btn" onclick="switchSubTab('dash', 'press', document.querySelectorAll('#tab-dashboard .sub-pill')[3])">Thirr Konferencë 🎙️</button>
                         </div>
                         <div id="mediaFeedList"></div>
