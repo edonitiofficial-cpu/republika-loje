@@ -131,6 +131,52 @@
     <div class="modal-box" id="interactiveActionModalContent"></div>
 </div>
 
+<!-- MODAL 6: SALLA E KUVENDIT (SISTEMI I ANIMUAR I VOTIMIT) -->
+<div class="modal-overlay" id="votingModal">
+    <div class="modal-box" style="max-width: 600px; text-align: center;">
+        <div class="card-header" style="justify-content: center; margin-bottom: 16px;">
+            <div class="card-title" id="votingModalTitle" style="font-size: 1.1rem; color: var(--accent-gold);">🏛️ Votimi në Kuvend</div>
+        </div>
+        <p id="votingModalDesc" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Duke numëruar votat e 120 deputetëve...</p>
+        
+        <div class="grid-2" style="gap: 10px; margin-bottom: 20px;">
+            <div class="card" style="background:#0f172a; padding: 10px; border-color: var(--success); margin-bottom: 0;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">🟢 Vota PRO</div>
+                <div id="voteCountPro" style="font-size: 1.8rem; font-weight: 900; color: var(--success);">0</div>
+            </div>
+            <div class="card" style="background:#0f172a; padding: 10px; border-color: var(--danger); margin-bottom: 0;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">🔴 KUNDËR</div>
+                <div id="voteCountKunder" style="font-size: 1.8rem; font-weight: 900; color: var(--danger);">0</div>
+            </div>
+            <div class="card" style="background:#0f172a; padding: 10px; border-color: #94a3b8; margin-bottom: 0;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">⚪ ABSTENIM</div>
+                <div id="voteCountAbstenim" style="font-size: 1.8rem; font-weight: 900; color: #94a3b8;">0</div>
+            </div>
+            <div class="card" style="background:#0f172a; padding: 10px; border-color: #475569; margin-bottom: 0;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">⚫ MUNGESË</div>
+                <div id="voteCountMungese" style="font-size: 1.8rem; font-weight: 900; color: #475569;">0</div>
+            </div>
+        </div>
+
+        <div class="prog-row" style="margin-bottom: 20px;">
+            <div class="prog-label">
+                <span>Progresi i Numërimit</span>
+                <span id="votingProgressText">0 / 120</span>
+            </div>
+            <div class="prog-track" style="height: 12px; background: rgba(255,255,255,0.05);">
+                <div id="votingProgressBar" class="prog-fill" style="width: 0%; background: var(--accent-gold); transition: width 0.1s linear;"></div>
+            </div>
+        </div>
+
+        <div id="votingModalResult" style="font-size: 0.9rem; font-weight: 700; margin-bottom: 16px; min-height: 20px;"></div>
+
+        <div style="display:flex; justify-content:center; gap: 10px;">
+            <button id="votingSkipBtn" class="action-btn btn-outline" onclick="skipVotingAnimation()">⏩ Përfundo Numërimin Menjëherë</button>
+            <button id="votingProceedBtn" class="action-btn btn-gold" onclick="finishVotingProcess()" style="display: none;">Vazhdo ▶</button>
+        </div>
+    </div>
+</div>
+
 <!-- HEADER -->
 <header>
     <div class="header-top">
@@ -222,7 +268,7 @@
 
                     <div class="card">
                         <div class="card-header">
-                            <div class="card-title">📺 Raportimi Interaktiv i Mediave (Kliko lajmin)</div>
+                            <div class="card-title">📺 Raportimi Interaktiv i Mediave (KKlikoni lajmin)</div>
                             <button class="action-btn" onclick="switchSubTab('dash', 'press', document.querySelectorAll('#tab-dashboard .sub-pill')[3])">Thirr Konferencë 🎙️</button>
                         </div>
                         <div id="mediaFeedList"></div>
