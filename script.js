@@ -1,4 +1,8 @@
 /* ============================================================================
+   REPUBLIKA: SIMULATORI POLITIK I KOSOVËS — LOGJIKA KRYESORE (v4.1)
+   ============================================================================ */
+
+/* ============================================================================
    1. BAZA E TË DHËNAVE FILLESTARE REALE & 120 DEPUTETËT E LEGJISLATURËS
    ============================================================================ */
 const FULL_ROSTER_NAMES = {
@@ -341,6 +345,10 @@ const MONTHS_SQ = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik
 
 let state = null;
 
+/* ============================================================================
+   2. FUNKSIONET E INICIALIZIMIT
+   ============================================================================ */
+
 function getInitialStateSectors() {
     return [
         { id: "sec_econ", name: "1. Ekonomia & Financat Publike", ministry: "Ministria e Financave", score: 68, problem: "Informaliteti fiskal dhe qasja në financa për prodhuesit", projectTitle: "Digjitalizimi i Arkave Fiskale & Fondi Sovran", costM: 25, weeksTotal: 8, weeksLeft: 0, active: false, competence: "QEVERI (Vendim i Mbledhjes së Qeverisë)" },
@@ -586,6 +594,7 @@ function generate120MPs(partiesObj, playerPartyKey) {
     });
     return allMps;
 }
+
 function getInitialLaws() {
     return [
         {
@@ -1995,4 +2004,1749 @@ function removeCandidateFromList(idx) {
 
 function includeReserveCandidate(rIdx) {
     var p = state.parties[state.playerParty];
-    var cand = p.reserves.splice(rIdx,
+    var cand = p.reserves.splice(rIdx, 1)[0];
+    p.candidates.push(cand);
+    p.poll = clamp(p.poll + 0.5, 2, 85);
+    refreshAllUI();
+}
+
+function holdPartyCouncilMeeting() {
+    var p = state.parties[state.playerParty];
+    p.partyDiscipline = clamp(p.partyDiscipline + 5, 40, 100);
+    p.internalCohesion = clamp(p.internalCohesion + 5, 40, 100);
+    state.mps.filter(function(m) { return m.party === state.playerParty; }).forEach(function(m) {
+        m.loyalty = clamp(m.loyalty + 5, 40, 100);
+        m.rebelRisk = m.loyalty < 82;
+    });
+    refreshAllUI();
+    showToast("Këshilli i Përgjithshëm u mblodh! Disiplina e deputetëve u forcua.");
+}
+
+function fundraisePartyDiaspora() {
+    state.parties[state.playerParty].partyFunds += 65000;
+    refreshAllUI();
+    showToast("U mblodhën €65,000 nga mërgata për fondin e partisë!");
+}
+
+function renderCoalitionNegotiations() {
+    var coalSeats = getCoalitionSeats();
+    document.getElementById("coalitionTotalBadge").textContent = coalSeats + " / 120 Deputetë (" + (coalSeats >= 61 ? "Shumicë Parlamentare ✔" : ("Mungojnë " + (61 - coalSeats) + " vota")) + ")";
+
+    var myParty = state.parties[state.playerParty];
+    var otherParties = Object.values(state.parties).filter(function(p) { return p.id !== state.playerParty; });
+
+    document.getElementById("coalitionNegotiationContainer").innerHTML =
+        '<div style="background:#0f172a; padding:12px; border-radius:8px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
+            '<div>' +
+                '<div style="font-size:0.84rem; font-weight:700;">Statusi i Qeverisë: ' + (state.governmentFormed ? ('<span style="color:var(--success);">Qeveria në detyrë (' + state.primeMinister + ')</span>') : '<span style="color:var(--warning);">Mandatari në negociata për 61 vota</span>') + '</div>' +
+                '<div style="font-size:0.75rem; color:var(--text-muted);">Partnerët aktualë: ' + state.coalitionParties.map(function(k) { return state.parties[k].short + " (" + state.parties[k].seats + ")"; }).join(" + ") + '</div>' +
+            '</div>' +
+            '<button class="action-btn btn-gold" onclick="formalizeGovernmentVote()" ' + (coalSeats < 61 ? "disabled" : "") + '>🏛️ Voto Konstituimin e Kuvendit & Qeverinë në Seancë (61+ vota)</button>' +
+        '</div>' +
+        '<div class="grid-2">' +
+            otherParties.map(function(p) {
+                var inCoal = state.coalitionParties.includes(p.id);
+                var rel = myParty.relations[p.id] || 40;
+                var ministriesHeld = state.ministries.filter(function(m) { return m.party === p.id; }).length;
+                var minDemand = p.seats >= 20 ? 4 : (p.seats >= 15 ? 3 : 2);
+                return '<div class="card" style="background:#0f172a; margin-bottom:0; border-color:' + (inCoal ? 'var(--success)' : 'var(--border)') + ';">' +
+                    '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+                        '<strong>' + p.short + ' (' + p.leader + ')</strong>' +
+                        '<span class="tag ' + p.tagClass + '">' + p.seats + ' Ulëse</span>' +
+                    '</div>' +
+                    '<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">' +
+                        'Raporti politik: <strong>' + rel + '/100</strong> • Ministri aktuale: <strong>' + ministriesHeld + '</strong><br>' +
+                        'Kërkesa fillestare e ' + p.short + ': <strong>Të paktën ' + minDemand + ' ministri + garanci programore</strong><br>' +
+                        'Vija programore: ' + p.dialogueStance +
+                    '</div>' +
+                    '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+                        (!inCoal
+                            ? '<button class="action-btn btn-gold" onclick="openCoalitionRound1(\'' + p.id + '\')">🤝 Fto ' + p.short + ' në Negociata (3 Raunde)</button>'
+                            : '<button class="action-btn btn-outline" onclick="openCoalitionRound1(\'' + p.id + '\')">⚙️ Rishiko Kushtet e Marrëveshjes</button><button class="action-btn btn-danger" onclick="removePartnerFromCoalition(\'' + p.id + '\')">✕ Prish Koalicionin</button>') +
+                    '</div>' +
+                '</div>';
+            }).join("") +
+        '</div>';
+}
+
+function openCoalitionRound1(targetPartyId) {
+    var p = state.parties[targetPartyId];
+    var rel = state.parties[state.playerParty].relations[targetPartyId] || 40;
+    var box = document.getElementById("interactiveActionModalContent");
+
+    box.innerHTML =
+        '<div class="card-header">' +
+            '<div class="card-title">🤝 Raundi 1 / 3: Ftesa Zyrtare për Takim me ' + p.name + '</div>' +
+            '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
+        '</div>' +
+        '<p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">Zgjidhni kornizën e takimit fillestar me <strong>' + p.leader + ' (' + p.seats + ' deputetë)</strong>. Marrëdhënia aktuale mes partive është <strong>' + rel + '/100</strong>.</p>' +
+        '<div class="grid-2" style="margin-bottom:12px;">' +
+            '<div>' +
+                '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">Vendi & Koha e Takimit:</label>' +
+                '<select id="negMeetingTime" style="width:100%;">' +
+                    '<option value="KUVEND_11">Selia e Kuvendit të Kosovës — Sot Ora 11:00</option>' +
+                    '<option value="PARTY_HQ">Selia e Partisë — Nesër Ora 15:00</option>' +
+                    '<option value="WORKING_DINNER">Darkë Pune Jopublike — Sonte Ora 20:00</option>' +
+                '</select>' +
+            '</div>' +
+            '<div>' +
+                '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">Qasja Hapëse e Ftesës:</label>' +
+                '<select id="negOpeningTone" style="width:100%;">' +
+                    '<option value="PARTNERSHIP">Partneritet i barabartë shtetëror dhe bashkëqeverisje</option>' +
+                    '<option value="PROGRAMMATIC">Harmonizim i programit ekonomik dhe ligjeve prioritare</option>' +
+                    '<option value="PRESIDENT_PACKAGE">Paketë e plotë: Qeveria + Kryeparlamentari + Presidenti</option>' +
+                '</select>' +
+            '</div>' +
+        '</div>' +
+        '<button class="action-btn btn-gold" onclick="proceedCoalitionRound2(\'' + targetPartyId + '\')">Dërgo Ftesën & Hyr në Raundin 2 (Ofertat Konkrete) ▶</button>';
+    toggleModal("interactiveActionModal", true);
+}
+
+function proceedCoalitionRound2(targetPartyId) {
+    var p = state.parties[targetPartyId];
+    var tone = document.getElementById("negOpeningTone") ? document.getElementById("negOpeningTone").value : "PARTNERSHIP";
+
+    if (targetPartyId === "SL" && state.playerParty === "LVV") {
+        document.getElementById("interactiveActionModalContent").innerHTML =
+            '<div class="card-header"><div class="card-title">⛔ Refuzim Politik</div></div>' +
+            '<p style="font-size:0.84rem; margin-bottom:12px;">Kryesia e LVV-së dhe Lista Serbe kanë vija të kuqe të papajtueshme për koalicion formal qeverisës.</p>' +
+            '<button class="action-btn" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll</button>';
+        return;
+    }
+
+    var minDemand = p.seats >= 20 ? 4 : (p.seats >= 15 ? 3 : 2);
+    var box = document.getElementById("interactiveActionModalContent");
+    var minsCheckHtml = state.ministries.map(function(m, idx) {
+        return '<label style="font-size:0.75rem; display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.03); padding:5px 8px; border-radius:6px; cursor:pointer;">' +
+            '<input type="checkbox" class="neg-min-check" value="' + idx + '" ' + (m.party === targetPartyId ? "checked" : "") + '>' +
+            '<span>' + m.name.replace("Ministria e ", "M. ") + '</span>' +
+        '</label>';
+    }).join("");
+
+    box.innerHTML =
+        '<div class="card-header">' +
+            '<div class="card-title">🤝 Raundi 2 / 3: Tavolina e Ofertimit dhe Kundërofertave me ' + p.short + '</div>' +
+            '<span class="tag ' + p.tagClass + '">Fuqia: ' + p.seats + ' Deputetë</span>' +
+        '</div>' +
+        '<div class="chat-bubble chat-them"><strong>' + p.leader + ' (' + p.short + '):</strong> "E pranuam ftesën tuaj për takim. Por që Kryesia jonë të votojë Qeverinë me ' + p.seats + ' deputetët tanë, ne kërkojmë të paktën <strong>' + minDemand + ' ministri</strong>, postin e Zëvendëskryeministrit ose Kryeparlamentarit, dhe garanci për vijën tonë në dialog e ekonomi. Cila është oferta juaj në tavolinë?"</div>' +
+        '<div style="background:#0f172a; padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:12px;">' +
+            '<div style="font-size:0.8rem; font-weight:700; color:var(--accent-gold); margin-bottom:8px;">1. Zgjidh sa dhe cilat Ministri ia ofron ' + p.short + '-së:</div>' +
+            '<div class="grid-2" style="max-height:175px; overflow-y:auto; gap:6px; margin-bottom:10px;">' + minsCheckHtml + '</div>' +
+            '<div style="font-size:0.8rem; font-weight:700; color:var(--accent-gold); margin-bottom:6px;">2. Pozita të Larta Kushtetuese & Programore në Paketë:</div>' +
+            '<div class="grid-2" style="gap:6px;">' +
+                '<label style="font-size:0.76rem; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="negOfferDeputyPM" checked> Ofro Postin e Zëvendëskryeministrit të Parë</label>' +
+                '<label style="font-size:0.76rem; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="negOfferSpeaker" ' + (tone === "PRESIDENT_PACKAGE" ? "checked" : "") + '> Ofro Postin e Kryetarit të Kuvendit</label>' +
+                '<label style="font-size:0.76rem; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="negOfferPresConsensus" ' + (tone === "PRESIDENT_PACKAGE" ? "checked" : "") + '> Marrëveshje për Kuorumin dhe Votat e Presidentit (80+)</label>' +
+                '<label style="font-size:0.76rem; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="negOfferProgramBudget" checked> Harmonizim i Buxhetit në Arsim, Shëndetësi & Komuna (€35M)</label>' +
+            '</div>' +
+        '</div>' +
+        '<div id="negCounterFeedbackBox" style="margin-bottom:10px;"></div>' +
+        '<div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:space-between;">' +
+            '<button class="action-btn btn-gold" onclick="evaluateCoalitionRound3(\'' + targetPartyId + '\')">Paraqit Ofertën në Tavolinë (Kalo në Raundin 3) ▶</button>' +
+            '<button class="action-btn btn-danger" onclick="toggleModal(\'interactiveActionModal\', false)">Ndërprit Negociatat</button>' +
+        '</div>';
+}
+
+function evaluateCoalitionRound3(targetPartyId) {
+    var p = state.parties[targetPartyId];
+    var myP = state.parties[state.playerParty];
+    var rel = myP.relations[targetPartyId] || 40;
+
+    var checkedMins = Array.from(document.querySelectorAll(".neg-min-check:checked")).map(function(el) { return parseInt(el.value, 10); });
+    var offerDepPM = document.getElementById("negOfferDeputyPM").checked;
+    var offerSpeaker = document.getElementById("negOfferSpeaker").checked;
+    var offerPres = document.getElementById("negOfferPresConsensus").checked;
+    var offerProg = document.getElementById("negOfferProgramBudget").checked;
+
+    var minDemand = p.seats >= 20 ? 4 : (p.seats >= 15 ? 3 : 2);
+    var offerScore = rel * 0.45 + checkedMins.length * 14 + (offerDepPM ? 10 : 0) + (offerSpeaker ? 20 : 0) + (offerPres ? 8 : 0) + (offerProg ? 12 : 0);
+    var requiredScore = p.seats >= 20 ? 82 : (p.seats >= 15 ? 74 : 62);
+    var fb = document.getElementById("negCounterFeedbackBox");
+
+    if (checkedMins.length < minDemand && !offerSpeaker) {
+        fb.innerHTML = '<div class="chat-bubble chat-them" style="border-left-color:var(--danger);"><strong>⚠️ KUNDËROFERTË NGA ' + p.leader + ' (' + p.short + '):</strong><br>"Kjo ofertë me vetëm <strong>' + checkedMins.length + ' ministri</strong> nuk përputhet me peshën tonë prej <strong>' + p.seats + ' deputetësh</strong> në Kuvend! Ne kërkojmë të paktën <strong>' + minDemand + ' ministri</strong> OSE postin e <strong>Kryetarit të Kuvendit</strong> si kompromis alternativ!"</div>';
+        return;
+    }
+
+    if (offerScore >= requiredScore) {
+        if (!state.coalitionParties.includes(targetPartyId)) state.coalitionParties.push(targetPartyId);
+        if (offerPres && !state.quorumPledgedParties.includes(targetPartyId)) state.quorumPledgedParties.push(targetPartyId);
+
+        checkedMins.forEach(function(mIdx, i) {
+            state.ministries[mIdx].party = targetPartyId;
+            var cand = p.candidates[i % p.candidates.length];
+            state.ministries[mIdx].minister = cand ? cand.name : p.leader;
+        });
+
+        if (offerSpeaker) state.speakerOfAssembly = p.candidates[0].name + " (" + p.short + ")";
+        if (offerProg) state.budgetTotalB = +(state.budgetTotalB - 0.035).toFixed(2);
+
+        myP.relations[targetPartyId] = clamp(rel + 18, 0, 100);
+        state.coalitionAgreements.push({
+            partner: targetPartyId,
+            ministriesCount: checkedMins.length,
+            deputyPM: offerDepPM,
+            speaker: offerSpeaker,
+            conditions: checkedMins.length + " Ministri" + (offerSpeaker ? " + Kryeparlamentari" : ""),
+            honored: true
+        });
+
+        toggleModal("interactiveActionModal", false);
+        addMediaNews("Klan Kosova / KOHA", "Nënshkruhet Marrëveshja e Koalicionit mes " + myP.short + " dhe " + p.short + " pas 3 raundeve!", "POSITIVE");
+        refreshAllUI();
+        showMajorAnnouncement({
+            badge: "MARRËVESHJE KOALICIONI (RAUNDI 3)",
+            title: "Arrihet Koalicioni Qeverisës: " + myP.short + " + " + p.short,
+            reason: "Pas negociatave mbi ndarjen e përgjegjësive, " + p.short + " merr " + checkedMins.length + " ministri" + (offerSpeaker ? " dhe Kryetarin e Kuvendit" : "") + ".",
+            immediateImpact: "Shumica parlamentare rritet në " + getCoalitionSeats() + " / 120 deputetë."
+        });
+    } else {
+        fb.innerHTML = '<div class="chat-bubble chat-them" style="border-left-color:var(--warning);"><strong>' + p.leader + ' (' + p.short + '):</strong> "Ende jemi pak larg marrëveshjes përfundimtare (Pikët: ' + Math.round(offerScore) + '/' + requiredScore + '). Shtoni edhe një ministri ose përfshini harmonizimin buxhetor."</div>';
+    }
+}
+
+function removePartnerFromCoalition(targetPartyId) {
+    state.coalitionParties = state.coalitionParties.filter(function(x) { return x !== targetPartyId; });
+    state.quorumPledgedParties = state.quorumPledgedParties.filter(function(x) { return x !== targetPartyId; });
+    state.ministries.forEach(function(m) {
+        if (m.party === targetPartyId) {
+            m.party = state.playerParty;
+            m.minister = "Ushtrues Detyre (" + state.parties[state.playerParty].short + ")";
+        }
+    });
+    addMediaNews("KOHA", "Prishet koalicioni me " + state.parties[targetPartyId].short + "! Qeveria mbetet me " + getCoalitionSeats() + " vota.", "CRITICAL");
+    refreshAllUI();
+}
+
+function formalizeGovernmentVote() {
+    var seats = getCoalitionSeats();
+    if (seats < 61) { showToast("Kërkohen të paktën 61 deputetë!"); return; }
+    state.assemblyConstituted = true;
+    state.governmentFormed = true;
+    state.primeMinister = state.parties[state.playerParty].leader + " (" + state.parties[state.playerParty].short + ")";
+    state.playerRole = "PRIME_MINISTER";
+    addMediaNews("RTK", "Kuvendi i Kosovës voton Qeverinë e re të drejtuar nga " + state.primeMinister + " me " + seats + " vota pro!", "POSITIVE");
+    refreshAllUI();
+    showMajorAnnouncement({
+        badge: "SEANCË KONSTITUIVE & VOTIM QEVERIE",
+        title: "Votohet Qeveria e Re e Republikës së Kosovës (" + seats + " Vota PRO)",
+        reason: "Koalicioni parlamentar (" + state.coalitionParties.join(" + ") + ") kaloi pragun kushtetues prej 61 votash.",
+        immediateImpact: state.primeMinister + " merr zyrtarisht mandatin ekzekutiv."
+    });
+}
+
+function renderAssemblySection() {
+    document.getElementById("speakerNameBadge").textContent = "Kryetar/e: " + state.speakerOfAssembly;
+
+    var grid = document.getElementById("parliamentSeats");
+    grid.innerHTML = state.mps.map(function(mp, idx) {
+        var p = state.parties[mp.party];
+        return '<div class="seat-dot ' + (mp.rebelRisk ? 'rebel' : '') + '" style="background:' + (p ? p.color : '#64748b') + ';" onclick="openMpProfile(' + idx + ')" title="#' + mp.seatNumber + ' ' + mp.name + ' (' + (p ? p.short : '') + ')"></div>';
+    }).join("");
+
+    document.getElementById("parliamentLegend").innerHTML = Object.values(state.parties).map(function(p) {
+        return '<div class="legend-item"><div class="legend-color" style="background:' + p.color + ';"></div><span>' + p.short + ': <strong>' + p.seats + '</strong></span></div>';
+    }).join("");
+
+    document.getElementById("parliamentGroupsTable").innerHTML =
+        '<table class="data-table">' +
+            '<thead><tr><th>Grupi Parlamentar / Subjekti</th><th>Kryetari / Përfaqësuesi</th><th>Ulëse</th><th>Kategoria Kushtetuese</th><th>Statusi</th></tr></thead>' +
+            '<tbody>' +
+                Object.values(state.parties).map(function(p) {
+                    var inCoal = state.coalitionParties.includes(p.id);
+                    return '<tr>' +
+                        '<td><strong>' + p.short + '</strong></td>' +
+                        '<td>' + p.leader + '</td>' +
+                        '<td><strong>' + p.seats + '</strong></td>' +
+                        '<td>' + (p.community === "GENERAL" ? "100 Ulëset e Përgjithshme (Pragu 5%)" : "20 Ulëset e Garantuara për Komunitetet") + '</td>' +
+                        '<td><span class="tag ' + (inCoal ? 'tag-min' : 'tag-sl') + '">' + (inCoal ? "Mazhorancë" : "Opozitë") + '</span></td>' +
+                    '</tr>';
+                }).join("") +
+            '</tbody>' +
+        '</table>';
+
+    renderMPsDirectory();
+    renderLawsSection();
+    renderPresidentialSection();
+    renderOppositionSection();
+}
+
+function renderMPsDirectory() {
+    var container = document.getElementById("mpsDirectoryGrid");
+    if (!container) return;
+    var partyFilter = document.getElementById("mpFilterParty") ? document.getElementById("mpFilterParty").value : "ALL";
+    var searchQ = (document.getElementById("mpSearchInput") ? document.getElementById("mpSearchInput").value : "").toLowerCase();
+
+    var filtered = state.mps.filter(function(mp) {
+        var matchP = (partyFilter === "ALL" || mp.party === partyFilter);
+        var matchS = (!searchQ || mp.name.toLowerCase().includes(searchQ) || mp.region.toLowerCase().includes(searchQ));
+        return matchP && matchS;
+    });
+
+    container.innerHTML = filtered.map(function(mp) {
+        var realIdx = mp.seatNumber - 1;
+        var p = state.parties[mp.party];
+        return '<div class="card" style="background:#0f172a; margin-bottom:0; border-color:' + (mp.promisedVoteNext ? 'var(--success)' : 'var(--border)') + ';">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+                '<strong style="font-size:0.84rem;">👤 #' + mp.seatNumber + ' ' + mp.name + '</strong>' +
+                '<span class="tag ' + p.tagClass + '">' + p.short + '</span>' +
+            '</div>' +
+            '<div style="font-size:0.73rem; color:var(--text-muted); line-height:1.5; margin-bottom:8px;">' +
+                '<div>• Statusi: <strong style="color:#fff;">' + mp.role + '</strong> (' + mp.region + ')</div>' +
+                '<div>• Besnikëria partiake: <strong>' + mp.loyalty + '%</strong> | Besimi te ju: <strong>' + (mp.trustPlayer || 60) + '/100</strong></div>' +
+                '<div>• ' + mp.stance + '</div>' +
+            '</div>' +
+            '<div style="display:flex; gap:6px;">' +
+                '<button class="action-btn" style="flex:1; justify-content:center;" onclick="openMpProfile(' + realIdx + ')">💬 Profili & Bisedo</button>' +
+                '<button class="btn-top" onclick="openScheduleMeetingModal(\'MPS_120\', \'' + mp.name.replace(/'/g, "") + '\')" title="Cakto në Kalendar">📅</button>' +
+            '</div>' +
+        '</div>';
+    }).join("");
+}
+
+function openMpProfile(mpIdx, chatStep, lastFeedback) {
+    var mp = state.mps[mpIdx];
+    var p = state.parties[mp.party];
+    var box = document.getElementById("mpModalContent");
+    var vHist = (mp.votingHistory || ["Seanca Konstituive: Pjesëmarrës"]).slice(-3).join(" • ");
+    var fbText = lastFeedback || ("Përshëndetje. Si deputet i Legjislaturës XI nga rajoni i " + mp.region + ", jam i gatshëm të diskutojmë për projektligjet në Kuvend, çështjen e Presidentit dhe prioritetet e zonës sime zgjedhore.");
+
+    box.innerHTML =
+        '<div class="card-header">' +
+            '<div class="card-title">👤 Deputeti #' + mp.seatNumber + ': ' + mp.name + ' (' + p.short + ')</div>' +
+            '<button class="btn-top" onclick="toggleModal(\'mpModal\', false)">Mbyll ✕</button>' +
+        '</div>' +
+        '<div class="grid-2" style="font-size:0.78rem; line-height:1.6; margin-bottom:10px; background:#0f172a; padding:10px; border-radius:8px;">' +
+            '<div>' +
+                '<div>• <strong>Grupi Parlamentar:</strong> <span class="tag ' + p.tagClass + '">' + p.short + '</span></div>' +
+                '<div>• <strong>Rajoni:</strong> ' + mp.region + '</div>' +
+                '<div>• <strong>Qëndrimi i modeluar:</strong> ' + mp.stance + '</div>' +
+                '<div>• <strong>Historiku i Votimeve:</strong> ' + vHist + '</div>' +
+            '</div>' +
+            '<div>' +
+                '<div>• <strong>Besnikëria Partiake:</strong> <strong>' + mp.loyalty + '%</strong></div>' +
+                '<div>• <strong>Raporti me Ju:</strong> <strong style="color:var(--accent-gold);">' + (mp.trustPlayer || 60) + '/100</strong></div>' +
+                '<div>• <strong>Prioriteti:</strong> ' + mp.ambition + '</div>' +
+            '</div>' +
+        '</div>' +
+        '<div id="mpConversationArea" style="margin-bottom:10px;">' +
+            '<div class="chat-bubble chat-them"><strong>' + mp.name + ':</strong> "' + fbText + '"</div>' +
+        '</div>' +
+        '<div style="margin-bottom:10px;">' +
+            '<div style="display:flex; gap:6px;">' +
+                '<input type="text" id="mpCustomArgument" placeholder="Shkruaj argumentin tënd personal për deputetin..." style="flex:1;">' +
+                '<button class="action-btn btn-gold" onclick="interactWithMP(' + mpIdx + ', \'CUSTOM_MSG\')">Dërgo ▶</button>' +
+            '</div>' +
+        '</div>' +
+        '<div style="display:flex; flex-direction:column; gap:6px;">' +
+            '<button class="choice-btn" onclick="interactWithMP(' + mpIdx + ', \'CONVINCE_LAW\')">' +
+                '<span class="choice-title">1. Argumento rëndësinë shtetërore të projektligjeve dhe kërko votën PRO në seancë</span>' +
+                '<span class="choice-impact">+10 Besim personal, siguron votën në votimin e radhës</span>' +
+            '</button>' +
+            '<button class="choice-btn" onclick="interactWithMP(' + mpIdx + ', \'REGIONAL_GRANT\')">' +
+                '<span class="choice-title">2. Premto amendament buxhetor prej €10M për rajonin ' + mp.region + '</span>' +
+                '<span class="choice-impact">+16 Besnikëri & Besim, garanton votën për ligje dhe President (-€10M)</span>' +
+            '</button>' +
+            '<button class="choice-btn" onclick="interactWithMP(' + mpIdx + ', \'MEDIATE_PARTY\')">' +
+                '<span class="choice-title">3. Kërko nga ' + mp.name + ' të ndërmjetësojë me kolegët e grupit parlamentar ' + p.short + '</span>' +
+                '<span class="choice-impact">Rrit raportin ndërpartiak me ' + p.short + ' (+5 pikë)</span>' +
+            '</button>' +
+        '</div>';
+    toggleModal("mpModal", true);
+}
+
+function interactWithMP(mpIdx, actionType) {
+    var mp = state.mps[mpIdx];
+    var customTxt = document.getElementById("mpCustomArgument") ? document.getElementById("mpCustomArgument").value.trim() : "";
+    var reply = "";
+
+    if (actionType === "CUSTOM_MSG" && customTxt) {
+        mp.trustPlayer = clamp((mp.trustPlayer || 60) + 8, 0, 100);
+        mp.promisedVoteNext = mp.trustPlayer >= 62;
+        reply = "E vlerësoj mesazhin tuaj të drejtpërdrejtë (\"" + customTxt + "\"). Do ta kem parasysh këtë argument në votimin e seancës së radhës!";
+    } else if (actionType === "CONVINCE_LAW") {
+        mp.trustPlayer = clamp((mp.trustPlayer || 60) + 10, 0, 100);
+        mp.loyalty = clamp(mp.loyalty + 6, 0, 100);
+        mp.rebelRisk = false;
+        mp.promisedVoteNext = true;
+        reply = "Argumentet tuaja për projektligjin janë bindëse. Mund të llogarisni në prezencën dhe votën time PRO në seancë!";
+    } else if (actionType === "REGIONAL_GRANT") {
+        state.budgetTotalB = +(state.budgetTotalB - 0.01).toFixed(2);
+        mp.trustPlayer = clamp((mp.trustPlayer || 60) + 16, 0, 100);
+        mp.loyalty = clamp(mp.loyalty + 12, 0, 100);
+        mp.rebelRisk = false;
+        mp.promisedVoteNext = true;
+        reply = "Mbështetja prej €10M për rajonin " + mp.region + " është lajm i shkëlqyer për qytetarët tanë. Keni votën time të garantuar!";
+    } else {
+        state.parties[state.playerParty].relations[mp.party] = clamp((state.parties[state.playerParty].relations[mp.party] || 50) + 5, 0, 100);
+        reply = "Do të bisedoj sot me kryetarin e grupit tonë parlamentar (" + mp.party + ") për të afruar qëndrimet tona.";
+    }
+
+    mp.meetingHistory.push(MONTHS_SQ[state.monthIndex] + " " + state.year + ": " + actionType);
+    refreshAllUI();
+    openMpProfile(mpIdx, 2, reply);
+}
+
+function renderLawsSection() {
+    var container = document.getElementById("lawsContainer");
+    container.innerHTML = state.laws.map(function(law, idx) {
+        var majLabel = law.majorityType === "INTL_80"
+            ? "2/3 e të gjithë deputetëve (80/120 vota)"
+            : (law.majorityType === "VITAL_DOUBLE" ? "Shumicë e Dyfishtë (61+ & 14/20 Komunitetet)" : "Shumicë e Thjeshtë (61+ vota)");
+        var tagCls = law.status === "PASSED" ? "tag-min" : (law.status === "FAILED" ? "tag-lvv" : "tag-pdk");
+        var tagTxt = law.status === "PASSED" ? "✔ I MIRATUAR" : (law.status === "FAILED" ? "✕ I RRËZUAR" : "NË SHQYRTIM");
+
+        return '<div class="card" style="background:#0f172a; margin-bottom:10px;">' +
+            '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px; flex-wrap:wrap;">' +
+                '<div>' +
+                    '<strong style="font-size:0.88rem;">' + law.title + '</strong>' +
+                    '<div style="font-size:0.72rem; color:var(--accent-gold);">' + law.ministry + ' • Faza: ' + (law.stage || "Në Procedurë") + ' • Kërkesa: ' + majLabel + '</div>' +
+                '</div>' +
+                '<span class="tag ' + tagCls + '">' + tagTxt + '</span>' +
+            '</div>' +
+            '<p style="font-size:0.79rem; color:var(--text-muted); margin-bottom:8px;">' + law.desc + '</p>' +
+            '<div style="font-size:0.74rem; color:#cbd5e1; margin-bottom:8px;">' +
+                'Grupet mbështetëse aktuale: <strong>' + law.supportParties.join(", ") + '</strong>' +
+                (law.lastVoteResult ? '<br>Rezultati i votimit në sallë: <strong style="color:var(--accent-gold);">' + law.lastVoteResult + '</strong>' : '') +
+            '</div>' +
+            (law.status !== "PASSED" ? '<div style="display:flex; gap:6px; flex-wrap:wrap;"><button class="action-btn btn-gold" onclick="voteLawInAssembly(' + idx + ')">🗳️ Hidhe në Votim në Seancë Plenare</button><button class="action-btn btn-outline" onclick="amendLawForOpposition(' + idx + ')">✏️ Prano Amendamentet e Komisionit (Shto LDK/PDK)</button></div>' : '') +
+        '</div>';
+    }).join("");
+}
+
+function amendLawForOpposition(lawIdx) {
+    var law = state.laws[lawIdx];
+    if (!law.supportParties.includes("LDK")) law.supportParties.push("LDK");
+    if (!law.supportParties.includes("PDK")) law.supportParties.push("PDK");
+    law.stage = "Amendamentuar me Konsensus në Komision";
+    refreshAllUI();
+    showToast("Amendamentet u pranuan! Grupet parlamentare të opozitës iu bashkuan mbështetjes së projektligjit.");
+}
+
+function voteLawInAssembly(lawIdx) {
+    var law = state.laws[lawIdx];
+    var yesVotes = 0, noVotes = 0, abstainVotes = 0, minorityYes = 0;
+
+    state.mps.forEach(function(mp) {
+        if (!mp.votingHistory) mp.votingHistory = [];
+        var partySupports = law.supportParties.includes(mp.party) || state.coalitionParties.includes(mp.party) || mp.promisedVoteNext;
+        if (partySupports) {
+            var rebellionChance = (law.id === "law_civil_code" && !mp.promisedVoteNext) ? 0.20 : (mp.rebelRisk && !mp.promisedVoteNext ? 0.10 : 0.0);
+            if (Math.random() < rebellionChance) {
+                abstainVotes++;
+                mp.votingHistory.push(law.id + ": ABSTENIM");
+            } else {
+                yesVotes++;
+                mp.votingHistory.push(law.id + ": PRO");
+                if (mp.party === "MIN_MULTI" || mp.party === "SL") minorityYes++;
+            }
+        } else {
+            noVotes++;
+            mp.votingHistory.push(law.id + ": KUNDËR");
+        }
+    });
+
+    var passed = false;
+    if (law.majorityType === "INTL_80") passed = (yesVotes >= 80);
+    else if (law.majorityType === "VITAL_DOUBLE") passed = (yesVotes >= 61 && minorityYes >= 14);
+    else passed = (yesVotes >= 61);
+
+    law.lastVoteResult = yesVotes + " PËR, " + noVotes + " KUNDËR, " + abstainVotes + " ABSTENIME" + (law.majorityType === "VITAL_DOUBLE" ? (" (Vota të komuniteteve: " + minorityYes + "/20)") : "");
+
+    if (passed) {
+        law.status = "PASSED";
+        law.stage = "I dekretuar dhe publikuar në Gazetën Zyrtare";
+        state.budgetTotalB = +(state.budgetTotalB - law.costB).toFixed(2);
+        state.approval = clamp(state.approval + law.approvalEffect, 5, 95);
+        addMediaNews("Kuvendi Live", "Miratohet \"" + law.title + "\" me " + yesVotes + " vota PËR!", "POSITIVE");
+    } else {
+        law.status = "FAILED";
+        state.approval = clamp(state.approval - 2.0, 5, 95);
+        addMediaNews("KOHA", "Dështon në Kuvend \"" + law.title + "\" (" + law.lastVoteResult + ").", "CRITICAL");
+    }
+
+    refreshAllUI();
+    showMajorAnnouncement({
+        badge: passed ? "✔ LIGJ I MIRATUAR NË KUVEND" : "✕ PROJEKTLIGJ I RRËZUAR",
+        title: law.title,
+        reason: "Kërkesa kushtetuese: " + law.requiredVotes + " vota" + (law.majorityType === "VITAL_DOUBLE" ? " + 14 vota të komuniteteve" : "") + ".",
+        statsHtml: '<div style="text-align:center; font-size:0.95rem; font-weight:800;">🟢 PËR: ' + yesVotes + ' &nbsp;|&nbsp; 🔴 KUNDËR: ' + noVotes + ' &nbsp;|&nbsp; ⚪ ABSTENIM: ' + abstainVotes + '</div>',
+        immediateImpact: passed ? ("Mbështetja publike ndryshoi me +" + law.approvalEffect + "%, efekti buxhetor u aplikua.") : "Mungesa e votave kërkon negociata me deputetët ose amendamente në komision."
+    });
+}
+
+function openExtraordinarySessionModal() {
+    var box = document.getElementById("interactiveActionModalContent");
+    var lawsOpts = state.laws.map(function(l, idx) {
+        return '<option value="' + idx + '">' + l.title + ' (' + l.status + ')</option>';
+    }).join("");
+
+    box.innerHTML =
+        '<div class="card-header">' +
+            '<div class="card-title">⚖️ Kërkesë për Thirrjen e Seancës së Jashtëzakonshme të Kuvendit</div>' +
+            '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
+        '</div>' +
+        '<div style="margin-bottom:10px;">' +
+            '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">1. Arsyeja Kushtetuese / Politike e Seancës:</label>' +
+            '<select id="extraSessReason" style="width:100%;">' +
+                '<option value="Rishqyrtimi urgjent i Projektligjeve të Bllokuara dhe Buxhetit">Rishqyrtimi urgjent i Projektligjeve të Bllokuara dhe Buxhetit</option>' +
+                '<option value="Rezoluta për Sigurinë Kombëtare dhe Situatën në Veri">Rezoluta për Sigurinë Kombëtare dhe Situatën në Veri të Vendit</option>' +
+                '<option value="Ratifikimi i Marrëveshjeve Ndërkombëtare me 80 Vota">Ratifikimi i Marrëveshjeve Ndërkombëtare me 80 Vota</option>' +
+                '<option value="Pakoja Emergjente kundër Inflacionit dhe Krizës Energjetike">Pakoja Emergjente kundër Inflacionit dhe Krizës Energjetike</option>' +
+            '</select>' +
+        '</div>' +
+        '<div style="margin-bottom:10px;">' +
+            '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">2. Projektligji ose Vendimi që futet në Rend të Ditës:</label>' +
+            '<select id="extraSessLawIdx" style="width:100%;">' +
+                '<option value="-1">Rezolutë Parlamentare e Përbashkët (Debat + Votim Rezolute)</option>' +
+                lawsOpts +
+            '</select>' +
+        '</div>' +
+        '<div style="margin-bottom:12px;">' +
+            '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">3. Argumentimi i Urgjencës para Kryesisë së Kuvendit:</label>' +
+            '<input type="text" id="extraSessObjective" value="Interes i lartë shtetëror dhe zhbllokim institucional me procedurë të përshpejtuar" style="width:100%;">' +
+        '</div>' +
+        '<button class="action-btn btn-gold" onclick="executeExtraordinarySession()">🏛️ Mblidh Kryesinë & Hap Seancën e Jashtëzakonshme ▶</button>';
+    toggleModal("interactiveActionModal", true);
+}
+
+function executeExtraordinarySession() {
+    var reason = document.getElementById("extraSessReason").value;
+    var lawIdx = parseInt(document.getElementById("extraSessLawIdx").value, 10);
+    var objText = document.getElementById("extraSessObjective").value.trim();
+
+    state.laws.forEach(function(l) { if (l.status === "FAILED") l.status = "PENDING"; });
+    toggleModal("interactiveActionModal", false);
+
+    if (lawIdx >= 0 && state.laws[lawIdx]) {
+        state.laws[lawIdx].status = "PENDING";
+        voteLawInAssembly(lawIdx);
+        return;
+    }
+
+    state.approval = clamp(state.approval + 2.2, 5, 95);
+    addMediaNews("Kuvendi Live", "Mbahet Seanca e Jashtëzakonshme e Kuvendit për: " + reason + ".", "POSITIVE");
+    refreshAllUI();
+    showMajorAnnouncement({
+        badge: "SEANCË E JASHTËZAKONSHME E KUVENDIT",
+        title: reason,
+        reason: "Objektivi i seancës: " + objText,
+        immediateImpact: "Rezoluta u miratua dhe projektligjet e rrëzuara u rikthyen në procedurë (+2.2% mbështetje)."
+    });
+}
+
+function renderPresidentialSection() {
+    var container = document.getElementById("presidentialSectionContainer");
+    var allCands = getAllPresCandidates();
+    var cand = allCands[state.presidentialCandidateId] || allCands.cand_pula;
+
+    var quorumSeats = state.quorumPledgedParties.reduce(function(a, pId) { return a + (state.parties[pId] ? state.parties[pId].seats : 0); }, 0);
+    var expectedYesSeats = state.mps.filter(function(mp) {
+        var inQuorum = state.quorumPledgedParties.includes(mp.party);
+        var acceptsCand = cand.acceptParties.includes(mp.party) || mp.promisedVoteNext;
+        return inQuorum && acceptsCand;
+    }).length;
+
+    var candOptions = Object.values(allCands).map(function(c) {
+        return '<option value="' + c.id + '" ' + (c.id === state.presidentialCandidateId ? "selected" : "") + '>' + c.name + ' — ' + c.type + '</option>';
+    }).join("");
+
+    container.innerHTML =
+        '<div class="card">' +
+            '<div class="card-header">' +
+                '<div class="card-title">🎖️ Procedura Kushtetuese për Zgjedhjen e Presidentit të Republikës (Neni 86)</div>' +
+                '<span class="tag ' + (state.presidentElected ? 'tag-min' : 'tag-lvv') + '">' +
+                    (state.presidentElected ? ("Në Detyrë: " + state.presidentName) : ("Raundi " + state.presidentialRound + " / 3 • Afati: " + state.presidentialDeadlineWeeks + " javë")) +
+                '</span>' +
+            '</div>' +
+            '<div class="grid-2" style="margin-bottom:12px;">' +
+                '<div style="background:#0f172a; padding:12px; border-radius:8px; border:1px solid var(--border);">' +
+                    '<label style="font-size:0.76rem; color:var(--accent-gold); font-weight:700; display:block; margin-bottom:6px;">1. Zgjidh ose Shto Kandidatin për President/e:</label>' +
+                    '<select style="width:100%; margin-bottom:8px;" onchange="changePresidentialCandidate(this.value)">' + candOptions + '</select>' +
+                    '<div style="font-size:0.76rem; color:var(--text-muted); margin-bottom:10px;">' +
+                        '• Pranueshmëria e kandidatit te partitë: <strong style="color:#fff;">' + cand.acceptParties.join(", ") + '</strong><br>' +
+                        '• Partitë që garantojnë Kuorumin në sallë: <strong style="color:var(--accent-gold);">' + state.quorumPledgedParties.join(", ") + ' (' + quorumSeats + ' deputetë)</strong><br>' +
+                        '• Vota PRO të parashikuara për këtë kandidat: <strong style="color:var(--success);">~' + expectedYesSeats + ' vota PRO</strong>' +
+                    '</div>' +
+                    '<div style="border-top:1px solid var(--border); padding-top:8px;">' +
+                        '<label style="font-size:0.72rem; color:var(--text-muted); display:block; margin-bottom:4px;">➕ Propozo Kandidat të Ri:</label>' +
+                        '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+                            '<input type="text" id="newPresCandName" placeholder="Emri dhe Mbiemri..." style="flex:2;">' +
+                            '<select id="newPresCandProfile" style="flex:1;">' +
+                                '<option value="CONSENSUAL">Jopartiak / Konsensual</option>' +
+                                '<option value="PARTISAN">Kandidat Politik</option>' +
+                            '</select>' +
+                            '<button class="action-btn btn-success" onclick="addCustomPresidentialCandidate()">+ Shto</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div style="background:#0f172a; padding:12px; border-radius:8px; border:1px solid var(--border);">' +
+                    '<div style="font-size:0.76rem; color:var(--accent-gold); font-weight:700; margin-bottom:8px;">2. Negocimi i Kuorumit, Mbështetjes & Votimi i Fshehtë:</div>' +
+                    '<div style="display:flex; flex-direction:column; gap:7px;">' +
+                        '<button class="action-btn btn-gold" onclick="runPresidentialVoteRound()">🗳️ Mbaj Votimin në Kuvend (Raundi ' + state.presidentialRound + ') — Shiko Ndarjen e Plotë të Votave</button>' +
+                        '<button class="action-btn btn-outline" onclick="negotiatePresidentialQuorum(\'QUORUM_ONLY\')">🤝 Negocio Marrëveshje për Kuorum me PDK / LDK (Qëndrojnë në sallë për 80+)</button>' +
+                        '<button class="action-btn btn-outline" onclick="negotiatePresidentialQuorum(\'FULL_VOTE\')">🏛️ Negocio Mbështetje me Votë PRO për Kandidatin (+Kosto politike/buxhetore)</button>' +
+                        (state.presidentElected ? '<button class="action-btn" onclick="openNewPresidentialProcedure()">🔄 Hap Procedurë të Re Presidenciale (Skenar Testimi)</button>' : '') +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+}
+
+function changePresidentialCandidate(candId) {
+    state.presidentialCandidateId = candId;
+    state.presidentialRound = 1;
+    refreshAllUI();
+}
+
+function addCustomPresidentialCandidate() {
+    var nameInput = document.getElementById("newPresCandName").value.trim();
+    var prof = document.getElementById("newPresCandProfile").value;
+    if (!nameInput) { showToast("Shkruani emrin e kandidatit!"); return; }
+    var newId = "cand_custom_" + Date.now();
+    state.customPresCandidates[newId] = {
+        id: newId,
+        name: nameInput,
+        type: prof === "CONSENSUAL" ? "Kandidat Jopartiak / Konsensual" : "Kandidat Politik",
+        acceptParties: prof === "CONSENSUAL" ? ["LVV", "PDK", "LDK", "AAK", "MIN_MULTI"] : [state.playerParty, "MIN_MULTI"],
+        popBonus: 4.0
+    };
+    state.presidentialCandidateId = newId;
+    state.presidentialRound = 1;
+    refreshAllUI();
+    showToast("Kandidati \"" + nameInput + "\" u shtua në listë!");
+}
+
+function openNewPresidentialProcedure() {
+    state.presidentElected = false;
+    state.presidentName = "Ushtrues/e Detyre — Seanca për Zgjedhjen e Presidentit";
+    state.presidentialDeadlineWeeks = 8;
+    state.presidentialRound = 1;
+    state.quorumPledgedParties = state.coalitionParties.slice();
+    refreshAllUI();
+}
+
+function negotiatePresidentialQuorum(mode) {
+    var allCands = getAllPresCandidates();
+    var cand = allCands[state.presidentialCandidateId];
+    if (mode === "QUORUM_ONLY") {
+        if (!state.quorumPledgedParties.includes("LDK")) state.quorumPledgedParties.push("LDK");
+        else if (!state.quorumPledgedParties.includes("PDK")) state.quorumPledgedParties.push("PDK");
+        refreshAllUI();
+        showToast("U arrit marrëveshja për Kuorum! Deputetët e opozitës do të qëndrojnë në sallë.");
+    } else {
+        if (!state.quorumPledgedParties.includes("PDK")) state.quorumPledgedParties.push("PDK");
+        if (!cand.acceptParties.includes("PDK")) cand.acceptParties.push("PDK");
+        if (!cand.acceptParties.includes("LDK")) cand.acceptParties.push("LDK");
+        state.budgetTotalB = +(state.budgetTotalB - 0.025).toFixed(2);
+        refreshAllUI();
+        showToast("Pas kompromisit politik, grupet parlamentare pranuan të votojnë PRO kandidatit " + cand.name + "!");
+    }
+}
+
+function runPresidentialVoteRound() {
+    var allCands = getAllPresCandidates();
+    var cand = allCands[state.presidentialCandidateId] || allCands.cand_pula;
+
+    var presentInHall = 0, absentMPs = 0, votesFor = 0, votesAgainst = 0, votesAbstain = 0;
+    var partyBreakdown = {};
+
+    state.mps.forEach(function(mp) {
+        if (!partyBreakdown[mp.party]) partyBreakdown[mp.party] = { present: 0, yes: 0, no: 0, abstain: 0, absent: 0 };
+        var partyInQuorum = state.quorumPledgedParties.includes(mp.party) || state.coalitionParties.includes(mp.party);
+        var individualPresent = partyInQuorum || mp.promisedVoteNext;
+
+        if (!individualPresent) {
+            absentMPs++;
+            partyBreakdown[mp.party].absent++;
+            return;
+        }
+        presentInHall++;
+        partyBreakdown[mp.party].present++;
+
+        var partyAcceptsCandidate = cand.acceptParties.includes(mp.party) || state.coalitionParties.includes(mp.party);
+        if (mp.promisedVoteNext || partyAcceptsCandidate) {
+            if (mp.rebelRisk && !mp.promisedVoteNext && Math.random() < 0.12) {
+                votesAbstain++;
+                partyBreakdown[mp.party].abstain++;
+            } else {
+                votesFor++;
+                partyBreakdown[mp.party].yes++;
+            }
+        } else {
+            if (mp.trustPlayer >= 72) {
+                votesFor++;
+                partyBreakdown[mp.party].yes++;
+            } else if (mp.seatNumber % 2 === 0) {
+                votesAbstain++;
+                partyBreakdown[mp.party].abstain++;
+            } else {
+                votesAgainst++;
+                partyBreakdown[mp.party].no++;
+            }
+        }
+    });
+
+    var round = state.presidentialRound;
+    var neededVotes = (round === 1 || round === 2) ? 80 : 61;
+
+    var rowsHtml = Object.entries(partyBreakdown).map(function(entry) {
+        var pk = entry[0]; var b = entry[1];
+        return '<tr><td><strong>' + pk + '</strong></td><td>' + b.present + '</td><td style="color:var(--success);">' + b.yes + '</td><td style="color:var(--danger);">' + b.no + '</td><td>' + b.abstain + '</td><td>' + b.absent + '</td></tr>';
+    }).join("");
+
+    var breakdownHtml =
+        '<div style="font-size:0.8rem; margin-bottom:8px; text-align:center;">' +
+            '<strong>Prania në Sallë (Kuorumi): ' + presentInHall + ' / 120</strong> (Munguan/Bojkotuan: ' + absentMPs + ')<br>' +
+            '🟢 <strong>Vota PRO: ' + votesFor + '</strong> &nbsp;|&nbsp; 🔴 <strong>KUNDËR: ' + votesAgainst + '</strong> &nbsp;|&nbsp; ⚪ <strong>ABSTENIM: ' + votesAbstain + '</strong>' +
+        '</div>' +
+        '<table class="data-table" style="font-size:0.73rem;">' +
+            '<thead><tr><th>Partia</th><th>Në Sallë</th><th>PRO</th><th>Kundër</th><th>Abstenim</th><th>Mungesë</th></tr></thead>' +
+            '<tbody>' + rowsHtml + '</tbody>' +
+        '</table>';
+
+    if (presentInHall < 80) {
+        addMediaNews("Betimi për Drejtësi", "Mungesë kuorumi në zgjedhjen e Presidentit: Vetëm " + presentInHall + " deputetë morën pjesë në votim!", "CRITICAL");
+        showMajorAnnouncement({
+            badge: "RAUNDI " + round + " — MUNGESË KUORUMI (<80)",
+            title: "Votimi i Pavlefshëm: Vetëm " + presentInHall + " Deputetë në Kutinë e Votimit",
+            reason: "Sipas Kushtetutës së Kosovës, pa pjesëmarrjen e të paktën 80 deputetëve në votim nuk plotësohet kuorumi.",
+            statsHtml: breakdownHtml,
+            immediateImpact: "Negocioni marrëveshje për kuorum me partitë opozitare."
+        });
+        return;
+    }
+
+    if (votesFor >= neededVotes) {
+        state.presidentElected = true;
+        state.presidentName = cand.name;
+        state.presidentialRound = 1;
+        state.approval = clamp(state.approval + cand.popBonus, 5, 95);
+        addMediaNews("RTK", "Kuvendi zgjedh " + cand.name + " President/e të Republikës së Kosovës me " + votesFor + " vota PRO në Raundin " + round + "!", "POSITIVE");
+        refreshAllUI();
+        showMajorAnnouncement({
+            badge: "✔ U ZGJODH PRESIDENTI/JA (RAUNDI " + round + ")",
+            title: cand.name + " Zgjidhet President/e e Republikës së Kosovës",
+            reason: "Me kuorum prej " + presentInHall + " deputetësh në sallë, kandidati mori " + votesFor + " vota PRO.",
+            statsHtml: breakdownHtml,
+            immediateImpact: "Institucionet janë plotësisht të konstituuara (+" + cand.popBonus + "% mbështetje)."
+        });
+    } else {
+        if (round < 3) {
+            state.presidentialRound++;
+            refreshAllUI();
+            showMajorAnnouncement({
+                badge: "RAUNDI " + round + " DËSHTOI — KALOJMË NË RAUNDIN " + state.presidentialRound,
+                title: cand.name + " mori " + votesFor + " vota PRO (Kërkoheshin " + neededVotes + ")",
+                reason: "Në sallë ishin " + presentInHall + " deputetë për kuorum, por " + (votesAbstain + votesAgainst) + " abstenuan ose votuan kundër.",
+                statsHtml: breakdownHtml,
+                immediateImpact: state.presidentialRound === 3 ? "Në Raundin III mjaftojnë 61 vota PRO, me kusht që 80 deputetë të marrin pjesë në votim!" : "Kuvendi kalon në Raundin II."
+            });
+        } else {
+            addMediaNews("KOHA", "Dështon zgjedhja e Presidentit edhe në Raundin III (" + votesFor + " vota)! Kuvendi shpërndahet!", "CRITICAL");
+            triggerSnapElection("Dështimi i zgjedhjes së Presidentit në 3 raunde (Neni 86 i Kushtetutës)");
+        }
+    }
+}
+
+function renderOppositionSection() {
+    var oppSeats = 120 - getCoalitionSeats();
+    document.getElementById("oppositionSectionContainer").innerHTML =
+        '<div class="card">' +
+            '<div class="card-header">' +
+                '<div class="card-title">⚡ Veprimtaria e Opozitës, Interpelancat & Mocioni i Mosbesimit (Neni 100)</div>' +
+                '<span class="tag tag-pdk">Vota të Opozitës: ' + oppSeats + ' / 120</span>' +
+            '</div>' +
+            '<div class="grid-2">' +
+                '<div class="card" style="background:#0f172a; margin-bottom:0;">' +
+                    '<h4 style="font-size:0.85rem; margin-bottom:8px; color:var(--accent-gold);">Mjetet e Kontrollit Parlamentar</h4>' +
+                    '<button class="choice-btn" onclick="runParliamentaryInterpellation()">' +
+                        '<span class="choice-title">Thirr Interpelancë Parlamentare për Ekzekutivin</span>' +
+                        '<span class="choice-impact">Debat i drejtpërdrejtë në Kuvend mbi punën e ministrive dhe buxhetin</span>' +
+                    '</button>' +
+                    '<button class="choice-btn" onclick="organizePublicProtest()">' +
+                        '<span class="choice-title">Mobilizo Protestë Qytetare / Tubim në Sheshin Skënderbeu</span>' +
+                        '<span class="choice-impact">Ndikon në sondazhet e partive dhe presionin publik</span>' +
+                    '</button>' +
+                '</div>' +
+                '<div class="card" style="background:#0f172a; margin-bottom:0;">' +
+                    '<h4 style="font-size:0.85rem; margin-bottom:8px; color:var(--danger);">Mocioni i Mosbesimit ndaj Qeverisë</h4>' +
+                    '<button class="action-btn btn-danger" onclick="voteNoConfidenceMotion()">🗳️ Procedo Votimin e Mocionit të Mosbesimit në Kuvend</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+}
+
+function runParliamentaryInterpellation() {
+    state.approval = clamp(state.approval + 1.2, 5, 95);
+    addMediaNews("Kuvendi Live", "Seancë maratonë me interpelanca parlamentare mes Kryeministrit dhe deputetëve të opozitës.", "NEUTRAL");
+    refreshAllUI();
+    showToast("Interpelanca parlamentare u zhvillua në Kuvend!");
+}
+
+function organizePublicProtest() {
+    var p = state.parties[state.playerParty];
+    p.poll = clamp(p.poll + 1.4, 2, 85);
+    addMediaNews("T7", "Tubim masiv në Sheshin e Prishtinës i organizuar nga " + p.short + ".", "NEUTRAL");
+    refreshAllUI();
+    showToast("Tubimi në Prishtinë rriti mbështetjen e " + p.short + " në sondazhe me +1.4%!");
+}
+
+function voteNoConfidenceMotion() {
+    var oppBase = 120 - getCoalitionSeats();
+    var rebels = state.mps.filter(function(m) { return state.coalitionParties.includes(m.party) && m.rebelRisk; }).length;
+    var motionVotes = oppBase + Math.floor(rebels * 0.5);
+
+    if (motionVotes >= 61) {
+        addMediaNews("KOHA", "Bie Qeveria! Mocioni i mosbesimit miratohet me " + motionVotes + " vota pro!", "CRITICAL");
+        triggerSnapElection("Miratimi i Mocionit të Mosbesimit me " + motionVotes + " vota");
+    } else {
+        state.approval = clamp(state.approval + 2.5, 5, 95);
+        addMediaNews("RTK", "Dështon mocioni i mosbesimit në Kuvend: Vetëm " + motionVotes + " vota pro.", "POSITIVE");
+        refreshAllUI();
+        showMajorAnnouncement({
+            badge: "MOCION MOSBESIMI I RRËZUAR",
+            title: "Qeveria i Mbijeton Mocionit (" + motionVotes + " PËR / " + (120 - motionVotes) + " KUNDËR)",
+            reason: "Opozita nuk arriti të sigurojë 61 vota për rrëzimin e kabinetit qeveritar.",
+            immediateImpact: "Qeveria forcon pozicionin e saj politik (+2.5% mbështetje)."
+        });
+    }
+}
+
+function renderGovernmentSection() {
+    document.getElementById("ministriesGrid").innerHTML = state.ministries.map(function(m, idx) {
+        var p = state.parties[m.party] || state.parties.LVV;
+        return '<div class="card" style="background:#0f172a; margin-bottom:0;">' +
+            '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px; margin-bottom:6px;">' +
+                '<strong style="font-size:0.83rem;">' + m.name + '</strong>' +
+                '<span class="tag ' + p.tagClass + '">' + p.short + '</span>' +
+            '</div>' +
+            '<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; line-height:1.5;">' +
+                '• Ministër/e: <strong style="color:#fff;">' + m.minister + '</strong><br>' +
+                '• Kompetenca: <strong>' + m.competence + '/100</strong> • Besnikëria: <strong>' + m.loyalty + '%</strong><br>' +
+                '• Dosja aktuale: <span style="color:var(--accent-gold);">' + (m.currentIssue || "Zbatimi i planit të punës") + '</span>' +
+            '</div>' +
+            '<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">' +
+                '<span style="font-size:0.73rem;">Buxheti: <strong>€' + m.budget + 'M</strong></span>' +
+                '<input type="range" min="30" max="950" step="5" value="' + m.budget + '" style="flex:1;" onchange="adjustMinistryBudget(' + idx + ', this.value)">' +
+            '</div>' +
+            '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+                '<button class="action-btn btn-gold" onclick="openMinisterOneOnOneModal(' + idx + ')">🤝 Thirr Ministrin në Takim Pune</button>' +
+                '<button class="btn-top" onclick="reshuffleMinister(' + idx + ', \'EXPERT\')">Emëro Ekspert</button>' +
+                '<button class="btn-top" onclick="reshuffleMinister(' + idx + ', \'PARTY\')">Kuadër Partie</button>' +
+            '</div>' +
+        '</div>';
+    }).join("");
+
+    renderStateSectorsGrid();
+
+    document.getElementById("cabinetAgendaContainer").innerHTML = state.cabinetAgenda.map(function(item, idx) {
+        var costM = (item.costB * 1000).toFixed(0);
+        return '<div class="card" style="background:#0f172a; margin-bottom:10px;">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;">' +
+                '<div>' +
+                    '<div style="font-size:0.88rem; font-weight:700;">Pika #' + (idx + 1) + ': ' + item.title + '</div>' +
+                    '<div style="font-size:0.74rem; color:var(--accent-gold);">Propozues: ' + (item.ministerName || item.ministry) + ' (' + item.ministry + ') • Kosto: €' + costM + 'M</div>' +
+                '</div>' +
+                (!item.done ? '<button class="action-btn btn-gold" onclick="openCabinetDebateModal(' + idx + ')">🗂️ Hap Diskutimin në Kabinet ▶</button>' : '<span class="tag tag-min">✔ Vendim i Miratuar në Procesverbal</span>') +
+            '</div>' +
+            '<div style="font-size:0.77rem; color:var(--text-muted);">' + item.note + '</div>' +
+        '</div>';
+    }).join("");
+
+    document.getElementById("macroEconomyContainer").innerHTML =
+        '<div class="card">' +
+            '<div class="card-header"><div class="card-title">💶 Bilanci Makroekonomik dhe Politika Fiskale e Republikës së Kosovës</div></div>' +
+            '<div class="grid-3" style="margin-bottom:14px;">' +
+                '<div class="card" style="background:#0f172a; margin-bottom:0;">' +
+                    '<span class="stat-label">Buxheti i Përgjithshëm</span>' +
+                    '<div style="font-size:1.1rem; font-weight:800; color:var(--accent-gold);">€' + state.budgetTotalB.toFixed(2) + ' Miliardë</div>' +
+                    '<small style="color:var(--text-muted);">Të hyrat nga ATK & Dogana: €' + state.taxRevenueB.toFixed(2) + ' Mld</small>' +
+                '</div>' +
+                '<div class="card" style="background:#0f172a; margin-bottom:0;">' +
+                    '<span class="stat-label">Rritja e BPV & Inflacioni</span>' +
+                    '<div style="font-size:1.1rem; font-weight:800; color:var(--success);">+' + state.gdpGrowth + '% BPV | ' + state.inflation + '% Inflacion</div>' +
+                    '<small style="color:var(--text-muted);">Papunësia e regjistruar: ' + state.unemployment + '%</small>' +
+                '</div>' +
+                '<div class="card" style="background:#0f172a; margin-bottom:0;">' +
+                    '<span class="stat-label">Remitancat & Borxhi Publik</span>' +
+                    '<div style="font-size:1.1rem; font-weight:800; color:var(--ldk);">€' + state.remittancesB + ' Mld Remitanca</div>' +
+                    '<small style="color:var(--text-muted);">Borxhi Publik: ' + state.publicDebtPct + '% e BPV-së</small>' +
+                '</div>' +
+            '</div>' +
+            '<div class="grid-2">' +
+                '<button class="choice-btn" onclick="applyFiscalPolicy(\'DIGITAL_ATK\')">' +
+                    '<span class="choice-title">Digjitalizo ATK-në dhe Doganat kundër Informalitetit</span>' +
+                    '<span class="choice-impact">+€0.12 Mld të hyra buxhetore pa rritur normat tatimore</span>' +
+                '</button>' +
+                '<button class="choice-btn" onclick="applyFiscalPolicy(\'LOWER_VAT_FOOD\')">' +
+                    '<span class="choice-title">Ul TVSH-në në 8% për Shportën Ushqimore dhe Energjinë</span>' +
+                    '<span class="choice-impact">-0.6% Inflacion, +3.5% Popullaritet, -€0.07 Mld të hyra</span>' +
+                '</button>' +
+            '</div>' +
+        '</div>';
+}
+
+function openMinisterOneOnOneModal(minIdx) {
+    var m = state.ministries[minIdx];
+    var box = document.getElementById("interactiveActionModalContent");
+    box.innerHTML =
+        '<div class="card-header">' +
+            '<div class="card-title">💼 Takim Pune në Kryeministri: ' + m.minister + ' (' + m.name + ')</div>' +
+            '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
+        '</div>' +
+        '<div class="chat-bubble chat-them"><strong>Ministri/ja ' + m.minister + ':</strong> "Z. Kryeministër, sfida kryesore në dikasterin tonë aktualisht është: <strong>' + (m.currentIssue || "realizimi i investimeve kapitale") + '</strong>. Kemi përgatitur tri opsione veprimi dhe presim udhëzimin tuaj."</div>' +
+        '<div style="display:flex; flex-direction:column; gap:7px; margin-top:10px;">' +
+            '<button class="choice-btn" onclick="resolveMinisterMeeting(' + minIdx + ', \'EXTRA_BUDGET\')">' +
+                '<span class="choice-title">1. Aprovo €15M buxhet shtesë për zgjidhje të menjëhershme dhe përshpejtim të punëve</span>' +
+                '<span class="choice-impact">+6 Kompetencë & Besnikëri e ministrit, +1.8% Mbështetje publike (-€15M)</span>' +
+            '</button>' +
+            '<button class="choice-btn" onclick="resolveMinisterMeeting(' + minIdx + ', \'REPLACE_CONTRACTOR\')">' +
+                '<span class="choice-title">2. Kërko auditim të brendshëm, zëvendësim të operatorëve të vonuar dhe raport javor</span>' +
+                '<span class="choice-impact">Ul rrezikun e skandalit në ministri (-8% rrezik), +4 Kompetencë, pa kosto shtesë</span>' +
+            '</button>' +
+            '<button class="choice-btn" onclick="resolveMinisterMeeting(' + minIdx + ', \'SEND_TO_CABINET\')">' +
+                '<span class="choice-title">3. Fute si pikë prioritare në Mbledhjen e ardhshme të Qeverisë për vendim kolektiv</span>' +
+                '<span class="choice-impact">Shtohet në rendin e ditës të Qeverisë</span>' +
+            '</button>' +
+        '</div>';
+    toggleModal("interactiveActionModal", true);
+}
+
+function resolveMinisterMeeting(minIdx, choice) {
+    var m = state.ministries[minIdx];
+    toggleModal("interactiveActionModal", false);
+    if (choice === "EXTRA_BUDGET") {
+        m.budget += 15;
+        state.budgetTotalB = +(state.budgetTotalB - 0.015).toFixed(3);
+        m.competence = clamp(m.competence + 6, 40, 100);
+        m.loyalty = clamp(m.loyalty + 6, 40, 100);
+        state.approval = clamp(state.approval + 1.8, 5, 95);
+        addMediaNews("Kryeministria", "Kryeministri zhvillon takim pune me " + m.minister + "; miratohen mjete shtesë për \"" + m.currentIssue + "\".", "POSITIVE");
+    } else if (choice === "REPLACE_CONTRACTOR") {
+        m.risk = Math.max(2, m.risk - 8);
+        m.competence = clamp(m.competence + 4, 40, 100);
+        addMediaNews("Kallxo.com", "Auditim dhe masa të reja menaxheriale në " + m.name + " pas takimit me Kryeministrin.", "POSITIVE");
+    } else {
+        state.cabinetAgenda.push({
+            id: "cab_dyn_" + Date.now(),
+            title: "Propozim-Vendim nga " + m.name + ": " + m.currentIssue,
+            ministry: m.name,
+            ministerName: m.minister,
+            costB: 0.015,
+            approvalGain: 2.2,
+            done: false,
+            note: "E përcjellë nga takimi dypalësh me Kryeministrin."
+        });
+    }
+    refreshAllUI();
+    showToast("Takimi me " + m.minister + " përfundoi me detyra dhe afate konkrete!");
+}
+
+function openInternalGovMeetingModal(mode) {
+    var box = document.getElementById("interactiveActionModalContent");
+    var isDep = mode === "DEPUTY_PMS";
+    box.innerHTML =
+        '<div class="card-header">' +
+            '<div class="card-title">' + (isDep ? "🤝 Takim Koordinues me Zëvendëskryeministrat (Konjufca, Gërvalla, Redžepi)" : "⚡ Mbledhje e Grupit Ndërministror të Punës (Task-Forca Shtetërore)") + '</div>' +
+            '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
+        '</div>' +
+        '<div class="chat-bubble chat-them"><strong>' + (isDep ? "Zëvendëskryeministrat e Qeverisë" : "Koordinatori i Grupit Ndërministror") + ':</strong> "Kemi harmonizuar raportet e ministrive. Ku dëshironi ta përqendrojmë fokusin kryesor të ekzekutivit gjatë këtij muaji?"</div>' +
+        '<div style="display:flex; flex-direction:column; gap:7px; margin-top:10px;">' +
+            '<button class="choice-btn" onclick="resolveInternalGroupMeeting(\'EXECUTION_SPEED\')">' +
+                '<span class="choice-title">1. Përshpejtim i të gjitha projekteve kapitale dhe sektorëve shtetërorë aktivë</span>' +
+                '<span class="choice-impact">Përparon me +15% progresin në sektorët shtetërorë aktivë, +1.5% Mbështetje</span>' +
+            '</button>' +
+            '<button class="choice-btn" onclick="resolveInternalGroupMeeting(\'COALITION_HARMONY\')">' +
+                '<span class="choice-title">2. Koordinim me grupet parlamentare për kalimin e ligjeve në Kuvend</span>' +
+                '<span class="choice-impact">+6 Disiplinë parlamentare dhe +6 raport me partnerët e koalicionit</span>' +
+            '</button>' +
+        '</div>';
+    toggleModal("interactiveActionModal", true);
+}
+
+function resolveInternalGroupMeeting(code) {
+    toggleModal("interactiveActionModal", false);
+    if (code === "EXECUTION_SPEED") {
+        (state.stateSectors || []).forEach(function(s) {
+            if (s.active && s.weeksLeft > 0) s.weeksLeft = Math.max(1, s.weeksLeft - 1);
+        });
+        state.approval = clamp(state.approval + 1.5, 5, 95);
+    } else {
+        state.parties[state.playerParty].partyDiscipline = clamp(state.parties[state.playerParty].partyDiscipline + 6, 40, 100);
+        state.parties[state.playerParty].relations.MIN_MULTI = clamp((state.parties[state.playerParty].relations.MIN_MULTI || 75) + 6, 0, 100);
+    }
+    refreshAllUI();
+    showToast("Udhëzimet e takimit ndërministror u dërguan për zbatim në të gjitha ministritë!");
+}
+
+function renderStateSectorsGrid() {
+    var container = document.getElementById("stateSectorsGrid");
+    if (!container) return;
+    var sectors = state.stateSectors || [];
+
+    container.innerHTML = sectors.map(function(sec, idx) {
+        var progPct = sec.active ? Math.round(((sec.weeksTotal - sec.weeksLeft) / sec.weeksTotal) * 100) : 0;
+        return '<div class="card" style="background:#0f172a; margin-bottom:0; border-color:' + (sec.active ? 'var(--accent-gold)' : 'var(--border)') + ';">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+                '<strong style="font-size:0.83rem;">' + sec.name + '</strong>' +
+                '<span class="tag ' + (sec.score >= 75 ? 'tag-min' : 'tag-pdk') + '">Treguesi: ' + sec.score + '/100</span>' +
+            '</div>' +
+            '<div style="font-size:0.73rem; color:var(--text-muted); margin-bottom:6px; line-height:1.45;">' +
+                '• Institucioni: <strong style="color:#fff;">' + sec.ministry + '</strong><br>' +
+                '• Kompetenca: <span style="color:var(--accent-gold);">' + sec.competence + '</span><br>' +
+                '• Problemi: ' + sec.problem +
+            '</div>' +
+            '<div class="prog-row" style="margin-bottom:8px;">' +
+                '<div class="prog-label"><span>Gjendja e Sektorit</span><span>' + sec.score + '%</span></div>' +
+                '<div class="prog-track"><div class="prog-fill" style="width:' + sec.score + '%; background:var(--success);"></div></div>' +
+            '</div>' +
+            (sec.active
+                ? '<div style="background:rgba(245,158,11,0.12); padding:6px 8px; border-radius:6px; font-size:0.73rem; margin-bottom:6px;">🏗️ <strong>Në Zbatim:</strong> ' + sec.projectTitle + ' (Edhe ' + sec.weeksLeft + ' javë • ' + progPct + '%)</div>'
+                : '<button class="action-btn" style="width:100%; justify-content:center;" onclick="launchStateSectorProject(' + idx + ')">🚀 Nis Reformën: ' + sec.projectTitle + ' (-€' + sec.costM + 'M • ' + sec.weeksTotal + 'j)</button>') +
+        '</div>';
+    }).join("");
+}
+
+function launchStateSectorProject(secIdx) {
+    var sec = state.stateSectors[secIdx];
+    if (!sec || sec.active) return;
+
+    if (sec.competence.includes("KUVENDI") && getCoalitionSeats() < 61) {
+        showToast("Ky sektor kërkon miratim ligjor/buxhetor në Kuvend (61+ vota)! Siguro shumicën fillimisht.");
+        return;
+    }
+
+    state.budgetTotalB = +(state.budgetTotalB - (sec.costM / 1000)).toFixed(3);
+    sec.active = true;
+    sec.weeksLeft = sec.weeksTotal;
+    addMediaNews("Ekonomia Online", "Nis projekti shtetëror \"" + sec.projectTitle + "\" në sektorin \"" + sec.name + "\" (€" + sec.costM + "M, afati " + sec.weeksTotal + " javë).", "POSITIVE");
+    refreshAllUI();
+    showToast("Projekti në \"" + sec.name + "\" nisi zbatimin! Rezultatet do të zhvillohen përgjatë " + sec.weeksTotal + " javëve.");
+}
+
+function openCabinetDebateModal(idx) {
+    var item = state.cabinetAgenda[idx];
+    if (!item) return;
+    var box = document.getElementById("interactiveActionModalContent");
+    var fullM = (item.costB * 1000).toFixed(0);
+    var modM = (item.costB * 700).toFixed(0);
+    var modGain = (item.approvalGain * 0.7).toFixed(1);
+
+    box.innerHTML =
+        '<div class="card-header">' +
+            '<div class="card-title">🗂️ Mbledhja e Qeverisë — Shqyrtimi i Pikës #' + (idx + 1) + '</div>' +
+            '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
+        '</div>' +
+        '<h3 style="font-size:0.96rem; margin-bottom:10px; color:var(--accent-gold);">' + item.title + '</h3>' +
+        '<div class="chat-bubble chat-them"><strong>🗣️ Propozimi i Ministrit (' + (item.ministerName || item.ministry) + '):</strong><br>"' + (item.ministerArgument || item.note) + ' Kërkojmë miratimin e plotë të buxhetit prej €' + fullM + ' Milionë."</div>' +
+        '<div class="chat-bubble chat-them" style="border-left-color:var(--warning);"><strong>⚖️ Vërejtja e Ministrisë së Financave / Kabinetit:</strong><br>"' + (item.financeObjection || "Duhet të kujdesemi për disiplinën buxhetore dhe afatet e prokurimit.") + '"</div>' +
+        '<div style="margin-top:12px; display:flex; flex-direction:column; gap:7px;">' +
+            '<button class="choice-btn" onclick="resolveCabinetDecision(' + idx + ', \'FULL_APPROVE\')">' +
+                '<span class="choice-title">1. Mirato propozimin e plotë me buxhetin e kërkuar (-€' + fullM + 'M)</span>' +
+                '<span class="choice-impact">+' + item.approvalGain + '% Mbështetje publike, kënaqësi e lartë në ministri</span>' +
+            '</button>' +
+            '<button class="choice-btn" onclick="resolveCabinetDecision(' + idx + ', \'MODIFIED_BUDGET\')">' +
+                '<span class="choice-title">2. Mirato me rishikim fiskal (Kurse 30% të kostos: -€' + modM + 'M)</span>' +
+                '<span class="choice-impact">+' + modGain + '% Mbështetje publike, disiplinë më e lartë buxhetore</span>' +
+            '</button>' +
+            '<button class="choice-btn" onclick="resolveCabinetDecision(' + idx + ', \'POSTPONE\')">' +
+                '<span class="choice-title">3. Shtyj vendimin për mbledhjen e ardhshme</span>' +
+                '<span class="choice-impact">Nuk shpenzon buxhet tani; pika mbetet e hapur</span>' +
+            '</button>' +
+        '</div>';
+    toggleModal("interactiveActionModal", true);
+}
+
+function resolveCabinetDecision(idx, mode) {
+    var item = state.cabinetAgenda[idx];
+    toggleModal("interactiveActionModal", false);
+    if (mode === "POSTPONE") { showToast("Pika u shty!"); return; }
+    item.done = true;
+    var actualCost = mode === "MODIFIED_BUDGET" ? +(item.costB * 0.7).toFixed(3) : item.costB;
+    var actualGain = mode === "MODIFIED_BUDGET" ? +(item.approvalGain * 0.7).toFixed(1) : item.approvalGain;
+
+    state.budgetTotalB = +(state.budgetTotalB - actualCost).toFixed(2);
+    state.approval = clamp(state.approval + actualGain, 5, 95);
+    addMediaNews("Kryeministria", "Procesverbali i Qeverisë: Miratohet \"" + item.title + "\" me kosto €" + (actualCost * 1000).toFixed(0) + "M.", "POSITIVE");
+    refreshAllUI();
+    showMajorAnnouncement({
+        badge: "VENDIM I MBLEDHJES SË QEVERISË",
+        title: item.title,
+        reason: "Vendim i miratuar në kabinet.",
+        immediateImpact: "Buxheti i alokuar: €" + (actualCost * 1000).toFixed(0) + "M | Mbështetja publike: +" + actualGain + "%."
+    });
+}
+
+function adjustMinistryBudget(idx, newVal) {
+    var m = state.ministries[idx];
+    var diffB = (parseInt(newVal, 10) - m.budget) / 1000;
+    m.budget = parseInt(newVal, 10);
+    state.budgetTotalB = +(state.budgetTotalB - diffB).toFixed(2);
+    refreshAllUI();
+}
+
+function reshuffleMinister(idx, mode) {
+    var m = state.ministries[idx];
+    var prevParty = m.party;
+    if (prevParty !== state.playerParty && state.coalitionParties.includes(prevParty)) {
+        state.parties[state.playerParty].relations[prevParty] = clamp((state.parties[state.playerParty].relations[prevParty] || 60) - 20, 0, 100);
+        addMediaNews("Gazeta Express", "Tension në koalicion pas shkarkimit të ministrit të " + state.parties[prevParty].short + " në " + m.name + "!", "CRITICAL");
+    }
+    if (mode === "EXPERT") {
+        m.minister = "Dr. Ekspert Jopartiak"; m.competence = 92; m.risk = 6;
+        state.approval = clamp(state.approval + 1.5, 5, 95);
+    } else {
+        var myP = state.parties[state.playerParty];
+        var randomCand = myP.candidates[idx % myP.candidates.length];
+        m.minister = randomCand ? randomCand.name : myP.leader;
+        m.party = state.playerParty; m.competence = 85;
+    }
+    refreshAllUI();
+    showToast("U emërua " + m.minister + " në krye të " + m.name + "!");
+}
+
+function applyFiscalPolicy(code) {
+    if (code === "DIGITAL_ATK") {
+        state.taxRevenueB = +(state.taxRevenueB + 0.12).toFixed(2);
+        state.budgetTotalB = +(state.budgetTotalB + 0.12).toFixed(2);
+        showToast("Digjitalizimi i ATK-së rriti inkasimin buxhetor me +€120 Milionë!");
+    } else {
+        state.inflation = +(Math.max(1.0, state.inflation - 0.6)).toFixed(1);
+        state.budgetTotalB = +(state.budgetTotalB - 0.07).toFixed(2);
+        state.approval = clamp(state.approval + 3.5, 5, 95);
+        showToast("TVSH për shportën bazë u ul!");
+    }
+    refreshAllUI();
+}
+
+function renderElectionsSection() {
+    var myP = state.parties[state.playerParty];
+    document.getElementById("campaignCenterContainer").innerHTML =
+        '<div class="grid-2">' +
+            '<div class="card">' +
+                '<div class="card-header"><div class="card-title">📢 Aktivitetet e Fushatës Zgjedhore</div><span class="tag tag-gold">Fondi i Partisë: €' + myP.partyFunds.toLocaleString() + '</span></div>' +
+                '<button class="choice-btn" onclick="runCampaignAction(\'SOCIAL_MEDIA\', 18000)"><span class="choice-title">📱 Fushatë Digjitale në Facebook, Instagram & TikTok (-€18,000)</span><span class="choice-impact">+1.1% në sondazhe tek të rinjtë</span></button>' +
+                '<button class="choice-btn" onclick="runCampaignAction(\'DIASPORA_RALLY\', 35000)"><span class="choice-title">✈️ Tubime me Mërgatën në Zürich, München dhe Stuttgart (-€35,000)</span><span class="choice-impact">+1.8% në votat e diasporës</span></button>' +
+            '</div>' +
+            '<div class="card">' +
+                '<div class="card-header"><div class="card-title">📺 Debat Televiziv Prime-Time</div></div>' +
+                '<button class="choice-btn" onclick="participateTvDebate(\'ECONOMY_NUMBERS\')"><span class="choice-title">Fokuso debatin te rritja ekonomike, pagat dhe investimet kapitale</span><span class="choice-impact">+1.6% në sondazhe</span></button>' +
+                '<button class="choice-btn" onclick="participateTvDebate(\'SOVEREIGNTY_LAW\')"><span class="choice-title">Fokuso debatin te sovraniteti në veri, FSK-ja dhe lufta kundër korrupsionit</span><span class="choice-impact">+1.8% në sondazhe</span></button>' +
+            '</div>' +
+        '</div>';
+
+    renderMunicipalities();
+
+    document.getElementById("cecElectionContainer").innerHTML =
+        '<div class="card">' +
+            '<div class="card-header"><div class="card-title">🗳️ Komisioni Qendror i Zgjedhjeve (KQZ) — Simulimi i Zgjedhjeve Parlamentare</div><span class="tag tag-min">Formula Kushtetuese: 100 + 20 Ulëse</span></div>' +
+            '<div style="margin-bottom:14px;"><button class="action-btn btn-gold" onclick="triggerSnapElection(\'Zgjedhje të reja të thirrura për mandat të ri\')">🗳️ Mbaj Zgjedhjet Parlamentare & Certifiko Rezultatet në KQZ</button></div>' +
+            '<div id="cecPollProjection">' +
+                Object.values(state.parties).map(function(p) {
+                    return '<div class="prog-row"><div class="prog-label"><span>' + p.name + '</span><span>Sondazhi: ' + p.poll.toFixed(2) + '% | Mandatet: ' + p.seats + '</span></div><div class="prog-track"><div class="prog-fill" style="width:' + Math.min(100, p.poll * 1.6) + '%; background:' + p.color + ';"></div></div></div>';
+                }).join("") +
+            '</div>' +
+        '</div>';
+}
+
+function renderMunicipalities() {
+    var filter = document.getElementById("muniRegionFilter") ? document.getElementById("muniRegionFilter").value : "ALL";
+    var list = state.municipalities.filter(function(m) { return filter === "ALL" || m.region === filter; });
+
+    var counts = {};
+    state.municipalities.forEach(function(m) { counts[m.mayorParty] = (counts[m.mayorParty] || 0) + 1; });
+    document.getElementById("municipalitiesSummaryBar").innerHTML =
+        '<div style="display:flex; gap:8px; flex-wrap:wrap; font-size:0.76rem; background:#0f172a; padding:8px 12px; border-radius:8px;">' +
+            '<span>Kryetarët Aktualë në 38 Komuna (Ndryshojnë vetëm me Zgjedhje Lokale):</span>' +
+            Object.entries(counts).map(function(entry) {
+                var pKey = entry[0]; var cnt = entry[1];
+                var pObj = state.parties[pKey];
+                return '<span class="tag ' + (pObj ? pObj.tagClass : 'tag-min') + '">' + (pObj ? pObj.short : pKey) + ': ' + cnt + ' komuna</span>';
+            }).join("") +
+        '</div>';
+
+    document.getElementById("municipalitiesGrid").innerHTML = list.map(function(m) {
+        var realIdx = state.municipalities.findIndex(function(x) { return x.id === m.id; });
+        var p = state.parties[m.mayorParty] || state.parties.LVV;
+        var projs = m.projects || [];
+        var projsHtml = projs.length > 0
+            ? '<div style="background:rgba(255,255,255,0.03); padding:6px 8px; border-radius:6px; margin-bottom:8px; font-size:0.72rem;"><strong style="color:var(--success);">🏗️ Projekte Kapitale (' + projs.length + '):</strong>' +
+              projs.map(function(pr) { return '<div>• ' + pr.title + ' (€' + pr.costM + 'M) — ' + pr.status + ' (' + pr.progress + '%)</div>'; }).join("") + '</div>'
+            : '';
+
+        return '<div class="card" style="background:#0f172a; margin-bottom:0;">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+                '<strong style="font-size:0.86rem;">📍 ' + m.name + '</strong>' +
+                '<span class="tag ' + p.tagClass + '">Kryetari: ' + p.short + '</span>' +
+            '</div>' +
+            '<div style="font-size:0.74rem; color:var(--text-muted); margin-bottom:8px; line-height:1.5;">' +
+                '• Kryetar në mandat: <strong style="color:#fff;">' + m.mayorName + ' (' + p.short + ')</strong><br>' +
+                '• Buxheti komunal: <strong>€' + m.budgetM + 'M</strong> | Raporti me Qeverinë: <strong>' + (m.relationWithGov || 60) + '/100</strong><br>' +
+                '• Mbështetja qytetare për partinë tuaj: <strong style="color:var(--accent-gold);">' + (m.localSupportPlayer || 35) + '%</strong><br>' +
+                '• Prioriteti: ' + m.issue +
+            '</div>' +
+            projsHtml +
+            '<div style="display:flex; gap:6px;">' +
+                '<button class="action-btn" style="flex:1; justify-content:center;" onclick="openMuniProjectModal(' + realIdx + ')">🏗️ Projekt Kapital</button>' +
+                '<button class="btn-top" onclick="openScheduleMeetingModal(\'MAYORS_38\', \'' + m.mayorName.replace(/'/g, "") + '\')" title="Cakto Takim me Kryetarin">📅</button>' +
+            '</div>' +
+        '</div>';
+    }).join("");
+}
+
+function openMuniProjectModal(mIdx) {
+    var m = state.municipalities[mIdx];
+    var p = state.parties[m.mayorParty] || state.parties.LVV;
+    var box = document.getElementById("interactiveActionModalContent");
+
+    box.innerHTML =
+        '<div class="card-header">' +
+            '<div class="card-title">🏗️ Projektet Kapitale — Komuna e ' + m.name + '</div>' +
+            '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
+        '</div>' +
+        '<div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">Kryetari aktual i Komunës së ' + m.name + ' është <strong>' + m.mayorName + ' (' + p.short + ')</strong> dhe mbetet në detyrë deri në përfundim të mandatit lokal.</div>' +
+        '<div class="grid-2" style="margin-bottom:10px;">' +
+            '<div>' +
+                '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">Emri i Projektit Kapital:</label>' +
+                '<input type="text" id="muniProjTitle" value="' + m.issue + '" style="width:100%;">' +
+            '</div>' +
+            '<div>' +
+                '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">Shuma e Financimit Qeveritar dhe Afati:</label>' +
+                '<select id="muniProjCost" style="width:100%;">' +
+                    '<option value="15">€15 Milionë — Afati i punimeve: 12 Javë</option>' +
+                    '<option value="8">€8 Milionë — Afati i punimeve: 8 Javë</option>' +
+                    '<option value="25">€25 Milionë (Projekt Madhor Rajonal) — Afati: 16 Javë</option>' +
+                '</select>' +
+            '</div>' +
+        '</div>' +
+        '<button class="action-btn btn-gold" onclick="approveMuniCapitalProject(' + mIdx + ')">✔ Aprovo Memorandum Financimi me Komunën e ' + m.name + '</button>';
+    toggleModal("interactiveActionModal", true);
+}
+
+function approveMuniCapitalProject(mIdx) {
+    var m = state.municipalities[mIdx];
+    var title = document.getElementById("muniProjTitle").value.trim() || m.issue;
+    var costM = parseInt(document.getElementById("muniProjCost").value, 10);
+    var weeks = costM >= 25 ? 16 : (costM >= 15 ? 12 : 8);
+
+    state.budgetTotalB = +(state.budgetTotalB - (costM / 1000)).toFixed(3);
+    m.budgetM += costM;
+    m.relationWithGov = clamp((m.relationWithGov || 60) + 18, 0, 100);
+    m.localSupportPlayer = clamp((m.localSupportPlayer || 35) + 12, 5, 90);
+
+    if (!m.projects) m.projects = [];
+    m.projects.push({ id: "prj_" + Date.now(), title: title, costM: costM, weeksLeft: weeks, totalWeeks: weeks, progress: 10, status: "Në Ndërtim" });
+
+    toggleModal("interactiveActionModal", false);
+    addMediaNews("MAPL / Ekonomia Online", "Qeveria ndan €" + costM + "M për projektin \"" + title + "\" në Komunën e " + m.name + ".", "POSITIVE");
+    refreshAllUI();
+    showToast("Projekti prej €" + costM + "M në " + m.name + " nisi punimet! Kryetari " + m.mayorName + " mbetet në mandat.");
+}
+
+function runLocalElections() {
+    var wonByPlayer = 0;
+    var genParties = ["LVV", "PDK", "LDK", "AAK"];
+    state.municipalities.forEach(function(m) {
+        if (m.mayorParty === "SL" || m.mayorParty === "MIN_MULTI") return;
+        var playerSupport = m.localSupportPlayer || state.parties[state.playerParty].poll;
+        if (playerSupport >= 48 || Math.random() * 100 < playerSupport) {
+            m.mayorParty = state.playerParty;
+            m.mayorName = "Kryetar i zgjedhur (" + state.parties[state.playerParty].short + ")";
+            wonByPlayer++;
+        } else {
+            var others = genParties.filter(function(k) { return k !== state.playerParty; });
+            m.mayorParty = others[Math.floor(Math.random() * others.length)];
+        }
+    });
+    addMediaNews("KQZ Zgjedhjet Lokale", "Përfundojnë zgjedhjet lokale në 38 komunat e Kosovës; " + state.parties[state.playerParty].short + " fiton " + wonByPlayer + " komuna!", "POSITIVE");
+    refreshAllUI();
+    showMajorAnnouncement({
+        badge: "ZGJEDHJET LOKALE NË 38 KOMUNA",
+        title: "KQZ Certifikon Kryetarët e Rinj: " + state.parties[state.playerParty].short + " Fiton " + wonByPlayer + " Komuna",
+        reason: "Qytetarët votuan bazuar në realizimin e projekteve kapitale komunale.",
+        immediateImpact: "Harta e pushtetit lokal në 38 komuna u përditësua."
+    });
+}
+
+function runCampaignAction(type, cost) {
+    var myP = state.parties[state.playerParty];
+    if (myP.partyFunds < cost) { showToast("Buxheti i partisë nuk mjafton!"); return; }
+    myP.partyFunds -= cost;
+    myP.poll = clamp(myP.poll + (type === "DIASPORA_RALLY" ? 1.8 : 1.2), 2, 75);
+    normalizePartyPolls();
+    refreshAllUI();
+}
+
+function participateTvDebate(strategy) {
+    var myP = state.parties[state.playerParty];
+    myP.poll = clamp(myP.poll + (strategy === "SOVEREIGNTY_LAW" ? 1.8 : 1.6), 2, 75);
+    normalizePartyPolls();
+    addMediaNews("Debat Plus / Pressing", "Sondazhet pas debatit televiziv tregojnë rritje për " + myP.leader + ".", "POSITIVE");
+    refreshAllUI();
+}
+
+function normalizePartyPolls() {
+    var genKeys = ["LVV", "PDK", "LDK", "AAK"];
+    var totalGen = genKeys.reduce(function(acc, k) { return acc + state.parties[k].poll; }, 0);
+    genKeys.forEach(function(k) { state.parties[k].poll = +((state.parties[k].poll / totalGen) * 90.0).toFixed(2); });
+}
+
+function triggerSnapElection(reasonText) {
+    normalizePartyPolls();
+    var genKeys = ["LVV", "PDK", "LDK", "AAK"];
+    var qualified = genKeys.filter(function(k) { return state.parties[k].poll >= 5.0; });
+    var sumVotes = qualified.reduce(function(a, k) { return a + state.parties[k].poll; }, 0);
+
+    var allocatedSum = 0;
+    qualified.forEach(function(k, idx) {
+        if (idx === qualified.length - 1) state.parties[k].seats = 100 - allocatedSum;
+        else {
+            var s = Math.round((state.parties[k].poll / sumVotes) * 100);
+            state.parties[k].seats = s;
+            allocatedSum += s;
+        }
+    });
+
+    state.parties.MIN_MULTI.seats = 11;
+    state.parties.SL.seats = 9;
+    state.mps = generate120MPs(state.parties, state.playerParty);
+    state.mandateNumber++;
+    state.weeksToNextRegularElection = 208;
+    state.governmentFormed = false;
+    state.coalitionParties = [state.playerParty, "MIN_MULTI"];
+
+    if (getCoalitionSeats() >= 61) {
+        state.governmentFormed = true;
+        state.primeMinister = state.parties[state.playerParty].leader + " (" + state.parties[state.playerParty].short + ")";
+    }
+
+    addMediaNews("KQZ Rezultatet Përfundimtare", "Zgjedhjet e reja (" + reasonText + "): LVV " + state.parties.LVV.seats + ", PDK " + state.parties.PDK.seats + ", LDK " + state.parties.LDK.seats + ", AAK " + state.parties.AAK.seats + ".", "POSITIVE");
+    refreshAllUI();
+    showMajorAnnouncement({
+        badge: "REZULTATET ZYRTARE TË KQZ-SË",
+        title: "Përbërja e Re e Kuvendit: LVV (" + state.parties.LVV.seats + "), PDK (" + state.parties.PDK.seats + "), LDK (" + state.parties.LDK.seats + "), AAK (" + state.parties.AAK.seats + ")",
+        reason: reasonText,
+        immediateImpact: "Komunitetet mbajnë 20 ulëset e garantuara."
+    });
+}
+
+function renderDiplomacySection() {
+    var step = state.dialogueChronologyStep || 1;
+    var stepLabels = [
+        "1. Konteksti & Ftesa nga BE/SHBA",
+        "2. Përgatitja & Konsultimi me Aleatët",
+        "3. Hartimi i Propozimit Konstruktiv",
+        "4. Tryeza e Brukselit & Kundërofertat",
+        "5. Marrëveshja & Monitorimi"
+    ];
+
+    var pillsHtml = stepLabels.map(function(lbl, idx) {
+        var cls = (step === idx + 1) ? "tag-gold" : (step > idx + 1 ? "tag-min" : "tag-sl");
+        return '<span class="tag ' + cls + '">' + lbl + '</span>';
+    }).join("");
+
+    var consultHtml = state.dialogueAlliesConsulted
+        ? '<span style="color:var(--success);">✔ Mbështetja paraprake e siguruar</span>'
+        : '<span style="color:var(--warning);">Ende pa konsultuar para raundit</span>';
+
+    var logHtml = (state.dialogueNegotiationLog || []).slice(0, 4).map(function(l) {
+        return '<div style="font-size:0.75rem; color:var(--text-muted);">• ' + l + '</div>';
+    }).join("");
+
+    document.getElementById("dialogueBrusselsContainer").innerHTML =
+        '<div class="card">' +
+            '<div class="card-header">' +
+                '<div class="card-title">🇪🇺 Procesi i Dialogut në Bruksel, Konsultimet Dypalëshe & Siguria në Veri</div>' +
+                '<span class="tag tag-pdk">Faza: ' + step + ' / 5 • Progresi: ' + state.dialogueProgress + '%</span>' +
+            '</div>' +
+            '<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">' + pillsHtml + '</div>' +
+            '<div style="background:#0f172a; padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:12px; font-size:0.82rem; line-height:1.6;">' +
+                '<div><strong>Statusi i Konsultimeve me Aleatët (SHBA/Gjermani/MB):</strong> ' + consultHtml + '</div>' +
+                '<div style="margin-top:6px;"><strong>Historiku i Raundeve të Negociatave:</strong></div>' +
+                logHtml +
+            '</div>' +
+            '<div style="display:flex; gap:8px; flex-wrap:wrap;">' +
+                '<button class="action-btn btn-gold" onclick="openInteractiveBrusselsModal()">🇪🇺 Hap Tryezën e Negociatave në Bruksel (Faza ' + step + ') ▶</button>' +
+                '<button class="action-btn" onclick="consultAlliesOffTable()">🤝 Konsultim Paraprak Jashtë Tryezës me SHBA & QUINT (+Fuqi Negociuese)</button>' +
+                '<button class="action-btn btn-outline" onclick="executeNorthSecurityOperation()">🛡️ Forco Rendin Kushtetues në 4 Komunat Veriore</button>' +
+            '</div>' +
+        '</div>';
+
+    var bilatHtml = Object.entries(state.diplomacy).map(function(entry) {
+        var k = entry[0];
+        var d = entry[1];
+        var tagCls = d.score >= 75 ? "tag-min" : "tag-aak";
+        var cityTxt = d.city || "Kryeqytet";
+        var offTxt = d.official || "Homologu";
+        return '<div class="card" style="background:#0f172a; margin-bottom:0;">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+                '<strong>' + d.name + '</strong>' +
+                '<span class="tag ' + tagCls + '">' + d.score + ' / 100</span>' +
+            '</div>' +
+            '<div style="font-size:0.74rem; color:var(--accent-gold); margin-bottom:4px;">📍 Kryeqyteti: ' + cityTxt + ' • Zyrtari: ' + offTxt + '</div>' +
+            '<p style="font-size:0.76rem; color:var(--text-muted); margin-bottom:10px;">' + d.note + '</p>' +
+            '<button class="action-btn btn-gold" onclick="openBilateralVisitModal(\'' + k + '\')">✈️ Planifiko & Zhvillo Vizitë Zyrtare në ' + cityTxt + ' ▶</button>' +
+        '</div>';
+    }).join("");
+
+    document.getElementById("diplomacyBilateralContainer").innerHTML = '<div class="grid-2">' + bilatHtml + '</div>';
+}
+
+function consultAlliesOffTable() {
+    state.dialogueAlliesConsulted = true;
+    state.diplomacy.USA.score = clamp(state.diplomacy.USA.score + 4, 10, 100);
+    state.dialogueNegotiationLog.unshift(MONTHS_SQ[state.monthIndex] + " " + state.year + ": Konsultim dypalësh me SHBA dhe QUINT para takimit në Bruksel.");
+    refreshAllUI();
+    showToast("U zhvilluan konsultimet paraprake me SHBA-në dhe QUINT-in! Pozicioni negociues i Kosovës në Bruksel u forcua.");
+}
+
+function openBilateralVisitModal(countryKey) {
+    var d = state.diplomacy[countryKey];
+    var cityTxt = d.city || d.name;
+    var offTxt = d.official || "Kryeministri / Sekretari i Shtetit";
+    var box = document.getElementById("interactiveActionModalContent");
+    box.innerHTML =
+        '<div class="card-header">' +
+            '<div class="card-title">✈️ Vizitë Zyrtare Shtetërore: ' + cityTxt + ' (' + d.name + ')</div>' +
+            '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
+        '</div>' +
+        '<div style="font-size:0.78rem; color:var(--accent-gold); margin-bottom:8px;">Pritësi Zyrtar: <strong>' + offTxt + '</strong> • Raporti aktual: <strong>' + d.score + '/100</strong></div>' +
+        '<div class="chat-bubble chat-them"><strong>' + offTxt + ' (' + cityTxt + '):</strong> "Mirë se vini në ' + cityTxt + '. Në agjendën e takimit tonë dypalësh kemi bashkëpunimin ekonomik, sigurinë rajonale dhe mbështetjen ndërkombëtare për Kosovën. Cila është marrëveshja prioritare që kërkon delegacioni juaj sot?"</div>' +
+        '<div style="margin-bottom:10px;">' +
+            '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">Zgjidh përbërjen e delegacionit shoqërues:</label>' +
+            '<select id="visitDelegationSelect" style="width:100%;">' +
+                '<option value="ECON_DEF">Kryeministri + Ministri i Mbrojtjes dhe Ministri i Ekonomisë</option>' +
+                '<option value="DIPLO_FULL">Kryeministri + MPJD dhe Oda Ekonomike (Forum Biznesi)</option>' +
+            '</select>' +
+        '</div>' +
+        '<div style="display:flex; flex-direction:column; gap:7px;">' +
+            '<button class="choice-btn" onclick="finalizeBilateralVisit(\'' + countryKey + '\', \'DEFENSE_SECURITY\')">' +
+                '<span class="choice-title">1. Nënshkruaj Marrëveshje për Mbrojtjen, Sigurinë dhe Trajnimin e FSK-së (-€10M bashkëfinancim)</span>' +
+                '<span class="choice-impact">+10 pikë marrëdhënie me ' + d.name + ', +5 Sektorët e Sigurisë & FSK, Konferencë e përbashkët</span>' +
+            '</button>' +
+            '<button class="choice-btn" onclick="finalizeBilateralVisit(\'' + countryKey + '\', \'TRADE_INVESTMENT\')">' +
+                '<span class="choice-title">2. Nënshkruaj Memorandum për Investime Direkte, Energji dhe Tregti (+€40M grante/investime)</span>' +
+                '<span class="choice-impact">+8 pikë marrëdhënie bilaterale, +0.2% Rritje e BPV-së, +€0.04 Mld Buxhet</span>' +
+            '</button>' +
+            '<button class="choice-btn" onclick="finalizeBilateralVisit(\'' + countryKey + '\', \'DIPLOMATIC_LOBBY\')">' +
+                '<span class="choice-title">3. Kërko mbështetje politike për anëtarësim në Këshillin e Evropës dhe organizata ndërkombëtare</span>' +
+                '<span class="choice-impact">+9 pikë diplomaci, +2.0% Mbështetje publike në Kosovë (-€5M kosto protokolli)</span>' +
+            '</button>' +
+        '</div>';
+    toggleModal("interactiveActionModal", true);
+}
+
+function finalizeBilateralVisit(countryKey, dealType) {
+    var d = state.diplomacy[countryKey];
+    var cityTxt = d.city || d.name;
+    var offTxt = d.official || "Homologu";
+    toggleModal("interactiveActionModal", false);
+
+    var achievedText = "";
+    if (dealType === "DEFENSE_SECURITY") {
+        state.budgetTotalB = +(state.budgetTotalB - 0.010).toFixed(3);
+        d.score = clamp(d.score + 10, 10, 100);
+        state.securityNorth = clamp(state.securityNorth + 4, 10, 100);
+        achievedText = "Nënshkrimi i Marrëveshjes së Bashkëpunimit në Mbrojtje dhe Siguri në " + cityTxt + ".";
+    } else if (dealType === "TRADE_INVESTMENT") {
+        state.budgetTotalB = +(state.budgetTotalB + 0.040).toFixed(3);
+        state.gdpGrowth = +(state.gdpGrowth + 0.2).toFixed(1);
+        d.score = clamp(d.score + 8, 10, 100);
+        achievedText = "Memorandum Ekonomik dhe Investime prej €40M nga vizita në " + cityTxt + ".";
+    } else {
+        state.budgetTotalB = +(state.budgetTotalB - 0.005).toFixed(3);
+        d.score = clamp(d.score + 9, 10, 100);
+        state.approval = clamp(state.approval + 2.0, 5, 95);
+        achievedText = "Garanci për mbështetjen e anëtarësimit të Kosovës në mekanizmat euro-atlantikë.";
+    }
+
+    addMediaNews("MPJD / RTK", "Përfundon vizita zyrtare në " + cityTxt + " (" + d.name + "): " + achievedText, "POSITIVE");
+    refreshAllUI();
+    showMajorAnnouncement({
+        badge: "RAPORT PËRFUNDIMTAR I VIZITËS ZYRTARE — " + cityTxt.toUpperCase(),
+        title: "Takim Dypalësh me " + offTxt,
+        reason: "Vizitë shtetërore dhe konferencë e përbashkët për media në " + cityTxt + " (" + d.name + ").",
+        immediateImpact: achievedText + " Marrëdhëniet bilaterale u rritën në " + d.score + "/100.",
+        futureImpact: "Ministritë e linjës kanë marrë detyrat për zbatimin e memorandumeve të nënshkruara."
+    });
+}
+
+function openInteractiveBrusselsModal() {
+    var step = state.dialogueChronologyStep || 1;
+    var box = document.getElementById("interactiveActionModalContent");
+
+    if (step === 1 || step === 2) {
+        box.innerHTML =
+            '<div class="card-header">' +
+                '<div class="card-title">🇪🇺 Fazat 1 & 2: Ftesa e BE/SHBA, Qëndrimet Fillestare & Delegacioni</div>' +
+                '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
+            '</div>' +
+            '<div class="chat-bubble chat-them"><strong>Propozimi Fillestar i Ndërmjetësuesve të BE-së:</strong> "Kërkojmë që palët të miratojnë planin e sekuencimit të Marrëveshjes së Ohrit. Pala serbe kërkon fillimisht Asociacionin, ndërsa ne presim qëndrimin dhe kundërpropozimin e Kosovës."</div>' +
+            '<div class="grid-2" style="margin-bottom:10px;">' +
+                '<div>' +
+                    '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">Përbërja e Delegacionit të Kosovës:</label>' +
+                    '<select id="dlgDelegation" style="width:100%;">' +
+                        '<option value="PM_MFJD">Kryeministri + Zëvendëskryeministri / MPJD (Nivel i Lartë Politik)</option>' +
+                        '<option value="BROAD_GOV_OPP">Delegacion Shtetëror Gjithëpërfshirës (Qeveria + Ekspertë + Opozita)</option>' +
+                    '</select>' +
+                '</div>' +
+                '<div>' +
+                    '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">Vija e Kuqe Kryesore e Kosovës:</label>' +
+                    '<select id="dlgRedLine" style="width:100%;">' +
+                        '<option value="CONSTITUTION">Respektim strikt i Kushtetutës së Kosovës dhe asnjë kompetencë ekzekutive</option>' +
+                        '<option value="MUTUAL_RECOG">Njohje de-facto dhe reciproke si parakusht</option>' +
+                    '</select>' +
+                '</div>' +
+            '</div>' +
+            '<button class="action-btn btn-gold" onclick="advanceBrusselsToStep3()">Konfirmo Qëndrimin & Kalo te Kundërpropozimi Konkret i Kosovës (Faza 3) ▶</button>';
+    } else if (step === 3) {
+        box.innerHTML =
+            '<div class="card-header">' +
+                '<div class="card-title">🇪🇺 Faza 3: Paraqitja e Kundërofertës / Propozimit Konstruktiv të Kosovës</div>' +
+                '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
+            '</div>' +
+            '<div style="margin-bottom:8px;">' +
+                '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">1. Kundërpropozimi Konkret i Republikës së Kosovës:</label>' +
+                '<select id="dlgProposalIssue" style="width:100%;">' +
+                    '<option value="Modeli Kroat i Vetëmenaxhimit pa Kompetenca Ekzekutive + Njohje e Dokumenteve">Modeli Kroat i Vetëmenaxhimit pa Kompetenca Ekzekutive + Njohje e Dokumenteve</option>' +
+                    '<option value="Traktat i Fqinjësisë së Mirë Evropiane dhe Zhbllokim i Anëtarësimit në Këshillin e Evropës">Traktat i Fqinjësisë së Mirë Evropiane + Anëtarësim në Këshillin e Evropës</option>' +
+                    '<option value="Marrëveshje Sektoriale për Energjinë (KOSTT), Telekomunikacionin dhe Të Pagjeturit">Marrëveshje Sektoriale për Energjinë (KOSTT), Telekomunikacionin dhe Të Pagjeturit</option>' +
+                '</select>' +
+            '</div>' +
+            '<div class="grid-2" style="margin-bottom:8px;">' +
+                '<div>' +
+                    '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">2. Garancia që kërkon Kosova:</label>' +
+                    '<select id="dlgGuarantee" style="width:100%;">' +
+                        '<option value="Zhbllokim i €150M nga Plani i Rritjes i BE-së dhe Partneriteti për Paqe në NATO">Zhbllokim i €150M nga Plani i Rritjes i BE-së + Partneriteti në NATO</option>' +
+                        '<option value="Verifikim paraprak i çdo neni nga Gjykata Kushtetuese e Kosovës">Verifikim paraprak i çdo neni nga Gjykata Kushtetuese e Kosovës</option>' +
+                    '</select>' +
+                '</div>' +
+                '<div>' +
+                    '<label style="font-size:0.74rem; color:var(--text-muted); display:block; margin-bottom:4px;">3. Afati dhe Mekanizmi i Zbatimit:</label>' +
+                    '<select id="dlgTimeline" style="width:100%;">' +
+                        '<option value="Zbatim paralel hap-pas-hapi brenda 16 javëve">Zbatim paralel hap-pas-hapi brenda 16 javëve</option>' +
+                        '<option value="Vetëm pas nënshkrimit formal të paketës">Vetëm pas nënshkrimit formal të paketës</option>' +
+                    '</select>' +
+                '</div>' +
+            '</div>' +
+            '<button class="action-btn btn-gold" onclick="submitConstructiveProposalToBrussels()">Paraqit Kundërofertën në Tryezën e Brukselit (Kalo në Fazën 4) ▶</button>';
+    } else {
+        var prop = state.dialogueDraftProposal || { issue: "Modeli Kroat i Vetëmenaxhimit pa Kompetenca Ekzekutive", guarantee: "Verifikim nga Gjykata Kushtetuese", timeline: "Zbatim paralel" };
+        box.innerHTML =
+            '<div class="card-header">' +
+                '<div class="card-title">🇪🇺 Faza 4: Reagimi i Palës Tjetër dhe Vendimi për Marrëveshje ose Shtyrje</div>' +
+                '<button class="btn-top" onclick="toggleModal(\'interactiveActionModal\', false)">Mbyll ✕</button>' +
+            '</div>' +
+            '<div style="background:#0f172a; padding:10px; border-radius:8px; font-size:0.78rem; margin-bottom:10px;">' +
+                '<strong>Propozimi juaj në tavolinë:</strong> ' + prop.issue + '<br>' +
+                '<strong>Garancia e kërkuar:</strong> ' + prop.guarantee + ' (' + prop.timeline + ')' +
+            '</div>' +
+            '<div class="chat-bubble chat-them"><strong>Reagimi në Bruksel:</strong> "Beogradi kundërshton pikën për nënshkrim të menjëhershëm, por BE dhe SHBA propozojnë kompromis: deklaratë të përbashkët zbatimi me garanci se çdo statut shkon në Gjykatën Kushtetuese të Kosovës dhe lëvrim të menjëhershëm të €80M nga Plani i Rritjes."</div>' +
+            '<div style="display:flex; flex-direction:column; gap:7px; margin-top:10px;">' +
+                '<button class="choice-btn" onclick="finalizeBrusselsRound(\'ACCEPT_SEQUENCING\')">' +
+                    '<span class="choice-title">1. Prano kompromisin me garancinë e Gjykatës Kushtetuese të Kosovës</span>' +
+                    '<span class="choice-impact">+12 Progres në Dialog, +8 SHBA & BE, +€0.08 Mld Buxhet</span>' +
+                '</button>' +
+                '<button class="choice-btn" onclick="finalizeBrusselsRound(\'STAND_FIRM\')">' +
+                    '<span class="choice-title">2. Refuzo lëshimet dhe kërko raund të ri pas konsultimeve në Prishtinë</span>' +
+                    '<span class="choice-impact">+3.2% Mbështetje vendore, procesi shtyhet për raundin tjetër</span>' +
+                '</button>' +
+            '</div>';
+    }
+    toggleModal("interactiveActionModal", true);
+}
+
+function advanceBrusselsToStep3() {
+    state.dialogueChronologyStep = 3;
+    openInteractiveBrusselsModal();
+    refreshAllUI();
+}
+
+function submitConstructiveProposalToBrussels() {
+    state.dialogueDraftProposal = {
+        issue: document.getElementById("dlgProposalIssue").value,
+        guarantee: document.getElementById("dlgGuarantee").value,
+        timeline: document.getElementById("dlgTimeline").value
+    };
+    state.dialogueChronologyStep = 4;
+    state.dialogueNegotiationLog.unshift(MONTHS_SQ[state.monthIndex] + " " + state.year + ": Kosova paraqet kundërofertën \"" + state.dialogueDraftProposal.issue + "\".");
+    openInteractiveBrusselsModal();
+    refreshAllUI();
+}
+
+function finalizeBrusselsRound(choiceCode) {
+    var prop = state.dialogueDraftProposal || { issue: "Propozimi Konstruktiv i Kosovës" };
+    toggleModal("interactiveActionModal", false);
+
+    if (choiceCode === "ACCEPT_SEQUENCING") {
+        state.dialogueChronologyStep = 5;
+        state.dialogueProgress = clamp(state.dialogueProgress + 12, 0, 100);
+        state.diplomacy.USA.score = clamp(state.diplomacy.USA.score + 8, 10, 100);
+        state.diplomacy.EU.score = clamp(state.diplomacy.EU.score + 8, 10, 100);
+        state.budgetTotalB = +(state.budgetTotalB + 0.08).toFixed(2);
+        state.dialogueNegotiationLog.unshift(MONTHS_SQ[state.monthIndex] + " " + state.year + ": Arrihet marrëveshje sekuencimi në Bruksel (+€80M grante).");
+        addMediaNews("Bruksel Live / RTK", "Arrihet dakordim në Bruksel mbi bazën e propozimit të Kosovës: \"" + prop.issue + "\".", "POSITIVE");
+    } else {
+        state.dialogueChronologyStep = 3;
+        state.approval = clamp(state.approval + 3.2, 5, 95);
+        state.dialogueNegotiationLog.unshift(MONTHS_SQ[state.monthIndex] + " " + state.year + ": Raundi mbyllet pa marrëveshje; Kosova mbron vijat e kuqe.");
+        addMediaNews("KOHA", "Raundi në Bruksel mbyllet pa nënshkrim; Kosova mbron propozimin \"" + prop.issue + "\".", "NEUTRAL");
+    }
+    refreshAllUI();
+    showMajorAnnouncement({
+        badge: "RAUNDI DIPLOMATIK NË BRUKSEL",
+        title: prop.issue,
+        reason: "Procesi u zhvillua me kundërofertë konkrete dhe mekanizëm zbatimi.",
+        immediateImpact: choiceCode === "ACCEPT_SEQUENCING" ? "+8 pikë SHBA & BE, +€80M në buxhetin e shtetit." : "+3.2% Mbështetje vendore për qëndrimin parimor."
+    });
+}
+
+function executeNorthSecurityOperation() {
+    state.securityNorth = clamp(state.securityNorth + 6, 10, 100);
+    state.approval = clamp(state.approval + 2.5, 5, 95);
+    addMediaNews("RTK", "Forcohen shërbimet komunale dhe prania ligjore në 4 komunat veriore.", "POSITIVE");
+    refreshAllUI();
+    showToast("Siguria dhe funksionaliteti institucional në veri u rritën me +6%!");
+}
+
+function advanceTime(weeksCount, silentToast) {
+    if (typeof weeksCount === "undefined") weeksCount = 1;
+    if (typeof silentToast === "undefined") silentToast = false;
+    var dueMeetingIdx = -1;
+
+    for (var i = 0; i < weeksCount; i++) {
+        state.week++;
+        state.turnCount++;
+        state.weeksToNextRegularElection--;
+
+        if (state.week > 4) {
+            state.week = 1;
+            state.monthIndex++;
+            if (state.monthIndex > 11) {
+                state.monthIndex = 0;
+                state.year++;
+                var yearlyRev = +(3.25 + (state.gdpGrowth * 0.06)).toFixed(2);
+                state.budgetTotalB = yearlyRev;
+                addMediaNews("Ministria e Financave", "Nis viti fiskal " + state.year + ": Buxheti i ri shtetëror arrin në €" + yearlyRev + " Miliardë.", "POSITIVE");
+            }
+        }
+
+        (state.stateSectors || []).forEach(function(sec) {
+            if (sec.active && sec.weeksLeft > 0) {
+                sec.weeksLeft--;
+                if (sec.weeksLeft === 0) {
+                    sec.active = false;
+                    sec.score = clamp(sec.score + 12, 10, 100);
+                    state.approval = clamp(state.approval + 2.4, 5, 95);
+                    state.gdpGrowth = +(state.gdpGrowth + 0.1).toFixed(1);
+                    addMediaNews("RTK / Ekonomia", "Përfundon me sukses reforma shtetërore \"" + sec.projectTitle + "\" në sektorin " + sec.name + "! Treguesi u rrit në " + sec.score + "/100.", "POSITIVE");
+                }
+            }
+        });
+
+        state.municipalities.forEach(function(m) {
+            if (!m.projects) return;
+            m.projects.forEach(function(pr) {
+                if (pr.status !== "I Përfunduar") {
+                    pr.weeksLeft = Math.max(0, pr.weeksLeft - 1);
+                    pr.progress = Math.min(100, Math.round(((pr.totalWeeks - pr.weeksLeft) / pr.totalWeeks) * 100));
+                    if (pr.weeksLeft === 0) {
+                        pr.status = "I Përfunduar";
+                        state.approval = clamp(state.approval + 1.5, 5, 95);
+                        addMediaNews("Ekonomia Online", "Përfundon me sukses projekti kapital \"" + pr.title + "\" në Komunën e " + m.name + "!", "POSITIVE");
+                    }
+                }
+            });
+        });
+
+        for (var r = (state.pmInboxRequests || []).length - 1; r >= 0; r--) {
+            var req = state.pmInboxRequests[r];
+            req.deadlineWeeks--;
+            if (req.deadlineWeeks <= 0) {
+                state.approval = clamp(state.approval - 2.2, 5, 95);
+                addMediaNews("Kallxo / Koha", "Skadon afati i kërkesës së " + req.senderName + " (\"" + req.title + "\") pa vendim të Kryeministrit (-2.2% Mbështetje)!", "CRITICAL");
+                state.pmInboxRequests.splice(r, 1);
+            }
+        }
+
+        if (state.turnCount % 2 === 0 && (state.pmInboxRequests || []).length < 4) {
+            generateDynamicIncomingRequest(false);
+        }
+
+        if (state.scheduledMeetings) {
+            state.scheduledMeetings.forEach(function(m, idx) {
+                if (m.status === "SCHEDULED" && m.dueTurn <= state.turnCount && dueMeetingIdx === -1) {
+                    dueMeetingIdx = idx;
+                }
+            });
+        }
+
+        if (!state.presidentElected) {
+            state.presidentialDeadlineWeeks--;
+            if (state.presidentialDeadlineWeeks <= 0) {
+                state.presidentElected = true;
+                triggerSnapElection("Skadimi i afatit kushtetues 60-ditor për zgjedhjen e Presidentit");
+                return;
+            }
+        }
+
+        state.promises.forEach(function(pr) {
+            if (!pr.fulfilled) {
+                pr.deadlineWeeks--;
+                if (pr.deadlineWeeks === 0) {
+                    state.approval = clamp(state.approval - 4.0, 5, 95);
+                    addMediaNews("Kallxo / KDI", "Qeveria thyen afatin për premtimin: \"" + pr.title + "\" (-4% besueshmëri)!", "CRITICAL");
+                }
+            }
+        });
+
+        if (state.weeksToNextRegularElection <= 0) {
+            triggerSnapElection("Përfundimi i mandatit të rregullt katërvjeçar kushtetues");
+            return;
+        }
+    }
+
+    var myP = state.parties[state.playerParty];
+    var delta = (state.approval - 46) * 0.03;
+    myP.poll = clamp(myP.poll + delta, 4, 72);
+    normalizePartyPolls();
+
+    refreshAllUI();
+
+    if (dueMeetingIdx !== -1) {
+        conductScheduledMeeting(dueMeetingIdx);
+    } else if (!silentToast) {
+        showToast("Kaluan " + weeksCount + " javë • " + MONTHS_SQ[state.monthIndex] + " " + state.year + " (Java " + state.week + ")");
+    }
+}
+
+function switchMainTab(tabId, navBtn) {
+    document.querySelectorAll(".tab-view").forEach(function(el) { el.classList.remove("active"); });
+    var target = document.getElementById(tabId);
+    if (target) target.classList.add("active");
+
+    if (navBtn) {
+        document.querySelectorAll(".bottom-nav .nav-item").forEach(function(b) { b.classList.remove("active"); });
+        navBtn.classList.add("active");
+    } else {
+        var mapIdx = { "tab-dashboard": 0, "tab-party": 1, "tab-assembly": 2, "tab-government": 3, "tab-elections": 4, "tab-diplomacy": 5 };
+        var btns = document.querySelectorAll(".bottom-nav .nav-item");
+        btns.forEach(function(b) { b.classList.remove("active"); });
+        if (btns[mapIdx[tabId]]) btns[mapIdx[tabId]].classList.add("active");
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function switchSubTab(prefix, subKey, pillBtn) {
+    if (!pillBtn) return;
+    var parentSection = pillBtn.closest(".tab-view");
+    parentSection.querySelectorAll(".sub-content").forEach(function(el) { el.style.display = "none"; });
+    parentSection.querySelectorAll(".sub-pill").forEach(function(b) { b.classList.remove("active"); });
+
+    var target = document.getElementById(prefix + "-" + subKey);
+    if (target) target.style.display = "block";
+    pillBtn.classList.add("active");
+}
+
+window.addEventListener("DOMContentLoaded", initApp);
