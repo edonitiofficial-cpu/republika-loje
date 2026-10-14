@@ -344,6 +344,8 @@ const STORAGE_KEY_SLOTS = "republika_ks_2026_slots_v4";
 const MONTHS_SQ = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor"];
 
 let state = null;
+let votingAnimInterval = null; // Variabël globale për FAZËN 3
+let currentVotingData = null;  // Ruan të dhënat e votimit gjatë animacionit
 
 /* ============================================================================
    FUNKSIONET E EKRANIT FILLESTAR (START SCREEN)
@@ -371,7 +373,7 @@ function loadGameFromScreen() {
 }
 
 /* ============================================================================
-   2. FUNKSIONET E INICIALIZIMIT & FAZA 2 LOGJIKA BAZË
+   2. FUNKSIONET E INICIALIZIMIT
    ============================================================================ */
 
 function getInitialStateSectors() {
@@ -465,7 +467,6 @@ function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customI
 
     const isPostElectionAlt = (mode === "ALT_POST_ELECTION");
 
-    // FAZA 2: Gjej partinë fituese (Mandatarin) bazuar në rezultatet e zgjedhjeve
     let maxSeats = 0;
     let winnerId = "LVV";
     Object.keys(partiesClone).forEach(function(k) {
@@ -476,7 +477,7 @@ function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customI
     });
 
     let s = {
-        version: "4.1.2026_Faza2",
+        version: "4.1.2026_Faza3",
         mode: mode,
         year: 2026,
         monthIndex: isPostElectionAlt ? 6 : 9,
@@ -487,15 +488,14 @@ function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customI
 
         playerParty: chosenParty,
         winningParty: winnerId,
-        mandatar: winnerId, // FAZA 2: Partia që ka të drejtën kushtetuese të formojë qeverinë
+        mandatar: winnerId,
 
-        playerRole: "", // Caktohet pak më poshtë bazuar në mandatarin
+        playerRole: "",
         assemblyConstituted: !isPostElectionAlt,
         speakerOfAssembly: isPostElectionAlt ? "Në pritje të konstituimit" : "Albulena Haxhiu (LVV)",
         governmentFormed: !isPostElectionAlt,
         primeMinister: isPostElectionAlt ? "Në pritje të mandatarit" : "Albin Kurti (LVV)",
         
-        // FAZA 2: Në fillim (pas zgjedhjeve) vetëm mandatari është në koalicion. Të tjerët ftohen përmes negociatave.
         coalitionParties: isPostElectionAlt ? [winnerId] : ["LVV", "MIN_MULTI"], 
         coalitionAgreements: isPostElectionAlt ? [] : [
             { partner: "MIN_MULTI", ministriesCount: 3, deputyPM: true, conditions: "3 Ministri dhe investime në komunitete", honored: true }
@@ -584,10 +584,8 @@ function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customI
         lastPressTurn: 0
     };
 
-    // FAZA 2: Kontrollo statusin e lojtarit bazuar në zgjedhjet e reja
     if (isPostElectionAlt) {
         s.playerRole = (s.mandatar === chosenParty) ? "MANDATAR PËR FORMIMIN E QEVERISË" : "NË PRITJE (OPOZITË)";
-        // Faza 2: Pastro ministrat kur ka zgjedhje të reja (qeveria e vjetër rrëzohet)
         s.ministries.forEach(function(m) {
             m.party = "NONE";
             m.minister = "I/E paemëruar";
@@ -1170,7 +1168,6 @@ function initApp() {
             if (!state.customPresCandidates) state.customPresCandidates = {};
             if (!state.dialogueNegotiationLog) state.dialogueNegotiationLog = [];
             
-            // Siguro që të dhënat e Fazës 2 të jenë aty edhe për lojërat e ruajtura më herët
             if (!state.winningParty) state.winningParty = "LVV";
             if (!state.mandatar) state.mandatar = state.winningParty;
 
@@ -1248,7 +1245,6 @@ function refreshAllUI() {
     if (!state) return;
     updateTopBar();
     renderDashboard();
-    // Funksionet e tjera mbeten për Pjesën 2
     if(typeof renderPartySection === "function") renderPartySection();
     if(typeof renderAssemblySection === "function") renderAssemblySection();
     if(typeof renderGovernmentSection === "function") renderGovernmentSection();
@@ -1257,7 +1253,6 @@ function refreshAllUI() {
     saveGameAuto();
 }
 
-// FAZA 2: Përditësimi i statusit në shiritin kryesor
 function updateTopBar() {
     var p = state.parties[state.playerParty];
     var coalSeats = getCoalitionSeats();
@@ -1340,7 +1335,6 @@ function renderDashboard() {
     var activeSectorProjs = (state.stateSectors || []).filter(function(s) { return s.active; }).length;
     var reqCount = (state.pmInboxRequests || []).length;
 
-    // FAZA 2: Treguesi i qartë në Dashboard për fazën e formimit të qeverisë
     var govStatusHtml = "";
     if (!state.governmentFormed) {
         govStatusHtml = "Në bisedime për formimin e Qeverisë së Re";
@@ -2115,7 +2109,6 @@ function fundraisePartyDiaspora() {
     showToast("U mblodhën €65,000 nga mërgata për fondin e partisë!");
 }
 
-// FAZA 2: Renderimi i tavolinës së negociatave
 function renderCoalitionNegotiations() {
     var coalSeats = getCoalitionSeats();
     document.getElementById("coalitionTotalBadge").textContent = coalSeats + " / 120 Deputetë (" + (coalSeats >= 61 ? "Shumicë Parlamentare ✔" : ("Mungojnë " + (61 - coalSeats) + " vota")) + ")";
@@ -2124,12 +2117,10 @@ function renderCoalitionNegotiations() {
     var isMandatar = (state.mandatar === state.playerParty);
     var mandatarParty = state.parties[state.mandatar];
 
-    // Vendos me kë po negociojmë varësisht nga rolet
     var negotiationList = [];
     if (isMandatar) {
         negotiationList = Object.values(state.parties).filter(function(p) { return p.id !== state.playerParty; });
     } else {
-        // Nëse nuk je mandatar, i vetmi me të cilin mund të bësh koalicion për qeverinë është mandatari
         negotiationList = [mandatarParty];
     }
 
@@ -2228,7 +2219,6 @@ function proceedCoalitionRound2(targetPartyId) {
     var isMandatar = (state.mandatar === state.playerParty);
     var tone = document.getElementById("negOpeningTone") ? document.getElementById("negOpeningTone").value : "PARTNERSHIP";
 
-    // Përjashtimi specifik (VV - Lista Serbe)
     if ((targetPartyId === "SL" && state.playerParty === "LVV") || (state.mandatar === "LVV" && state.playerParty === "SL")) {
         document.getElementById("interactiveActionModalContent").innerHTML =
             '<div class="card-header"><div class="card-title">⛔ Refuzim Politik</div></div>' +
@@ -2309,7 +2299,6 @@ function evaluateCoalitionRound3(targetPartyId) {
             if (!state.quorumPledgedParties.includes(state.playerParty)) state.quorumPledgedParties.push(state.playerParty);
         }
 
-        // Cakto ministritë sipas zgjedhjes
         var receivingParty = isMandatar ? targetPartyId : state.playerParty;
         var receivingCands = state.parties[receivingParty].candidates;
         checkedMins.forEach(function(mIdx, i) {
@@ -2349,7 +2338,6 @@ function removePartnerFromCoalition(targetPartyId) {
     state.coalitionParties = state.coalitionParties.filter(function(x) { return x !== targetPartyId; });
     state.quorumPledgedParties = state.quorumPledgedParties.filter(function(x) { return x !== targetPartyId; });
     
-    // Pastro ministrat e partisë që doli nga koalicioni
     state.ministries.forEach(function(m) {
         if (m.party === targetPartyId) {
             m.party = "NONE";
@@ -2365,40 +2353,178 @@ function removePartnerFromCoalition(targetPartyId) {
     refreshAllUI();
 }
 
-function formalizeGovernmentVote() {
-    var seats = getCoalitionSeats();
-    if (seats < 61) { 
-        showToast("Kërkohen të paktën 61 deputetë për ta votuar Qeverinë në Kuvend!"); 
-        return; 
+/* ============================================================================
+   FAZA 3: MOTORI I ANIMACIONIT TË VOTIMIT & LOGJIKA STRIKTE MATEMATIKORE
+   ============================================================================ */
+
+function startVotingAnimation(title, desc, voteData, onComplete) {
+    document.getElementById("votingModalTitle").innerHTML = title;
+    document.getElementById("votingModalDesc").innerHTML = desc;
+    document.getElementById("voteCountPro").textContent = "0";
+    document.getElementById("voteCountKunder").textContent = "0";
+    document.getElementById("voteCountAbstenim").textContent = "0";
+    document.getElementById("voteCountMungese").textContent = "0";
+    document.getElementById("votingProgressText").textContent = "0 / 120";
+    document.getElementById("votingProgressBar").style.width = "0%";
+    document.getElementById("votingModalResult").innerHTML = "";
+    
+    document.getElementById("votingSkipBtn").style.display = "inline-block";
+    document.getElementById("votingProceedBtn").style.display = "none";
+    
+    toggleModal("votingModal", true);
+    
+    currentVotingData = {
+        targetPro: voteData.pro,
+        targetKunder: voteData.kunder,
+        targetAbstenim: voteData.abstenim,
+        targetMungese: voteData.mungese,
+        currentPro: 0, currentKunder: 0, currentAbstenim: 0, currentMungese: 0,
+        totalCounted: 0,
+        onCompleteCallback: onComplete,
+        finalResultHtml: voteData.resultHtml
+    };
+    
+    clearInterval(votingAnimInterval);
+    votingAnimInterval = setInterval(animateVoteStep, 35); // 35ms per vote
+}
+
+function animateVoteStep() {
+    var v = currentVotingData;
+    if (v.totalCounted >= 120) {
+        clearInterval(votingAnimInterval);
+        showVotingResult();
+        return;
     }
     
-    state.assemblyConstituted = true;
-    state.governmentFormed = true;
-    state.primeMinister = state.parties[state.mandatar].leader + " (" + state.parties[state.mandatar].short + ")";
+    var available = [];
+    if (v.currentPro < v.targetPro) available.push("pro");
+    if (v.currentKunder < v.targetKunder) available.push("kunder");
+    if (v.currentAbstenim < v.targetAbstenim) available.push("abstenim");
+    if (v.currentMungese < v.targetMungese) available.push("mungese");
     
-    // FAZA 2: Ministritë e pashpërndara i takojnë Mandatarit automatikisht
-    var mandatarCands = state.parties[state.mandatar].candidates;
-    var cIndex = 0;
-    state.ministries.forEach(function(m) {
-        if (m.party === "NONE" || !state.coalitionParties.includes(m.party)) {
-            m.party = state.mandatar;
-            var cand = mandatarCands[cIndex % mandatarCands.length];
-            m.minister = cand ? cand.name : state.parties[state.mandatar].leader;
-            cIndex++;
+    if (available.length > 0) {
+        var pick = available[Math.floor(Math.random() * available.length)];
+        if (pick === "pro") v.currentPro++;
+        else if (pick === "kunder") v.currentKunder++;
+        else if (pick === "abstenim") v.currentAbstenim++;
+        else if (pick === "mungese") v.currentMungese++;
+        v.totalCounted++;
+        
+        document.getElementById("voteCountPro").textContent = v.currentPro;
+        document.getElementById("voteCountKunder").textContent = v.currentKunder;
+        document.getElementById("voteCountAbstenim").textContent = v.currentAbstenim;
+        document.getElementById("voteCountMungese").textContent = v.currentMungese;
+        document.getElementById("votingProgressText").textContent = v.totalCounted + " / 120";
+        document.getElementById("votingProgressBar").style.width = Math.round((v.totalCounted / 120) * 100) + "%";
+    } else {
+        clearInterval(votingAnimInterval);
+        showVotingResult();
+    }
+}
+
+function skipVotingAnimation() {
+    if (!currentVotingData) return;
+    clearInterval(votingAnimInterval);
+    var v = currentVotingData;
+    v.currentPro = v.targetPro;
+    v.currentKunder = v.targetKunder;
+    v.currentAbstenim = v.targetAbstenim;
+    v.currentMungese = v.targetMungese;
+    v.totalCounted = 120;
+    
+    document.getElementById("voteCountPro").textContent = v.currentPro;
+    document.getElementById("voteCountKunder").textContent = v.currentKunder;
+    document.getElementById("voteCountAbstenim").textContent = v.currentAbstenim;
+    document.getElementById("voteCountMungese").textContent = v.currentMungese;
+    document.getElementById("votingProgressText").textContent = "120 / 120";
+    document.getElementById("votingProgressBar").style.width = "100%";
+    
+    showVotingResult();
+}
+
+function showVotingResult() {
+    document.getElementById("votingSkipBtn").style.display = "none";
+    document.getElementById("votingProceedBtn").style.display = "inline-block";
+    document.getElementById("votingModalResult").innerHTML = currentVotingData.finalResultHtml;
+}
+
+function finishVotingProcess() {
+    toggleModal("votingModal", false);
+    if (currentVotingData && currentVotingData.onCompleteCallback) {
+        currentVotingData.onCompleteCallback();
+    }
+}
+
+function formalizeGovernmentVote() {
+    var seats = getCoalitionSeats();
+    
+    var pro = 0, kunder = 0, abstenim = 0, mungese = 0;
+    
+    // FAZA 3: Llogaritja strikte për 120 deputetë
+    state.mps.forEach(function(mp) {
+        var inCoal = state.coalitionParties.includes(mp.party);
+        if (inCoal) {
+            if (mp.rebelRisk && Math.random() < 0.1) abstenim++;
+            else pro++;
+        } else {
+            if (mp.promisedVoteNext) pro++;
+            else if (Math.random() < 0.2) mungese++;
+            else if (Math.random() < 0.1) abstenim++;
+            else kunder++;
         }
     });
+    
+    // Sigurohemi që asnjë deputet nuk humbet ose nuk dyfishohet
+    var total = pro + kunder + abstenim + mungese;
+    if(total !== 120) {
+        kunder += (120 - total); 
+    }
 
-    state.playerRole = state.coalitionParties.includes(state.playerParty) 
-        ? (state.mandatar === state.playerParty ? "PRIME_MINISTER" : "BASHKËQEVERISJE") 
-        : "OPPOSITION_LEADER";
+    var passed = pro >= 61;
+    var resHtml = passed 
+        ? '<span style="color:var(--success);">✅ QEVERIA U MIRATUA ME ' + pro + ' VOTA PRO!</span>' 
+        : '<span style="color:var(--danger);">❌ QEVERIA DËSHTOI TË MARRË 61 VOTA! (' + pro + ' PRO)</span>';
 
-    addMediaNews("RTK", "Kuvendi i Kosovës voton Qeverinë e re të drejtuar nga " + state.primeMinister + " me " + seats + " vota pro!", "POSITIVE");
-    refreshAllUI();
-    showMajorAnnouncement({
-        badge: "SEANCË KONSTITUIVE & VOTIM QEVERIE",
-        title: "Votohet Qeveria e Re e Republikës së Kosovës (" + seats + " Vota PRO)",
-        reason: "Koalicioni (" + state.coalitionParties.join(" + ") + ") kaloi pragun kushtetues prej 61 votash.",
-        immediateImpact: state.primeMinister + " merr zyrtarisht mandatin ekzekutiv. Ministritë e lira u plotësuan nga Mandatari."
+    startVotingAnimation("🏛️ Seanca për Zgjedhjen e Qeverisë", "Mandatari: " + state.parties[state.mandatar].leader + " (" + state.parties[state.mandatar].short + ")", {
+        pro: pro, kunder: kunder, abstenim: abstenim, mungese: mungese, resultHtml: resHtml
+    }, function() {
+        if (passed) {
+            state.assemblyConstituted = true;
+            state.governmentFormed = true;
+            state.primeMinister = state.parties[state.mandatar].leader + " (" + state.parties[state.mandatar].short + ")";
+            
+            var mandatarCands = state.parties[state.mandatar].candidates;
+            var cIndex = 0;
+            state.ministries.forEach(function(m) {
+                if (m.party === "NONE" || !state.coalitionParties.includes(m.party)) {
+                    m.party = state.mandatar;
+                    var cand = mandatarCands[cIndex % mandatarCands.length];
+                    m.minister = cand ? cand.name : state.parties[state.mandatar].leader;
+                    cIndex++;
+                }
+            });
+
+            state.playerRole = state.coalitionParties.includes(state.playerParty) 
+                ? (state.mandatar === state.playerParty ? "PRIME_MINISTER" : "BASHKËQEVERISJE") 
+                : "OPPOSITION_LEADER";
+
+            addMediaNews("RTK", "Kuvendi i Kosovës voton Qeverinë e re të drejtuar nga " + state.primeMinister + " me " + pro + " vota pro!", "POSITIVE");
+            showMajorAnnouncement({
+                badge: "SEANCË KONSTITUIVE & VOTIM QEVERIE",
+                title: "Votohet Qeveria e Re e Republikës së Kosovës (" + pro + " Vota PRO)",
+                reason: "Koalicioni (" + state.coalitionParties.join(" + ") + ") kaloi pragun kushtetues prej 61 votash.",
+                immediateImpact: state.primeMinister + " merr zyrtarisht mandatin ekzekutiv. Ministritë e lira u plotësuan nga Mandatari."
+            });
+        } else {
+            addMediaNews("KOHA", "Dështon votimi i Qeverisë në Kuvend. Kërkohet mandatar i ri ose zgjedhje të reja.", "CRITICAL");
+            showMajorAnnouncement({
+                badge: "DËSHTON VOTIMI I QEVERISË",
+                title: "Kuvendi refuzon Qeverinë (" + pro + " Vota PRO)",
+                reason: "Mandatari nuk arriti të sigurojë 61 votat e nevojshme në sallë.",
+                immediateImpact: "Negociatat duhet të vazhdojnë ose vendi shkon në zgjedhje të reja."
+            });
+        }
+        refreshAllUI();
     });
 }
 
@@ -2593,53 +2719,70 @@ function amendLawForOpposition(lawIdx) {
 
 function voteLawInAssembly(lawIdx) {
     var law = state.laws[lawIdx];
-    var yesVotes = 0, noVotes = 0, abstainVotes = 0, minorityYes = 0;
+    var pro = 0, kunder = 0, abstenim = 0, mungese = 0, minorityYes = 0;
 
     state.mps.forEach(function(mp) {
         if (!mp.votingHistory) mp.votingHistory = [];
         var partySupports = law.supportParties.includes(mp.party) || state.coalitionParties.includes(mp.party) || mp.promisedVoteNext;
+        
         if (partySupports) {
             var rebellionChance = (law.id === "law_civil_code" && !mp.promisedVoteNext) ? 0.20 : (mp.rebelRisk && !mp.promisedVoteNext ? 0.10 : 0.0);
             if (Math.random() < rebellionChance) {
-                abstainVotes++;
+                abstenim++;
                 mp.votingHistory.push(law.id + ": ABSTENIM");
             } else {
-                yesVotes++;
+                pro++;
                 mp.votingHistory.push(law.id + ": PRO");
                 if (mp.party === "MIN_MULTI" || mp.party === "SL") minorityYes++;
             }
         } else {
-            noVotes++;
-            mp.votingHistory.push(law.id + ": KUNDËR");
+            if (Math.random() < 0.2) {
+                mungese++;
+                mp.votingHistory.push(law.id + ": MUNGON");
+            } else {
+                kunder++;
+                mp.votingHistory.push(law.id + ": KUNDËR");
+            }
         }
     });
 
+    var total = pro + kunder + abstenim + mungese;
+    if(total !== 120) { kunder += (120 - total); }
+
     var passed = false;
-    if (law.majorityType === "INTL_80") passed = (yesVotes >= 80);
-    else if (law.majorityType === "VITAL_DOUBLE") passed = (yesVotes >= 61 && minorityYes >= 14);
-    else passed = (yesVotes >= 61);
+    if (law.majorityType === "INTL_80") passed = (pro >= 80);
+    else if (law.majorityType === "VITAL_DOUBLE") passed = (pro >= 61 && minorityYes >= 14);
+    else passed = (pro >= 61);
 
-    law.lastVoteResult = yesVotes + " PËR, " + noVotes + " KUNDËR, " + abstainVotes + " ABSTENIME" + (law.majorityType === "VITAL_DOUBLE" ? (" (Vota të komuniteteve: " + minorityYes + "/20)") : "");
+    law.lastVoteResult = pro + " PËR, " + kunder + " KUNDËR, " + abstenim + " ABSTENIME, " + mungese + " MUNGESA" + (law.majorityType === "VITAL_DOUBLE" ? (" (Vota komuniteteve: " + minorityYes + "/20)") : "");
 
-    if (passed) {
-        law.status = "PASSED";
-        law.stage = "I dekretuar dhe publikuar në Gazetën Zyrtare";
-        state.budgetTotalB = +(state.budgetTotalB - law.costB).toFixed(2);
-        state.approval = clamp(state.approval + law.approvalEffect, 5, 95);
-        addMediaNews("Kuvendi Live", "Miratohet \"" + law.title + "\" me " + yesVotes + " vota PËR!", "POSITIVE");
-    } else {
-        law.status = "FAILED";
-        state.approval = clamp(state.approval - 2.0, 5, 95);
-        addMediaNews("KOHA", "Dështon në Kuvend \"" + law.title + "\" (" + law.lastVoteResult + ").", "CRITICAL");
-    }
+    var resHtml = passed 
+        ? '<span style="color:var(--success);">✅ LIGJI U MIRATUA ME ' + pro + ' VOTA PRO!</span>' 
+        : '<span style="color:var(--danger);">❌ LIGJI U RRËZUA (' + pro + ' PRO)</span>';
 
-    refreshAllUI();
-    showMajorAnnouncement({
-        badge: passed ? "✔ LIGJ I MIRATUAR NË KUVEND" : "✕ PROJEKTLIGJ I RRËZUAR",
-        title: law.title,
-        reason: "Kërkesa kushtetuese: " + law.requiredVotes + " vota" + (law.majorityType === "VITAL_DOUBLE" ? " + 14 vota të komuniteteve" : "") + ".",
-        statsHtml: '<div style="text-align:center; font-size:0.95rem; font-weight:800;">🟢 PËR: ' + yesVotes + ' &nbsp;|&nbsp; 🔴 KUNDËR: ' + noVotes + ' &nbsp;|&nbsp; ⚪ ABSTENIM: ' + abstainVotes + '</div>',
-        immediateImpact: passed ? ("Mbështetja publike ndryshoi me +" + law.approvalEffect + "%, efekti buxhetor u aplikua.") : "Mungesa e votave kërkon negociata me deputetët ose amendamente në komision."
+    startVotingAnimation("⚖️ Votimi i Projektligjit", law.title, {
+        pro: pro, kunder: kunder, abstenim: abstenim, mungese: mungese, resultHtml: resHtml
+    }, function() {
+        if (passed) {
+            law.status = "PASSED";
+            law.stage = "I dekretuar dhe publikuar në Gazetën Zyrtare";
+            state.budgetTotalB = +(state.budgetTotalB - law.costB).toFixed(2);
+            state.approval = clamp(state.approval + law.approvalEffect, 5, 95);
+            addMediaNews("Kuvendi Live", "Miratohet \"" + law.title + "\" me " + pro + " vota PËR!", "POSITIVE");
+        } else {
+            law.status = "FAILED";
+            state.approval = clamp(state.approval - 2.0, 5, 95);
+            addMediaNews("KOHA", "Dështon në Kuvend \"" + law.title + "\" (" + law.lastVoteResult + ").", "CRITICAL");
+        }
+
+        refreshAllUI();
+        showMajorAnnouncement({
+            badge: passed ? "✔ LIGJ I MIRATUAR NË KUVEND" : "✕ PROJEKTLIGJ I RRËZUAR",
+            title: law.title,
+            reason: "Kërkesa kushtetuese: " + law.requiredVotes + " vota" + (law.majorityType === "VITAL_DOUBLE" ? " + 14 vota të komuniteteve" : "") + ".",
+            statsHtml: '<div style="text-align:center; font-size:0.95rem; font-weight:800;">🟢 PËR: ' + pro + ' &nbsp;|&nbsp; 🔴 KUNDËR: ' + kunder + ' &nbsp;|&nbsp; ⚪ ABSTENIM: ' + abstenim + '</div>',
+            immediateImpact: passed ? ("Mbështetja publike ndryshoi me +" + law.approvalEffect + "%, efekti buxhetor u aplikua.") : "Mungesa e votave kërkon negociata me deputetët ose amendamente në komision."
+        });
     });
 }
 
@@ -2751,10 +2894,10 @@ function renderPresidentialSection() {
                 '<div style="background:#0f172a; padding:12px; border-radius:8px; border:1px solid var(--border);">' +
                     '<div style="font-size:0.76rem; color:var(--accent-gold); font-weight:700; margin-bottom:8px;">2. Negocimi i Kuorumit, Mbështetjes & Votimi i Fshehtë:</div>' +
                     '<div style="display:flex; flex-direction:column; gap:7px;">' +
-                        '<button class="action-btn btn-gold" onclick="runPresidentialVoteRound()">🗳️ Mbaj Votimin në Kuvend (Raundi ' + state.presidentialRound + ') — Shiko Ndarjen e Plotë të Votave</button>' +
-                        '<button class="action-btn btn-outline" onclick="negotiatePresidentialQuorum(\'QUORUM_ONLY\')">🤝 Negocio Marrëveshje për Kuorum me PDK / LDK (Qëndrojnë në sallë për 80+)</button>' +
-                        '<button class="action-btn btn-outline" onclick="negotiatePresidentialQuorum(\'FULL_VOTE\')">🏛️ Negocio Mbështetje me Votë PRO për Kandidatin (+Kosto politike/buxhetore)</button>' +
-                        (state.presidentElected ? '<button class="action-btn" onclick="openNewPresidentialProcedure()">🔄 Hap Procedurë të Re Presidenciale (Skenar Testimi)</button>' : '') +
+                        '<button class="action-btn btn-gold" onclick="runPresidentialVoteRound()">🗳️ Mbaj Votimin në Kuvend (Raundi ' + state.presidentialRound + ')</button>' +
+                        '<button class="action-btn btn-outline" onclick="negotiatePresidentialQuorum(\'QUORUM_ONLY\')">🤝 Negocio Marrëveshje për Kuorum me PDK/LDK (Qëndrojnë në sallë)</button>' +
+                        '<button class="action-btn btn-outline" onclick="negotiatePresidentialQuorum(\'FULL_VOTE\')">🏛️ Negocio Mbështetje me Votë PRO (+Kosto politike)</button>' +
+                        (state.presidentElected ? '<button class="action-btn" onclick="openNewPresidentialProcedure()">🔄 Hap Procedurë të Re Presidenciale (Testim)</button>' : '') +
                     '</div>' +
                 '</div>' +
             '</div>' +
@@ -2816,105 +2959,94 @@ function runPresidentialVoteRound() {
     var allCands = getAllPresCandidates();
     var cand = allCands[state.presidentialCandidateId] || allCands.cand_pula;
 
-    var presentInHall = 0, absentMPs = 0, votesFor = 0, votesAgainst = 0, votesAbstain = 0;
-    var partyBreakdown = {};
+    var pro = 0, kunder = 0, abstenim = 0, mungese = 0;
+    var presentInHall = 0;
 
     state.mps.forEach(function(mp) {
-        if (!partyBreakdown[mp.party]) partyBreakdown[mp.party] = { present: 0, yes: 0, no: 0, abstain: 0, absent: 0 };
         var partyInQuorum = state.quorumPledgedParties.includes(mp.party) || state.coalitionParties.includes(mp.party);
         var individualPresent = partyInQuorum || mp.promisedVoteNext;
 
         if (!individualPresent) {
-            absentMPs++;
-            partyBreakdown[mp.party].absent++;
+            mungese++;
             return;
         }
-        presentInHall++;
-        partyBreakdown[mp.party].present++;
 
+        presentInHall++;
         var partyAcceptsCandidate = cand.acceptParties.includes(mp.party) || state.coalitionParties.includes(mp.party);
+        
         if (mp.promisedVoteNext || partyAcceptsCandidate) {
             if (mp.rebelRisk && !mp.promisedVoteNext && Math.random() < 0.12) {
-                votesAbstain++;
-                partyBreakdown[mp.party].abstain++;
+                abstenim++;
             } else {
-                votesFor++;
-                partyBreakdown[mp.party].yes++;
+                pro++;
             }
         } else {
             if (mp.trustPlayer >= 72) {
-                votesFor++;
-                partyBreakdown[mp.party].yes++;
+                pro++;
             } else if (mp.seatNumber % 2 === 0) {
-                votesAbstain++;
-                partyBreakdown[mp.party].abstain++;
+                abstenim++;
             } else {
-                votesAgainst++;
-                partyBreakdown[mp.party].no++;
+                kunder++;
             }
         }
     });
 
+    var total = pro + kunder + abstenim + mungese;
+    if(total !== 120) { kunder += (120 - total); }
+
     var round = state.presidentialRound;
     var neededVotes = (round === 1 || round === 2) ? 80 : 61;
+    var hasQuorum = presentInHall >= 80;
+    var passed = hasQuorum && (pro >= neededVotes);
 
-    var rowsHtml = Object.entries(partyBreakdown).map(function(entry) {
-        var pk = entry[0]; var b = entry[1];
-        return '<tr><td><strong>' + pk + '</strong></td><td>' + b.present + '</td><td style="color:var(--success);">' + b.yes + '</td><td style="color:var(--danger);">' + b.no + '</td><td>' + b.abstain + '</td><td>' + b.absent + '</td></tr>';
-    }).join("");
-
-    var breakdownHtml =
-        '<div style="font-size:0.8rem; margin-bottom:8px; text-align:center;">' +
-            '<strong>Prania në Sallë (Kuorumi): ' + presentInHall + ' / 120</strong> (Munguan/Bojkotuan: ' + absentMPs + ')<br>' +
-            '🟢 <strong>Vota PRO: ' + votesFor + '</strong> &nbsp;|&nbsp; 🔴 <strong>KUNDËR: ' + votesAgainst + '</strong> &nbsp;|&nbsp; ⚪ <strong>ABSTENIM: ' + votesAbstain + '</strong>' +
-        '</div>' +
-        '<table class="data-table" style="font-size:0.73rem;">' +
-            '<thead><tr><th>Partia</th><th>Në Sallë</th><th>PRO</th><th>Kundër</th><th>Abstenim</th><th>Mungesë</th></tr></thead>' +
-            '<tbody>' + rowsHtml + '</tbody>' +
-        '</table>';
-
-    if (presentInHall < 80) {
-        addMediaNews("Betimi për Drejtësi", "Mungesë kuorumi në zgjedhjen e Presidentit: Vetëm " + presentInHall + " deputetë morën pjesë në votim!", "CRITICAL");
-        showMajorAnnouncement({
-            badge: "RAUNDI " + round + " — MUNGESË KUORUMI (<80)",
-            title: "Votimi i Pavlefshëm: Vetëm " + presentInHall + " Deputetë në Kutinë e Votimit",
-            reason: "Sipas Kushtetutës së Kosovës, pa pjesëmarrjen e të paktën 80 deputetëve në votim nuk plotësohet kuorumi.",
-            statsHtml: breakdownHtml,
-            immediateImpact: "Negocioni marrëveshje për kuorum me partitë opozitare."
-        });
-        return;
+    var resHtml = "";
+    if (!hasQuorum) {
+        resHtml = '<span style="color:var(--warning);">⚠️ MUNGESË KUORUMI! Vetëm ' + presentInHall + ' deputetë morën pjesë.</span>';
+    } else if (passed) {
+        resHtml = '<span style="color:var(--success);">✅ PRESIDENTI U ZGJODH ME ' + pro + ' VOTA PRO!</span>';
+    } else {
+        resHtml = '<span style="color:var(--danger);">❌ DËSHTOI ZGJEDHJA NË KËTË RAUND (' + pro + ' PRO / ' + neededVotes + ' të nevojshme)</span>';
     }
 
-    if (votesFor >= neededVotes) {
-        state.presidentElected = true;
-        state.presidentName = cand.name;
-        state.presidentialRound = 1;
-        state.approval = clamp(state.approval + cand.popBonus, 5, 95);
-        addMediaNews("RTK", "Kuvendi zgjedh " + cand.name + " President/e të Republikës së Kosovës me " + votesFor + " vota PRO në Raundin " + round + "!", "POSITIVE");
-        refreshAllUI();
-        showMajorAnnouncement({
-            badge: "✔ U ZGJODH PRESIDENTI/JA (RAUNDI " + round + ")",
-            title: cand.name + " Zgjidhet President/e e Republikës së Kosovës",
-            reason: "Me kuorum prej " + presentInHall + " deputetësh në sallë, kandidati mori " + votesFor + " vota PRO.",
-            statsHtml: breakdownHtml,
-            immediateImpact: "Institucionet janë plotësisht të konstituuara (+" + cand.popBonus + "% mbështetje)."
-        });
-    } else {
-        if (round < 3) {
-            state.presidentialRound++;
-            refreshAllUI();
+    startVotingAnimation("🎖️ Zgjedhja e Presidentit (Raundi " + round + ")", "Votimi i fshehtë për: " + cand.name, {
+        pro: pro, kunder: kunder, abstenim: abstenim, mungese: mungese, resultHtml: resHtml
+    }, function() {
+        if (!hasQuorum) {
+            addMediaNews("Betimi për Drejtësi", "Mungesë kuorumi në zgjedhjen së Presidentit: Vetëm " + presentInHall + " deputetë në sallë!", "CRITICAL");
             showMajorAnnouncement({
-                badge: "RAUNDI " + round + " DËSHTOI — KALOJMË NË RAUNDIN " + state.presidentialRound,
-                title: cand.name + " mori " + votesFor + " vota PRO (Kërkoheshin " + neededVotes + ")",
-                reason: "Në sallë ishin " + presentInHall + " deputetë për kuorum, por " + (votesAbstain + votesAgainst) + " abstenuan ose votuan kundër.",
-                statsHtml: breakdownHtml,
-                immediateImpact: state.presidentialRound === 3 ? "Në Raundin III mjaftojnë 61 vota PRO, me kusht që 80 deputetë të marrin pjesë në votim!" : "Kuvendi kalon në Raundin II."
+                badge: "RAUNDI " + round + " — MUNGESË KUORUMI (<80)",
+                title: "Votimi i Pavlefshëm: Vetëm " + presentInHall + " Deputetë",
+                reason: "Sipas Kushtetutës së Kosovës, pa pjesëmarrjen e të paktën 80 deputetëve nuk plotësohet kuorumi.",
+                immediateImpact: "Negocioni marrëveshje për kuorum me opozitën."
+            });
+        } else if (passed) {
+            state.presidentElected = true;
+            state.presidentName = cand.name;
+            state.presidentialRound = 1;
+            state.approval = clamp(state.approval + cand.popBonus, 5, 95);
+            addMediaNews("RTK", "Kuvendi zgjedh " + cand.name + " President/e me " + pro + " vota PRO në Raundin " + round + "!", "POSITIVE");
+            showMajorAnnouncement({
+                badge: "✔ U ZGJODH PRESIDENTI/JA (RAUNDI " + round + ")",
+                title: cand.name + " Zgjidhet President/e e Republikës",
+                reason: "Me kuorum prej " + presentInHall + " deputetësh, kandidati mori " + pro + " vota PRO.",
+                immediateImpact: "Institucionet janë plotësisht të konstituuara (+" + cand.popBonus + "% mbështetje)."
             });
         } else {
-            addMediaNews("KOHA", "Dështon zgjedhja e Presidentit edhe në Raundin III (" + votesFor + " vota)! Kuvendi shpërndahet!", "CRITICAL");
-            triggerSnapElection("Dështimi i zgjedhjes së Presidentit në 3 raunde (Neni 86 i Kushtetutës)");
+            if (round < 3) {
+                state.presidentialRound++;
+                showMajorAnnouncement({
+                    badge: "RAUNDI " + round + " DËSHTOI — KALOJMË NË RAUNDIN " + state.presidentialRound,
+                    title: cand.name + " mori " + pro + " vota PRO (Kërkoheshin " + neededVotes + ")",
+                    reason: "Në sallë ishin " + presentInHall + " deputetë, por munguan votat PRO.",
+                    immediateImpact: state.presidentialRound === 3 ? "Në Raundin III mjaftojnë 61 vota PRO (me kuorum 80)!" : "Kuvendi kalon në Raundin II."
+                });
+            } else {
+                addMediaNews("KOHA", "Dështon zgjedhja e Presidentit edhe në Raundin III! Kuvendi shpërndahet!", "CRITICAL");
+                triggerSnapElection("Dështimi i zgjedhjes së Presidentit në 3 raunde (Neni 86 i Kushtetutës)");
+            }
         }
-    }
+        refreshAllUI();
+    });
 }
 
 function renderOppositionSection() {
@@ -2961,24 +3093,45 @@ function organizePublicProtest() {
 }
 
 function voteNoConfidenceMotion() {
-    var oppBase = 120 - getCoalitionSeats();
-    var rebels = state.mps.filter(function(m) { return state.coalitionParties.includes(m.party) && m.rebelRisk; }).length;
-    var motionVotes = oppBase + Math.floor(rebels * 0.5);
+    var pro = 0, kunder = 0, abstenim = 0, mungese = 0;
 
-    if (motionVotes >= 61) {
-        addMediaNews("KOHA", "Bie Qeveria! Mocioni i mosbesimit miratohet me " + motionVotes + " vota pro!", "CRITICAL");
-        triggerSnapElection("Miratimi i Mocionit të Mosbesimit me " + motionVotes + " vota");
-    } else {
-        state.approval = clamp(state.approval + 2.5, 5, 95);
-        addMediaNews("RTK", "Dështon mocioni i mosbesimit në Kuvend: Vetëm " + motionVotes + " vota pro.", "POSITIVE");
-        refreshAllUI();
-        showMajorAnnouncement({
-            badge: "MOCION MOSBESIMI I RRËZUAR",
-            title: "Qeveria i Mbijeton Mocionit (" + motionVotes + " PËR / " + (120 - motionVotes) + " KUNDËR)",
-            reason: "Opozita nuk arriti të sigurojë 61 vota për rrëzimin e kabinetit qeveritar.",
-            immediateImpact: "Qeveria forcon pozicionin e saj politik (+2.5% mbështetje)."
-        });
-    }
+    state.mps.forEach(function(mp) {
+        var isGov = state.coalitionParties.includes(mp.party);
+        if (isGov) {
+            if (mp.rebelRisk && Math.random() < 0.2) pro++;
+            else kunder++;
+        } else {
+            if (Math.random() < 0.1) mungese++;
+            else pro++;
+        }
+    });
+
+    var total = pro + kunder + abstenim + mungese;
+    if(total !== 120) { kunder += (120 - total); }
+
+    var passed = pro >= 61;
+    var resHtml = passed 
+        ? '<span style="color:var(--danger);">❌ MOCIONI U MIRATUA ME ' + pro + ' VOTA PRO! Qeveria ra!</span>' 
+        : '<span style="color:var(--success);">✅ MOCIONI DËSHTOI! Vetëm ' + pro + ' vota PRO. Qeveria mbijetoi.</span>';
+
+    startVotingAnimation("⚡ Mocioni i Mosbesimit", "Votimi për shkarkimin e Qeverisë (Neni 100)", {
+        pro: pro, kunder: kunder, abstenim: abstenim, mungese: mungese, resultHtml: resHtml
+    }, function() {
+        if (passed) {
+            addMediaNews("KOHA", "Bie Qeveria! Mocioni i mosbesimit miratohet me " + pro + " vota pro!", "CRITICAL");
+            triggerSnapElection("Miratimi i Mocionit të Mosbesimit me " + pro + " vota");
+        } else {
+            state.approval = clamp(state.approval + 2.5, 5, 95);
+            addMediaNews("RTK", "Dështon mocioni i mosbesimit në Kuvend: Vetëm " + pro + " vota pro.", "POSITIVE");
+            showMajorAnnouncement({
+                badge: "MOCION MOSBESIMI I RRËZUAR",
+                title: "Qeveria i Mbijeton Mocionit (" + pro + " PËR / " + kunder + " KUNDËR)",
+                reason: "Opozita nuk arriti të sigurojë 61 vota për rrëzimin e kabinetit.",
+                immediateImpact: "Qeveria forcon pozicionin e saj politik (+2.5% mbështetje)."
+            });
+            refreshAllUI();
+        }
+    });
 }
 
 function renderGovernmentSection() {
@@ -3460,7 +3613,6 @@ function normalizePartyPolls() {
     genKeys.forEach(function(k) { state.parties[k].poll = +((state.parties[k].poll / totalGen) * 90.0).toFixed(2); });
 }
 
-// FAZA 2: Largimi i Qeverisë së vjetër dhe ri-mandatimi
 function triggerSnapElection(reasonText) {
     normalizePartyPolls();
     var genKeys = ["LVV", "PDK", "LDK", "AAK"];
@@ -3494,14 +3646,12 @@ function triggerSnapElection(reasonText) {
     state.mandateNumber++;
     state.weeksToNextRegularElection = 208;
     
-    // Rrëzohet qeveria dhe koalicionet
     state.governmentFormed = false;
     state.coalitionParties = [winnerId];
     state.coalitionAgreements = [];
     state.primeMinister = "Në pritje të formimit";
     state.speakerOfAssembly = "Në pritje të konstituimit";
 
-    // Pastrimi i plotë i ministrave (Largimi i qeverisë së vjetër)
     state.ministries.forEach(function(m) {
         m.party = "NONE";
         m.minister = "I/E paemëruar";
