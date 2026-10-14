@@ -311,7 +311,6 @@
 
         <div id="dash-press" class="sub-content" style="display:none;">
             <div class="grid-2">
-                <!-- Paneli 1: Konferenca për Media -->
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">🎙️ Konferencë për Media</div>
@@ -343,7 +342,6 @@
                 </div>
 
                 <div>
-                    <!-- Paneli 2: Komunikatë Zyrtare -->
                     <div class="card">
                         <div class="card-header">
                             <div class="card-title">📜 Publiko Komunikatë Zyrtare</div>
@@ -359,7 +357,6 @@
                         <button class="action-btn btn-outline" onclick="publishPressRelease()">Publiko Komunikatën Zyrtare</button>
                     </div>
 
-                    <!-- Paneli 3: Deklaratë e Shpejtë (Social Media / Publik) -->
                     <div class="card" style="margin-bottom:0;">
                         <div class="card-header">
                             <div class="card-title">💬 Deklaratë Publike (Reagim)</div>
@@ -603,25 +600,19 @@
         </div>
     </section>
 
-    <!-- TAB 6: FAZA 6 - DIPLOMACIA & RRUGA EVROPIANE -->
+    <!-- TAB 6: DIPLOMACIA, VIZITAT BILATERALE TË PLOTA & DIALOGU NË BRUKSEL -->
     <section id="tab-diplomacy" class="tab-view">
         <div class="sub-nav">
-            <button class="sub-pill active" onclick="switchSubTab('dip', 'eu', this)">🇪🇺 Dialogu & Rruga Evropiane</button>
-            <button class="sub-pill" onclick="switchSubTab('dip', 'bilateral', this)">🌍 Marrëdhëniet Bilaterale</button>
-            <button class="sub-pill" onclick="switchSubTab('dip', 'agreements', this)">📜 Marrëveshjet & Krizat</button>
+            <button class="sub-pill active" onclick="switchSubTab('dip', 'dialogue', this)">🇪🇺 Dialogu në Bruksel & Konsultimet me Aleatët</button>
+            <button class="sub-pill" onclick="switchSubTab('dip', 'bilateral', this)">🌍 Marrëdhëniet Bilaterale & Vizitat Zyrtare</button>
         </div>
 
-        <div id="dip-eu" class="sub-content">
+        <div id="dip-dialogue" class="sub-content">
             <div id="dialogueBrusselsContainer"></div>
-            <div id="euReformsContainer" style="margin-top: 14px;"></div>
         </div>
 
         <div id="dip-bilateral" class="sub-content" style="display:none;">
             <div id="diplomacyBilateralContainer"></div>
-        </div>
-
-        <div id="dip-agreements" class="sub-content" style="display:none;">
-            <div id="agreementsCrisesContainer"></div>
         </div>
     </section>
 
