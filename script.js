@@ -483,7 +483,7 @@ function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customI
     });
 
     let s = {
-        version: "4.1.2026_Faza4",
+        version: "4.1.2026_Faza5",
         mode: mode,
         year: 2026,
         monthIndex: isPostElectionAlt ? 6 : 9,
@@ -532,7 +532,7 @@ function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customI
         diplomacy: {
             USA: { name: "Shtetet e Bashkuara të Amerikës (SHBA)", city: "Uashington D.C.", official: "Sekretari i Shtetit & Ndihmës Sekretari për Evropën", score: 78, status: "Partneritet Strategjik", note: "Kërkon koordinim për veprimet në veri dhe zbatim të marrëveshjeve." },
             EU: { name: "Bashkimi Evropian (BE)", city: "Bruksel", official: "Presidentja e Komisionit Evropian & Përfaqësuesi i Lartë", score: 74, status: "Kandidat Potencial / Plani i Rritjes", note: "Kushtëzon fondet e Planit të Rritjes me progresin në dialog." },
-            GERMANY: { name: "Gjermania & Franca (Boshti Franko-Gjerman)", city: "Berlin & Paris", official: "Kancelari Federal i Gjermanisë & Këshilltarët Diplomatikë", score: 76, status: "Mbështetje për Procesin e Berlinit", note: "Mbështet tregun e përbashkët rajonal dhe integrimin evropian." },
+            GERMANY: { name: "Gjermania & Franca (Boshti Franko-Gjerman)", city: "Berlin & Paris", official: "Kancelari Federal i Gjermanisë & Këshilltarët Diplomatikë", score: 76, status: "Mbështetje për Procesin e Berlinit", note: "Mbështet tregun e përbashkët regional dhe integrimin evropian." },
             UK: { name: "Mbretëria e Bashkuar (Britania e Madhe)", city: "Londër", official: "Sekretari i Jashtëm Britanik & Emisari për Ballkanin Perëndimor", score: 88, status: "Aleat i Fortë i Sigurisë", note: "Mbështet fuqishëm FSK-në, sundimin e ligjit dhe sigurinë kufitare." },
             ALBANIA: { name: "Republika e Shqipërisë", city: "Tiranë", official: "Kryeministri i Shqipërisë & Kabinetet ndërqeveritare", score: 92, status: "Vëllazëror & Marrëveshje të Përbashkëta", note: "Projektet e hekurudhës Durrës–Prishtinë dhe tregu unik energjetik." },
             TURKEY: { name: "Republika e Turqisë", city: "Ankara & Stamboll", official: "Presidenti & Ministri i Mbrojtjes dhe Tregtisë", score: 85, status: "Bashkëpunim Ekonomik & Ushtarak", note: "Furnizim me sisteme mbrojtëse dhe investime në energji." }
@@ -1246,7 +1246,6 @@ function toggleModal(id, show) {
     }
 }
 
-// FAZA 4: Funksioni parandalues i kalimit të kohës
 window.promptAdvanceTime = function(weeks) {
     if (!state) return;
     
@@ -1437,7 +1436,12 @@ function renderDashboard() {
     renderPromisesList();
 
     var filterVal = document.getElementById("historyFilterSelect") ? document.getElementById("historyFilterSelect").value : "ALL";
-    var logs = state.historyLog.filter(function(x) { return filterVal === "ALL" || x.toLowerCase().includes(filterVal.toLowerCase()); });
+    var logs = state.historyLog.filter(function(x) { 
+        if(filterVal === "Media" && x.toLowerCase().includes("medi")) return true;
+        if(filterVal === "Media" && x.toLowerCase().includes("komunikat")) return true;
+        return filterVal === "ALL" || x.toLowerCase().includes(filterVal.toLowerCase()); 
+    });
+    
     document.getElementById("historyLogContainer").innerHTML = logs.map(function(item) {
         return '<div style="padding:7px 10px; border-bottom:1px solid var(--border); font-size:0.79rem;">• ' + item + '</div>';
     }).join("");
@@ -1458,7 +1462,6 @@ function resolveActiveEvent(optIdx) {
     advanceTime(1, true);
 }
 
-// FAZA 4: Renderimi i Inbox me Statuse Reale (Pending, Completed, Expired)
 function renderPMInboxSection() {
     var container = document.getElementById("pmInboxListContainer");
     if (!container) return;
@@ -1532,7 +1535,6 @@ function openPMRequestModal(reqIdx) {
     toggleModal("interactiveActionModal", true);
 }
 
-// FAZA 4: Detyrat nuk fshihen menjëherë, marrin status COMPLETED
 function resolvePMRequest(reqIdx, optIdx) {
     var req = state.pmInboxRequests[reqIdx];
     var opt = req.options[optIdx];
@@ -1663,7 +1665,6 @@ function renderCalendarMeetings() {
         return;
     }
 
-    // FAZA 4: Renderimi me statuset e reja (SCHEDULED, COMPLETED, MISSED)
     container.innerHTML = list.map(function(m, idx) {
         var isReady = m.dueTurn <= state.turnCount && m.status === "SCHEDULED";
         var isMissed = m.status === "MISSED";
@@ -1835,7 +1836,7 @@ function confirmScheduleMeeting() {
         goal: goal,
         hour: offset === 0 ? "16:30" : "10:00",
         dueTurn: state.turnCount + offset,
-        status: "SCHEDULED", // FAZA 4 status
+        status: "SCHEDULED",
         outcome: null
     };
     state.scheduledMeetings.unshift(newMeet);
@@ -1848,7 +1849,6 @@ function confirmScheduleMeeting() {
     }
 }
 
-// FAZA 4: Lojtari hyn vetë në takim dhe vendos për ta përfunduar
 function conductScheduledMeeting(meetIdx) {
     var m = state.scheduledMeetings[meetIdx];
     if (!m || m.status !== "SCHEDULED") return;
@@ -1888,7 +1888,7 @@ function finalizeScheduledMeeting(meetIdx, decisionCode) {
     var m = state.scheduledMeetings[meetIdx];
     var customMsg = document.getElementById("customMeetingMessage") ? document.getElementById("customMeetingMessage").value.trim() : "";
     
-    m.status = "COMPLETED"; // FAZA 4: Takimi shënohet si i përfunduar
+    m.status = "COMPLETED";
 
     if (decisionCode === "COMPROMISE") {
         m.outcome = "U arrit dakordim dhe koordinim institucional me " + m.targetName + "." + (customMsg ? (" (\"" + customMsg + "\")") : "");
@@ -2030,6 +2030,49 @@ function finishFullPressConference() {
         reason: "U zhvilluan " + sess.step + " pyetje me gazetarët e akredituar në Kryeministri.",
         immediateImpact: "Deklaratat dhe premtimet u pasqyruan në lajmet kryesore dhe në sondazhin e mbështetjes publike."
     });
+}
+
+// FAZA 5: Publikimi i Komunikatës Zyrtare
+function publishPressRelease() {
+    var title = document.getElementById("prTitle").value.trim();
+    var category = document.getElementById("prCategory").value;
+    
+    if (!title) {
+        showToast("Ju lutem shkruani një titull për komunikatën zyrtare!");
+        return;
+    }
+
+    // Ndikimi i balancuar sipas kërkesave (Nuk bën hove të mëdha joreale)
+    state.approval = clamp(state.approval + 0.8, 5, 95);
+    
+    var fullBodyText = "Zyra për Komunikim e ka shpërndarë këtë njoftim tek të gjitha mediat vendore dhe ndërkombëtare. Qëndrimi i qartë institucional pritet të ndikojë në uljen e paqartësive rreth kësaj teme.";
+    
+    addMediaNews("Komunikatë Zyrtare", "[" + category + "] " + title, "POSITIVE", fullBodyText, "Opozita ka marrë shënim dhe mediat po analizojnë deklaratën e lëshuar.");
+    
+    document.getElementById("prTitle").value = "";
+    refreshAllUI();
+    showToast("Komunikata u publikua dhe u shpërnda te mediat!");
+}
+
+// FAZA 5: Lëshimi i Deklaratës së Shpejtë (Social Media / Publik)
+function issuePublicStatement() {
+    var text = document.getElementById("psText").value.trim();
+    
+    if (!text) {
+        showToast("Ju lutem shkruani mesazhin e deklaratës suaj!");
+        return;
+    }
+
+    // Ndikimi i një deklarate është i vogël dhe rrit pak kohezionin
+    state.approval = clamp(state.approval + 0.4, 5, 95);
+    var myP = state.parties[state.playerParty];
+    myP.internalCohesion = clamp(myP.internalCohesion + 1, 0, 100);
+
+    addMediaNews("Deklaratë e Shpejtë", "Reagim: " + text.substring(0, 50) + (text.length > 50 ? "..." : ""), "NEUTRAL", text, "Qytetarët dhe mbështetësit po reagojnë në rrjetet sociale.");
+    
+    document.getElementById("psText").value = "";
+    refreshAllUI();
+    showToast("Deklarata juaj publike u lëshua me sukses!");
 }
 
 function renderPromisesList() {
@@ -4015,7 +4058,6 @@ function executeNorthSecurityOperation() {
     showToast("Siguria dhe funksionaliteti institucional në veri u rritën me +6%!");
 }
 
-// FAZA 4: Funksioni kryesor thelbësor i menaxhimit të kohës dhe skadimit të detyrave
 function advanceTime(weeksCount, silentToast) {
     if (typeof weeksCount === "undefined") weeksCount = 1;
     if (typeof silentToast === "undefined") silentToast = false;
@@ -4038,7 +4080,6 @@ function advanceTime(weeksCount, silentToast) {
             }
         }
 
-        // Sektorët Shtetërorë
         (state.stateSectors || []).forEach(function(sec) {
             if (sec.active && sec.weeksLeft > 0) {
                 sec.weeksLeft--;
@@ -4052,7 +4093,6 @@ function advanceTime(weeksCount, silentToast) {
             }
         });
 
-        // Projektet Komunale
         state.municipalities.forEach(function(m) {
             if (!m.projects) return;
             m.projects.forEach(function(pr) {
@@ -4068,7 +4108,6 @@ function advanceTime(weeksCount, silentToast) {
             });
         });
 
-        // FAZA 4: Detyrat e Inbox - Skadojnë me pasoja pa u zhdukur nga lista
         (state.pmInboxRequests || []).forEach(function(req) {
             if (req.status === "PENDING") {
                 req.deadlineWeeks--;
@@ -4081,12 +4120,10 @@ function advanceTime(weeksCount, silentToast) {
             }
         });
 
-        // Inbox Dinamik
         if (state.turnCount % 2 === 0 && (state.pmInboxRequests || []).filter(function(r){return r.status==="PENDING";}).length < 4) {
             generateDynamicIncomingRequest(false);
         }
 
-        // FAZA 4: Takimet - Humben nëse afati i tyre mbetet pas
         if (state.scheduledMeetings) {
             state.scheduledMeetings.forEach(function(m, idx) {
                 if (m.status === "SCHEDULED" && m.dueTurn < state.turnCount) {
@@ -4095,7 +4132,6 @@ function advanceTime(weeksCount, silentToast) {
                 }
             });
             
-            // Hap takimin e parë që është GATI vetëm nëse s'kemi asnjë tjetër radhazi
             state.scheduledMeetings.forEach(function(m, idx) {
                 if (m.status === "SCHEDULED" && m.dueTurn === state.turnCount && dueMeetingIdx === -1) {
                     dueMeetingIdx = idx;
@@ -4103,7 +4139,6 @@ function advanceTime(weeksCount, silentToast) {
             });
         }
 
-        // Zgjedhja e Presidentit
         if (!state.presidentElected) {
             state.presidentialDeadlineWeeks--;
             if (state.presidentialDeadlineWeeks <= 0) {
@@ -4113,7 +4148,6 @@ function advanceTime(weeksCount, silentToast) {
             }
         }
 
-        // Premtimet Politike
         state.promises.forEach(function(pr) {
             if (!pr.fulfilled) {
                 pr.deadlineWeeks--;
