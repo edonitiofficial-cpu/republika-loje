@@ -8,6 +8,51 @@
 </head>
 <body>
 
+<!-- ============================================================
+     EKRANI FILLESTAR (START SCREEN)
+     ============================================================ -->
+<div id="startScreen" class="start-screen">
+    <!-- Sfond dinamik me 6 fotografi (rrotullohen me Ken Burns) -->
+    <div class="start-bg">
+        <div class="start-bg-slide" style="background-image: url('images/kuvendi.jpg');"></div>
+        <div class="start-bg-slide" style="background-image: url('images/qeveria.jpg');"></div>
+        <div class="start-bg-slide" style="background-image: url('images/konferenca.jpg');"></div>
+        <div class="start-bg-slide" style="background-image: url('images/diplomacia.jpg');"></div>
+        <div class="start-bg-slide" style="background-image: url('images/komuna.jpg');"></div>
+        <div class="start-bg-slide" style="background-image: url('images/partia.jpg');"></div>
+    </div>
+    <div class="start-overlay"></div>
+
+    <!-- Përmbajtja qendrore -->
+    <div class="start-content">
+        <div class="start-crest">🇽🇰</div>
+        <h1 class="start-title">REPUBLIKA</h1>
+        <div class="start-subtitle">Simulatori Politik i Republikës së Kosovës</div>
+        <div class="start-divider"></div>
+        <p class="start-description">
+            Udhëhiqe vendin përmes Kuvendit, Qeverisë, 38 Komunave dhe diplomacisë ndërkombëtare.
+            Nga koalicionet e negociatat në Bruksel, çdo vendim formon të ardhmen e Legjislaturës XI.
+        </p>
+
+        <div class="start-buttons">
+            <button class="start-btn start-btn-primary" onclick="startNewGameFromScreen()">
+                <span class="start-btn-icon">▶</span>
+                <span>LOJË E RE</span>
+            </button>
+            <button class="start-btn start-btn-secondary" onclick="loadGameFromScreen()">
+                <span class="start-btn-icon">💾</span>
+                <span>NGARKO LOJËN</span>
+            </button>
+        </div>
+
+        <div class="start-footer">
+            <span class="start-tag">Legjislatura XI</span>
+            <span class="start-tag">v4.1</span>
+            <span class="start-tag">Tetor 2026</span>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL 1: ZGJEDHJA E SKENARIT DHE PARTISË -->
 <div class="modal-overlay" id="setupModal">
     <div class="modal-box">
