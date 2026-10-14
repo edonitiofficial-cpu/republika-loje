@@ -346,6 +346,31 @@ const MONTHS_SQ = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik
 let state = null;
 
 /* ============================================================================
+   FUNKSIONET E EKRANIT FILLESTAR (START SCREEN)
+   ============================================================================ */
+function showStartScreen() {
+    var ss = document.getElementById("startScreen");
+    if (ss) ss.classList.remove("hidden");
+    document.body.classList.add("start-screen-active");
+}
+
+function hideStartScreen() {
+    var ss = document.getElementById("startScreen");
+    if (ss) ss.classList.add("hidden");
+    document.body.classList.remove("start-screen-active");
+}
+
+function startNewGameFromScreen() {
+    hideStartScreen();
+    openNewScenarioModal();
+}
+
+function loadGameFromScreen() {
+    hideStartScreen();
+    toggleModal("saveModal", true);
+}
+
+/* ============================================================================
    2. FUNKSIONET E INICIALIZIMIT
    ============================================================================ */
 
@@ -1068,6 +1093,7 @@ function loadFromSlot(slotIdx) {
     state = slots[slotIdx].data;
     saveGameAuto();
     toggleModal("saveModal", false);
+    hideStartScreen();
     refreshAllUI();
     showToast("U ngarkua skenari nga Sloti #" + (slotIdx + 1) + "!");
 }
@@ -1118,13 +1144,14 @@ function initApp() {
             if (!state.dialogueNegotiationLog) state.dialogueNegotiationLog = [];
             document.getElementById("setupModal").classList.remove("show");
             refreshAllUI();
+            hideStartScreen();
             showToast("Loja vazhdoi automatikisht nga ruajtja e fundit!");
             return;
         } catch (e) {}
     }
     state = createFreshState("REALITY_OCT2026", "LVV");
     refreshAllUI();
-    document.getElementById("setupModal").classList.add("show");
+    showStartScreen();
 }
 
 function renderSetupModalParties() {
@@ -1147,6 +1174,7 @@ function startScenarioWithParty(partyKey) {
     state = createFreshState(mode, partyKey);
     saveGameAuto();
     document.getElementById("setupModal").classList.remove("show");
+    hideStartScreen();
     refreshAllUI();
     showToast("Fillohet loja me " + state.parties[partyKey].short + "!");
 }
@@ -1159,6 +1187,7 @@ function startCustomParty() {
     state = createFreshState(mode, "LVV", { partyName: pName, leaderName: lName });
     saveGameAuto();
     document.getElementById("setupModal").classList.remove("show");
+    hideStartScreen();
     refreshAllUI();
 }
 
