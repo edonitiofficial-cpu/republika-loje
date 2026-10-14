@@ -46,6 +46,246 @@ body {
     padding-bottom: 84px;
 }
 
+/* ============================================================
+   EKRANI FILLESTAR (START SCREEN)
+   ============================================================ */
+.start-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #050810;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.start-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Sfondi me 6 foto që rrotullohen */
+.start-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.start-bg-slide {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    animation: startSlideshow 36s infinite;
+    transform-origin: center center;
+    filter: brightness(0.55) saturate(1.15);
+}
+
+.start-bg-slide:nth-child(1) { animation-delay: 0s; }
+.start-bg-slide:nth-child(2) { animation-delay: 6s; }
+.start-bg-slide:nth-child(3) { animation-delay: 12s; }
+.start-bg-slide:nth-child(4) { animation-delay: 18s; }
+.start-bg-slide:nth-child(5) { animation-delay: 24s; }
+.start-bg-slide:nth-child(6) { animation-delay: 30s; }
+
+@keyframes startSlideshow {
+    0%   { opacity: 0; transform: scale(1) translate(0, 0); }
+    4%   { opacity: 1; }
+    16%  { opacity: 1; transform: scale(1.08) translate(-1%, -0.5%); }
+    20%  { opacity: 0; transform: scale(1.1) translate(-1.5%, -1%); }
+    100% { opacity: 0; transform: scale(1.15) translate(-2%, -1.5%); }
+}
+
+/* Overlay me gradient për lexueshmëri */
+.start-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background:
+        radial-gradient(circle at 50% 40%, rgba(11, 17, 32, 0.35) 0%, rgba(11, 17, 32, 0.85) 70%, rgba(5, 8, 16, 0.98) 100%),
+        linear-gradient(180deg, rgba(11, 17, 32, 0.5) 0%, rgba(11, 17, 32, 0.9) 100%);
+}
+
+/* Përmbajtja qendrore */
+.start-content {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    padding: 24px;
+    max-width: 720px;
+    width: 100%;
+    animation: startContentFadeIn 1s ease-out;
+}
+
+@keyframes startContentFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.start-crest {
+    font-size: 3.5rem;
+    line-height: 1;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 4px 20px rgba(245, 158, 11, 0.45));
+    animation: startCrestPulse 3.5s ease-in-out infinite;
+}
+
+@keyframes startCrestPulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 4px 20px rgba(245, 158, 11, 0.45)); }
+    50%      { transform: scale(1.05); filter: drop-shadow(0 4px 30px rgba(245, 158, 11, 0.7)); }
+}
+
+.start-title {
+    font-size: clamp(2.8rem, 9vw, 5rem);
+    font-weight: 900;
+    letter-spacing: 0.22em;
+    color: #fff;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    background: linear-gradient(180deg, #ffffff 0%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 4px 30px rgba(245, 158, 11, 0.25);
+    padding-left: 0.22em; /* kompensim për letter-spacing në center */
+}
+
+.start-subtitle {
+    font-size: clamp(0.85rem, 2.6vw, 1.05rem);
+    font-weight: 600;
+    letter-spacing: 0.35em;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+    margin-bottom: 22px;
+    padding-left: 0.35em;
+}
+
+.start-divider {
+    width: 90px;
+    height: 3px;
+    margin: 0 auto 22px;
+    background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+    border-radius: 2px;
+}
+
+.start-description {
+    font-size: clamp(0.82rem, 2.4vw, 0.95rem);
+    line-height: 1.75;
+    color: #cbd5e1;
+    max-width: 560px;
+    margin: 0 auto 34px;
+    padding: 0 8px;
+}
+
+/* Butonat */
+.start-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 340px;
+    margin: 0 auto 30px;
+}
+
+.start-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 24px;
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.18s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.start-btn-icon {
+    font-size: 1.05rem;
+    display: inline-block;
+}
+
+.start-btn-primary {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #0b1120;
+    box-shadow: 0 8px 28px rgba(245, 158, 11, 0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+.start-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 36px rgba(245, 158, 11, 0.5), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+
+.start-btn-primary:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.start-btn-secondary {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.start-btn-secondary:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--accent-gold);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.start-btn-secondary:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Footer me tags */
+.start-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.start-tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    padding: 4px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 99px;
+    background: rgba(11, 17, 32, 0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* Responsive për mobile të vegjël */
+@media (max-width: 480px) {
+    .start-content { padding: 18px; }
+    .start-crest { font-size: 2.6rem; }
+    .start-title { letter-spacing: 0.16em; }
+    .start-subtitle { letter-spacing: 0.25em; }
+    .start-description { font-size: 0.8rem; line-height: 1.65; }
+    .start-btn { padding: 13px 20px; font-size: 0.85rem; }
+}
+
+/* Disable scroll kur start screen është aktiv */
+body.start-screen-active {
+    overflow: hidden;
+}
+
 /* ---------- HEADER ---------- */
 header {
     background: linear-gradient(135deg, #111c35 0%, #0b1120 100%);
@@ -595,4 +835,72 @@ select, input[type="text"], input[type="number"], input[type="range"], textarea 
 .markdown-body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     font-size:16px;line-height:1.5;word-wrap:break-word;
+}
+
+/* ============================================================
+   PËRMIRËSIME VIZUALE TË LEHTA (FAZA 1)
+   ============================================================ */
+
+/* Animacion fade-in për kartat kur hapen tab-et */
+.tab-view.active .card {
+    animation: cardFadeIn 0.35s ease-out backwards;
+}
+
+.tab-view.active .card:nth-child(1) { animation-delay: 0.02s; }
+.tab-view.active .card:nth-child(2) { animation-delay: 0.06s; }
+.tab-view.active .card:nth-child(3) { animation-delay: 0.10s; }
+.tab-view.active .card:nth-child(4) { animation-delay: 0.14s; }
+
+@keyframes cardFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Glow i butë për butonin "Java Tjetër" */
+.next-turn-btn:hover {
+    box-shadow: 0 4px 18px rgba(245, 158, 11, 0.55);
+}
+
+/* Hover i butë për të gjithë butonat kryesorë */
+.action-btn {
+    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Sfond i lehtë për tab-in aktiv në bottom-nav */
+.nav-item:hover:not(.active) {
+    background: rgba(255,255,255,0.04);
+    color: var(--text-main);
+}
+
+/* Scrollbar i personalizuar për modal-box */
+.modal-box::-webkit-scrollbar,
+#historyLogContainer::-webkit-scrollbar {
+    width: 8px;
+}
+.modal-box::-webkit-scrollbar-track,
+#historyLogContainer::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.04);
+    border-radius: 99px;
+}
+.modal-box::-webkit-scrollbar-thumb,
+#historyLogContainer::-webkit-scrollbar-thumb {
+    background: rgba(245, 158, 11, 0.5);
+    border-radius: 99px;
+}
+.modal-box::-webkit-scrollbar-thumb:hover,
+#historyLogContainer::-webkit-scrollbar-thumb:hover {
+    background: rgba(245, 158, 11, 0.8);
+}
+
+/* Përmirësim për tab-et në ekrane të vogla */
+@media (max-width: 480px) {
+    .header-top { flex-direction: column; align-items: stretch; }
+    .header-controls { justify-content: center; }
+    .brand { justify-content: center; }
+    .card { padding: 12px; }
+    .modal-box { padding: 14px; border-radius: 12px; }
 }
