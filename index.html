@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Republika: Simulatori Politik i Kosovës (Edicioni Institucional v4.1)</title>
+    <title>Republika: Simulatori Politik i Kosovës (VisionOS Edition)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+<!-- TRUKU I TRANZICIONIT -->
+<div id="pageTransition" class="page-transition">
+    <div class="transition-crest">🇽🇰</div>
+    <div class="transition-text">Po ngarkon të dhënat shtetërore...</div>
+</div>
 
 <!-- ============================================================
      EKRANI FILLESTAR (START SCREEN)
@@ -16,638 +22,708 @@
         <div class="start-bg-slide" style="background-image: url('images/kuvendi.jpg');"></div>
         <div class="start-bg-slide" style="background-image: url('images/qeveria.jpg');"></div>
         <div class="start-bg-slide" style="background-image: url('images/konferenca.jpg');"></div>
-        <div class="start-bg-slide" style="background-image: url('images/diplomacia.jpg');"></div>
-        <div class="start-bg-slide" style="background-image: url('images/komuna.jpg');"></div>
-        <div class="start-bg-slide" style="background-image: url('images/partia.jpg');"></div>
     </div>
     <div class="start-overlay"></div>
-
+    
     <div class="start-content">
         <div class="start-crest">🇽🇰</div>
         <h1 class="start-title">REPUBLIKA</h1>
         <div class="start-subtitle">Simulatori Politik i Republikës së Kosovës</div>
         <div class="start-divider"></div>
-        <p class="start-description">
-            Udhëhiqe vendin përmes Kuvendit, Qeverisë, 38 Komunave dhe diplomacisë ndërkombëtare.
-            Nga koalicionet e negociatat në Bruksel, çdo vendim formon të ardhmen e Legjislaturës XI.
-        </p>
-
+        <p class="start-description">Udhëhiqe vendin përmes Kuvendit, Qeverisë, 38 Komunave dhe diplomacisë ndërkombëtare.</p>
+        
         <div class="start-buttons">
-            <button class="start-btn start-btn-primary" onclick="startNewGameFromScreen()">
-                <span class="start-btn-icon">▶</span>
-                <span>LOJË E RE</span>
-            </button>
-            <button class="start-btn start-btn-secondary" onclick="loadGameFromScreen()">
-                <span class="start-btn-icon">💾</span>
-                <span>NGARKO LOJËN</span>
-            </button>
+            <button class="start-btn start-btn-primary" onclick="startNewGameFromScreen()">▶ LOJË E RE</button>
+            <button class="start-btn start-btn-secondary" onclick="loadGameFromScreen()">💾 NGARKO LOJËN</button>
         </div>
-
+        
         <div class="start-footer">
             <span class="start-tag">Legjislatura XI</span>
-            <span class="start-tag">v4.1</span>
-            <span class="start-tag">Tetor 2026</span>
+            <span class="start-tag">v4.8 VisionOS</span>
         </div>
     </div>
 </div>
 
-<!-- MODAL 1: ZGJEDHJA E SKENARIT DHE PARTISË -->
+<!-- ============================================================
+     MODALET (DRITARET POPUP)
+     ============================================================ -->
 <div class="modal-overlay" id="setupModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h2 style="font-size: 1.15rem; color: var(--accent-gold);">🇽🇰 REPUBLIKA: SIMULATORI POLITIK I KOSOVËS</h2>
+            <h2 style="font-size: 1.15rem; color: var(--accent-gold);">🇽🇰 REPUBLIKA: SIMULATORI POLITIK</h2>
             <button class="btn-top" onclick="closeSetupIfLoaded()" id="closeSetupBtn" style="display:none;">Mbyll ✕</button>
         </div>
-        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
-            Bazuar në të dhënat e KQZ-së nga Zgjedhjet e Parakohshme të <strong>7 Qershorit 2026 (Legjislatura XI)</strong>: LVV (53), PDK (22), LDK (18), AAK (7), Lista Serbe (9) dhe 11 deputetë të komuniteteve joshumicë.
-        </p>
-
-        <div class="card" style="background:#0f172a; margin-bottom:12px;">
-            <div style="font-size:0.8rem; font-weight:700; margin-bottom:8px; color:var(--accent-gold);">1. ZGJIDH MËNYRËN E LOJËS DHE SKENARIN FILLESTAR:</div>
+        <div class="card" style="margin-bottom:12px;">
+            <div style="font-size:0.8rem; font-weight:700; margin-bottom:8px; color:var(--accent-gold);">1. SKENARI FILLESTAR:</div>
             <div class="grid-2" style="gap:8px;">
-                <label style="display:flex; gap:8px; align-items:flex-start; font-size:0.78rem; cursor:pointer; background:rgba(255,255,255,0.03); padding:8px; border-radius:8px; border:1px solid var(--border);">
+                <label style="display:flex; gap:8px; align-items:flex-start; font-size:0.78rem; cursor:pointer; background:rgba(0,0,0,0.3); padding:8px; border-radius:8px; border:1px solid var(--border-glass);">
                     <input type="radio" name="gameMode" value="REALITY_OCT2026" checked>
-                    <div>
-                        <strong>Mënyra 1: Realiteti Politik (Tetor 2026)</strong>
-                        <span style="display:block; color:var(--text-muted); font-size:0.72rem;">Kuvendi i konstituuar (Kryetare Albulena Haxhiu), Qeveria Kurti 4 e votuar (62 vota) dhe Presidentja Justina Shiroka-Pula në detyrë.</span>
-                    </div>
+                    <div><strong>Realiteti Politik (Tetor 2026)</strong></div>
                 </label>
-                <label style="display:flex; gap:8px; align-items:flex-start; font-size:0.78rem; cursor:pointer; background:rgba(255,255,255,0.03); padding:8px; border-radius:8px; border:1px solid var(--border);">
+                <label style="display:flex; gap:8px; align-items:flex-start; font-size:0.78rem; cursor:pointer; background:rgba(0,0,0,0.3); padding:8px; border-radius:8px; border:1px solid var(--border-glass);">
                     <input type="radio" name="gameMode" value="ALT_POST_ELECTION">
-                    <div>
-                        <strong>Mënyra 2: Historia Alternative (8 Korrik 2026)</strong>
-                        <span style="display:block; color:var(--text-muted); font-size:0.72rem;">Nis menjëherë pas certifikimit të rezultateve të 7 Qershorit 2026 (LVV 53 ulëse). Negocio vetë koalicionin me raunde, Kryeparlamentarin, Qeverinë dhe Presidentin!</span>
-                    </div>
+                    <div><strong>Historia Alternative (Pas Zgjedhjeve)</strong></div>
                 </label>
             </div>
         </div>
-
-        <div style="font-size:0.8rem; font-weight:700; margin-bottom:8px; color:var(--accent-gold);">2. ZGJIDH SUBJEKTIN POLITIK OSE KRIJO PARTI TË RE:</div>
+        <div style="font-size:0.8rem; font-weight:700; margin-bottom:8px; color:var(--accent-gold);">2. ZGJIDH SUBJEKTIN:</div>
         <div id="partySelectContainer"></div>
-
-        <div class="card" style="background:#0f172a; margin-top:10px;">
-            <div style="font-size:0.78rem; font-weight:700; margin-bottom:6px;">Ose Krijo Subjekt të Ri Politik (Historia Alternative):</div>
+        <div class="card" style="margin-top:10px;">
+            <div style="font-size:0.78rem; font-weight:700; margin-bottom:6px;">Ose Krijo Subjekt të Ri:</div>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                <input type="text" id="customPartyName" placeholder="Emri i Partisë (p.sh. Alternativa e Re)" style="flex:2;">
-                <input type="text" id="customLeaderName" placeholder="Emri i Kryetarit" style="flex:2;">
-                <button class="action-btn btn-gold" onclick="startCustomParty()">Krijo & Fillo</button>
+                <input type="text" id="customPartyName" placeholder="Emri i Partisë" style="flex:2;">
+                <input type="text" id="customLeaderName" placeholder="Kryetari" style="flex:2;">
+                <button class="action-btn btn-gold" onclick="startCustomParty()">Fillo</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL 2: MENAXHIMI I RUAJTJEVE (SAVE / LOAD SLOTS) -->
 <div class="modal-overlay" id="saveModal">
     <div class="modal-box">
         <div class="card-header">
-            <div class="card-title">💾 Ruajtja e Progresit dhe Historiku i Mandateve</div>
+            <div class="card-title">💾 Ruajtjet</div>
             <button class="btn-top" onclick="toggleModal('saveModal', false)">Mbyll ✕</button>
         </div>
-        <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
-            Loja ruhet automatikisht në çdo veprim dhe javë. Këtu mund të ruani deri në 3 skenarë të veçantë ose të nisni një skenar të ri.
-        </p>
         <div id="saveSlotsContainer"></div>
-        <div style="display:flex; justify-content:space-between; margin-top:12px; flex-wrap:wrap; gap:8px;">
-            <button class="action-btn btn-outline" onclick="openNewScenarioModal()">🔄 Nis Skenar të Ri</button>
-            <button class="action-btn btn-danger" onclick="hardResetAllSaves()">🗑️ Fshi Të Gjitha Ruajtjet</button>
+        <div style="display:flex; justify-content:space-between; margin-top:12px;">
+            <button class="action-btn btn-outline" onclick="openNewScenarioModal()">🔄 Skenar i Ri</button>
+            <button class="action-btn btn-danger" onclick="hardResetAllSaves()">🗑️ Fshi Të Gjitha</button>
         </div>
     </div>
 </div>
 
-<!-- MODAL 3: PROFILI & BISEDA INTERAKTIVE ME DEPUTET / POLITIKAN -->
 <div class="modal-overlay" id="mpModal">
     <div class="modal-box" id="mpModalContent"></div>
 </div>
 
-<!-- MODAL 4: MODAL QENDROR I ANIMUAR PËR NGJARJET KRYESORE, VOTIMET & LAJMET -->
 <div class="modal-overlay" id="majorEventModal">
     <div class="modal-box" id="majorEventModalContent"></div>
 </div>
 
-<!-- MODAL 5: NEGOCIATAT ME RAUNDE, SEANCA, VIZITAT BILATERALE & BRUKSELI -->
 <div class="modal-overlay" id="interactiveActionModal">
     <div class="modal-box" id="interactiveActionModalContent"></div>
 </div>
 
-<!-- MODAL 6: SALLA E KUVENDIT (SISTEMI I ANIMUAR I VOTIMIT) -->
 <div class="modal-overlay" id="votingModal">
     <div class="modal-box" style="max-width: 600px; text-align: center;">
         <div class="card-header" style="justify-content: center; margin-bottom: 16px;">
             <div class="card-title" id="votingModalTitle" style="font-size: 1.1rem; color: var(--accent-gold);">🏛️ Votimi në Kuvend</div>
         </div>
         <p id="votingModalDesc" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Duke numëruar votat e 120 deputetëve...</p>
-        
         <div class="grid-2" style="gap: 10px; margin-bottom: 20px;">
-            <div class="card" style="background:#0f172a; padding: 10px; border-color: var(--success); margin-bottom: 0;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">🟢 Vota PRO</div>
-                <div id="voteCountPro" style="font-size: 1.8rem; font-weight: 900; color: var(--success);">0</div>
+            <div class="card" style="margin-bottom: 0; text-align:center;">
+                <div style="font-size: 0.75rem; color: var(--text-muted);">🟢 Vota PRO</div>
+                <div id="voteCountPro" style="font-size: 1.8rem; font-weight: 900; color: var(--success); text-shadow: 0 0 10px rgba(16,185,129,0.5);">0</div>
             </div>
-            <div class="card" style="background:#0f172a; padding: 10px; border-color: var(--danger); margin-bottom: 0;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">🔴 KUNDËR</div>
-                <div id="voteCountKunder" style="font-size: 1.8rem; font-weight: 900; color: var(--danger);">0</div>
+            <div class="card" style="margin-bottom: 0; text-align:center;">
+                <div style="font-size: 0.75rem; color: var(--text-muted);">🔴 KUNDËR</div>
+                <div id="voteCountKunder" style="font-size: 1.8rem; font-weight: 900; color: var(--danger); text-shadow: 0 0 10px rgba(239,68,68,0.5);">0</div>
             </div>
-            <div class="card" style="background:#0f172a; padding: 10px; border-color: #94a3b8; margin-bottom: 0;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">⚪ ABSTENIM</div>
+            <div class="card" style="margin-bottom: 0; text-align:center;">
+                <div style="font-size: 0.75rem; color: var(--text-muted);">⚪ ABSTENIM</div>
                 <div id="voteCountAbstenim" style="font-size: 1.8rem; font-weight: 900; color: #94a3b8;">0</div>
             </div>
-            <div class="card" style="background:#0f172a; padding: 10px; border-color: #475569; margin-bottom: 0;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">⚫ MUNGESË</div>
+            <div class="card" style="margin-bottom: 0; text-align:center;">
+                <div style="font-size: 0.75rem; color: var(--text-muted);">⚫ MUNGESË</div>
                 <div id="voteCountMungese" style="font-size: 1.8rem; font-weight: 900; color: #475569;">0</div>
             </div>
         </div>
-
         <div class="prog-row" style="margin-bottom: 20px;">
-            <div class="prog-label">
-                <span>Progresi i Numërimit</span>
-                <span id="votingProgressText">0 / 120</span>
-            </div>
-            <div class="prog-track" style="height: 12px; background: rgba(255,255,255,0.05);">
-                <div id="votingProgressBar" class="prog-fill" style="width: 0%; background: var(--accent-gold); transition: width 0.1s linear;"></div>
+            <div class="prog-label"><span>Progresi</span><span id="votingProgressText">0 / 120</span></div>
+            <div class="prog-track" style="height: 12px; background: rgba(0,0,0,0.5);">
+                <div id="votingProgressBar" class="prog-fill" style="width: 0%; background: var(--accent-gold);"></div>
             </div>
         </div>
-
         <div id="votingModalResult" style="font-size: 0.9rem; font-weight: 700; margin-bottom: 16px; min-height: 20px;"></div>
-
         <div style="display:flex; justify-content:center; gap: 10px;">
-            <button id="votingSkipBtn" class="action-btn btn-outline" onclick="skipVotingAnimation()">⏩ Përfundo Numërimin Menjëherë</button>
+            <button id="votingSkipBtn" class="action-btn btn-outline" onclick="skipVotingAnimation()">⏩ Përfundo Numërimin</button>
             <button id="votingProceedBtn" class="action-btn btn-gold" onclick="finishVotingProcess()" style="display: none;">Vazhdo ▶</button>
         </div>
     </div>
 </div>
 
-<!-- HEADER -->
-<header>
-    <div class="header-top">
-        <div class="brand">
-            <div class="ks-crest">🇽🇰</div>
-            <div class="brand-title">
-                <h1>Republika e Kosovës</h1>
-                <span id="roleDisplay">Zyra e Kryeministrit • Legjislatura XI</span>
-            </div>
-        </div>
-        <div class="header-controls">
-            <div class="badge-info" id="dateDisplay">Tetor 2026 • Java 1</div>
-            <button class="btn-top" onclick="switchMainTab('tab-dashboard'); switchSubTab('dash', 'inbox', document.querySelectorAll('#tab-dashboard .sub-pill')[1])" id="inboxTopBtn" style="border-color:var(--accent-gold);">📥 Kërkesat (0)</button>
-            <button class="btn-top" onclick="switchMainTab('tab-dashboard'); switchSubTab('dash', 'calendar', document.querySelectorAll('#tab-dashboard .sub-pill')[2])" id="calendarTopBtn">📅 Kalendari (0)</button>
-            <button class="btn-top" onclick="toggleModal('saveModal', true)">💾 Ruajtjet</button>
-            <button class="next-turn-btn" onclick="promptAdvanceTime(1)">Java Tjetër ▶</button>
-            <button class="btn-top" onclick="promptAdvanceTime(4)" title="Kalo 1 Muaj">+4 Javë ⏩</button>
-        </div>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-box" onclick="switchMainTab('tab-dashboard')">
-            <span class="stat-label">Mbështetja</span>
-            <span class="stat-val" id="statApproval" style="color: var(--success);">49.5%</span>
-        </div>
-        <div class="stat-box" onclick="switchMainTab('tab-assembly')">
-            <span class="stat-label">Shumica Kuvend</span>
-            <span class="stat-val" id="statSeats" style="color: var(--accent-gold);">62 / 120</span>
-        </div>
-        <div class="stat-box" onclick="switchMainTab('tab-government')">
-            <span class="stat-label">Buxheti Vjetor</span>
-            <span class="stat-val" id="statBudget">€3.32 Mld</span>
-        </div>
-        <div class="stat-box" onclick="switchMainTab('tab-government')">
-            <span class="stat-label">Rritja / Papunësia</span>
-            <span class="stat-val" id="statEconomy">+3.9% | 10.8%</span>
-        </div>
-        <div class="stat-box" onclick="switchMainTab('tab-diplomacy')">
-            <span class="stat-label">SHBA & QUINT</span>
-            <span class="stat-val" id="statIntl">76 / 100</span>
-        </div>
-        <div class="stat-box" onclick="switchMainTab('tab-assembly')">
-            <span class="stat-label">Afati Kushtetues</span>
-            <span class="stat-val" id="statConstStatus" style="color: var(--success);">Stabil</span>
-        </div>
-    </div>
-</header>
-
-<!-- MEDIA TICKER -->
-<div class="media-ticker">
-    <span class="ticker-badge">LAJMI I FUNDIT</span>
-    <div class="ticker-text" id="mediaTickerText">Kuvendi i Kosovës miraton Qeverinë Kurti 4 me 62 vota; Prof. Dr. Justina Shiroka-Pula merr detyrën si Presidente e Republikës.</div>
+<div class="modal-overlay" id="meetingSceneModal">
+    <div class="modal-box meeting-scene-box" id="meetingSceneModalContent"></div>
 </div>
 
-<!-- MAIN CONTENT -->
-<main>
+<div class="modal-overlay" id="chatModal">
+    <div class="modal-box chat-modal-box" id="chatModalContent"></div>
+</div>
 
-    <!-- TAB 1: DASHBOARD, AGJENDA E KM (KËRKESAT), KALENDARI, KONFERENCA & PREMTIMET -->
-    <section id="tab-dashboard" class="tab-view active">
-        <div class="sub-nav">
-            <button class="sub-pill active" onclick="switchSubTab('dash', 'overview', this)">📊 Qendra e Situatës</button>
-            <button class="sub-pill" onclick="switchSubTab('dash', 'inbox', this)">📥 Agjenda e KM: Kërkesat & Detyrat</button>
-            <button class="sub-pill" onclick="switchSubTab('dash', 'calendar', this)">📅 Kalendari & Takimet Zyrtare</button>
-            <button class="sub-pill" onclick="switchSubTab('dash', 'press', this)">🎙️ Komunikimi Publik & Media</button>
-            <button class="sub-pill" onclick="switchSubTab('dash', 'promises', this)">📌 Premtimet & Llogaridhënia</button>
-            <button class="sub-pill" onclick="switchSubTab('dash', 'history', this)">📜 Arkivi i Vendimeve</button>
+<!-- ============================================================
+     APP LAYOUT DHE SIDEBAR / DOCK
+     ============================================================ -->
+<div class="app-layout">
+    
+    <!-- SIDEBAR PËR DESKTOP (Kthehet në Dock lundrues në Mobile) -->
+    <nav class="bottom-nav">
+        <div class="sidebar-logo">
+            <div class="ks-crest">🇽🇰</div>
+            <div class="brand-title">
+                <h1>REPUBLIKA</h1>
+                <span>v4.8 VisionOS</span>
+            </div>
         </div>
+        
+        <button class="nav-item active" onclick="switchMainTab('tab-dashboard', this)">
+            <span class="nav-icon">📊</span>
+            <span>Shteti</span>
+        </button>
+        <button class="nav-item" onclick="switchMainTab('tab-party', this)">
+            <span class="nav-icon">🚩</span>
+            <span>Partia</span>
+        </button>
+        <button class="nav-item" onclick="switchMainTab('tab-assembly', this)">
+            <span class="nav-icon">🏛️</span>
+            <span>Kuvendi</span>
+        </button>
+        <button class="nav-item" onclick="switchMainTab('tab-government', this)">
+            <span class="nav-icon">💼</span>
+            <span>Qeveria</span>
+        </button>
+        <button class="nav-item" onclick="switchMainTab('tab-elections', this)">
+            <span class="nav-icon">📍</span>
+            <span>38 Komunat</span>
+        </button>
+        <button class="nav-item" onclick="switchMainTab('tab-diplomacy', this)">
+            <span class="nav-icon">🌍</span>
+            <span>Diplomacia</span>
+        </button>
 
-        <div id="dash-overview" class="sub-content">
-            <div class="grid-2">
-                <div>
-                    <div class="card" id="activeEventCard"></div>
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">🏛️ Qendra e Situatës Shtetërore & Kushtetuese</div>
-                            <span class="tag tag-min" id="govStatusBadge">Në Mandat</span>
-                        </div>
-                        <div id="institutionalSummary" style="font-size: 0.82rem; line-height: 1.65;"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">📥 Kërkesat Urgjente në Zyren e Kryeministrit</div>
-                            <button class="action-btn btn-gold" onclick="switchSubTab('dash', 'inbox', document.querySelectorAll('#tab-dashboard .sub-pill')[1])">Shiko të Gjitha 📥</button>
-                        </div>
-                        <div id="quickInboxPreview"></div>
-                    </div>
+        <div class="sidebar-logo-bottom">
+            <div class="ks-crest" style="width:24px; height:24px; font-size:10px;">🇽🇰</div>
+            <div class="brand-title">
+                <h2>REPUBLIKA E KOSOVËS</h2>
+                <span>Simulim Strategjik</span>
+            </div>
+        </div>
+    </nav>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">📺 Raportimi Interaktiv i Mediave (Kliko lajmin)</div>
-                            <button class="action-btn" onclick="switchSubTab('dash', 'press', document.querySelectorAll('#tab-dashboard .sub-pill')[3])">Thirr Konferencë 🎙️</button>
-                        </div>
-                        <div id="mediaFeedList"></div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">📊 Sondazhi i Fundit Kombëtar (±2.2%)</div>
-                            <span style="font-size:0.72rem; color:var(--text-muted);" id="pollDateLabel">Tetor 2026</span>
-                        </div>
-                        <div id="quickPollBars"></div>
-                    </div>
-                </div>
+    <!-- HAPËSIRA KRYESORE E FAQES -->
+    <div class="app-main-view">
+        
+        <!-- LOGO E VOGËL PËR MOBILE (Shfaqet vetëm në telefon) -->
+        <div class="sidebar-logo mobile-only">
+            <div class="ks-crest" style="width:30px; height:30px; font-size:12px;">🇽🇰</div>
+            <div class="brand-title">
+                <h1 style="font-size:1rem;">REPUBLIKA</h1>
             </div>
         </div>
 
-        <div id="dash-inbox" class="sub-content" style="display:none;">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">📥 Agjenda e Kryeministrit — Kërkesat, Raportet dhe Ftesat nga Aktorët</div>
-                    <button class="action-btn" onclick="generateDynamicIncomingRequest(true)">+ Kërko Raportim të Ri nga Institucionet</button>
-                </div>
-                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">
-                    Ministrat, zëvendëskryeministrat, kryetarët e komunave, deputetët dhe ambasadorët dërgojnë automatikisht kërkesa për takime, buxhet, miratime ose ndërhyrje. Mosveprimi para skadimit të afatit shkakton pasoja reale politike dhe buxhetore!
-                </p>
-                <div id="pmInboxListContainer"></div>
-            </div>
-        </div>
-
-        <div id="dash-calendar" class="sub-content" style="display:none;">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">📅 Kalendari Zyrtar i Takimeve (Me Listë Reale të Personave & Institucioneve)</div>
-                    <button class="action-btn btn-gold" onclick="openScheduleMeetingModal()">+ Cakto Takim me Zyrtar nga Databaza</button>
-                </div>
-                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">
-                    Zgjidhni bashkëbiseduesin nga databaza e plotë e Republikës së Kosovës dhe partnerëve ndërkombëtarë. Kur vjen java e takimit, ai hapet për t'u zhvilluar me bisedë dhe vendime.
-                </p>
-                <div id="calendarMeetingsContainer"></div>
-            </div>
-        </div>
-
-        <div id="dash-press" class="sub-content" style="display:none;">
-            <div class="grid-2">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">🎙️ Konferencë për Media</div>
-                    </div>
-                    <div style="margin-bottom:12px;">
-                        <label style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:4px;">Tema e Konferencës:</label>
-                        <select id="pressTopicSelect" style="width:100%; margin-bottom:8px;">
-                            <option value="Paketa Ekonomike, Pagat dhe Inflacioni">Paketa Ekonomike dhe Buxheti</option>
-                            <option value="Dialogu në Bruksel dhe Siguria në Veri">Dialogu dhe Siguria në Veri</option>
-                            <option value="Stabiliteti i Koalicionit dhe Puna e Kuvendit">Stabiliteti i Koalicionit / Qeveria</option>
-                            <option value="Sundimi i Ligjit, Vetingu dhe Drejtësia">Sundimi i Ligjit dhe Vetingu</option>
-                            <option value="Furnizimi me Energji (KEK) dhe Projektet Kapitale">Energjia dhe Investimet Kapitale</option>
-                        </select>
-
-                        <label style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:4px;">Toni / Qëllimi i Komunikimit:</label>
-                        <select id="pressToneSelect" style="width:100%; margin-bottom:8px;">
-                            <option value="INSTITUTIONAL">Institucional dhe sqarues</option>
-                            <option value="POPULIST">Kritik ndaj opozitës dhe mobilizues</option>
-                            <option value="COOPERATIVE">Bashkëpunues me theks te konsensusi</option>
-                        </select>
-                        
-                        <label style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:4px;">Përfaqësimi (Formati):</label>
-                        <select id="pressPartnerSelect" style="width:100%;">
-                            <option value="SOLO">Paraqitje e vetme e Liderit</option>
-                            <option value="MINISTER">Së bashku me një Ministër të Linjës</option>
-                        </select>
-                    </div>
-                    <button class="action-btn btn-gold" onclick="startPressConference()">Thirr Konferencën & Hyr në Pyetje ▶</button>
-                </div>
-
+        <header>
+            <div class="header-top">
                 <div>
+                    <span id="roleDisplay">Zyra e Kryeministrit • Legjislatura XI</span>
+                </div>
+                <div class="header-controls">
+                    <div class="badge-info" id="dateDisplay">Tetor 2026 • Java 1</div>
+                    <button class="btn-top" onclick="switchMainTab('tab-dashboard'); switchSubTab('dash', 'inbox', document.querySelectorAll('#tab-dashboard .sub-pill')[1])" id="inboxTopBtn" style="border-color:var(--accent-gold);">📥 Kërkesat</button>
+                    <button class="btn-top" onclick="switchMainTab('tab-dashboard'); switchSubTab('dash', 'calendar', document.querySelectorAll('#tab-dashboard .sub-pill')[2])" id="calendarTopBtn">📅 Kalendari</button>
+                    <button class="btn-top" onclick="toggleModal('saveModal', true)">💾 Ruajtjet</button>
+                    <button class="next-turn-btn" onclick="promptAdvanceTime(1)">Java Tjetër ▶</button>
+                </div>
+            </div>
+
+            <!-- STATISTIKAT LART -->
+            <div class="stats-grid">
+                <div class="stat-box" onclick="switchMainTab('tab-dashboard')">
+                    <div class="stat-icon-wrapper blue">👍</div>
+                    <div class="stat-text-wrapper">
+                        <span class="stat-label">Mbështetja</span>
+                        <span class="stat-val" id="statApproval" style="color: var(--success); text-shadow: 0 0 10px rgba(16,185,129,0.4);">49.5%</span>
+                    </div>
+                </div>
+                <div class="stat-box" onclick="switchMainTab('tab-assembly')">
+                    <div class="stat-icon-wrapper blue">👥</div>
+                    <div class="stat-text-wrapper">
+                        <span class="stat-label">Shumica</span>
+                        <span class="stat-val" id="statSeats" style="color: var(--accent-blue); text-shadow: 0 0 10px rgba(59,130,246,0.4);">62 / 120</span>
+                    </div>
+                </div>
+                <div class="stat-box" onclick="switchMainTab('tab-government'); switchSubTab('gov','fiscal', document.querySelectorAll('#tab-government .sub-pill')[4]);">
+                    <div class="stat-icon-wrapper gold">💰</div>
+                    <div class="stat-text-wrapper">
+                        <span class="stat-label">Buxheti Vjetor</span>
+                        <span class="stat-val" id="statBudget" style="color: var(--accent-gold); text-shadow: 0 0 10px rgba(251,191,36,0.4);">€3.32 Mld</span>
+                    </div>
+                </div>
+                <div class="stat-box" onclick="switchMainTab('tab-government'); switchSubTab('gov','fiscal', document.querySelectorAll('#tab-government .sub-pill')[4]);">
+                    <div class="stat-icon-wrapper red">📉</div>
+                    <div class="stat-text-wrapper">
+                        <span class="stat-label">Rritja / Papunësia</span>
+                        <span class="stat-val" id="statEconomy" style="color: var(--danger); text-shadow: 0 0 10px rgba(239,68,68,0.4);">+3.9% | 10.8%</span>
+                    </div>
+                </div>
+                <div class="stat-box" onclick="switchMainTab('tab-diplomacy')">
+                    <div class="stat-icon-wrapper blue">🇺🇸</div>
+                    <div class="stat-text-wrapper">
+                        <span class="stat-label">SHBA & QUINT</span>
+                        <span class="stat-val" id="statIntl" style="color: var(--text-main);">76 / 100</span>
+                    </div>
+                </div>
+                <div class="stat-box" onclick="switchMainTab('tab-assembly')">
+                    <div class="stat-icon-wrapper green">🛡️</div>
+                    <div class="stat-text-wrapper">
+                        <span class="stat-label">Statusi</span>
+                        <span class="stat-val" id="statConstStatus" style="color: var(--success);">Stabil</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- MEDIA TICKER -->
+        <div class="media-ticker">
+            <span class="ticker-badge">LAJMI I FUNDIT</span>
+            <div class="ticker-text" id="mediaTickerText">Sistemet gati për simulim politik. Përgatituni për vendime sfiduese.</div>
+        </div>
+
+        <main>
+            <!-- TAB 1: DASHBOARD -->
+            <section id="tab-dashboard" class="tab-view active">
+                <div class="sub-nav">
+                    <button class="sub-pill active" onclick="switchSubTab('dash', 'overview', this)">📊 Qendra e Situatës</button>
+                    <button class="sub-pill" onclick="switchSubTab('dash', 'inbox', this)">📥 Agjenda e KM</button>
+                    <button class="sub-pill" onclick="switchSubTab('dash', 'calendar', this)">📅 Kalendari</button>
+                    <button class="sub-pill" onclick="switchSubTab('dash', 'press', this)">🎙️ Media</button>
+                    <button class="sub-pill" onclick="switchSubTab('dash', 'promises', this)">📌 Premtimet</button>
+                    <button class="sub-pill" onclick="switchSubTab('dash', 'development', this)">🏗️ Zhvillimi</button>
+                    <button class="sub-pill" onclick="switchSubTab('dash', 'history', this)">📜 Arkivi</button>
+                </div>
+
+                <div id="dash-overview" class="sub-content">
+                    <div class="grid-2">
+                        <div>
+                            <div class="card" id="activeEventCard"></div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">🏛️ Qendra e Situatës</div>
+                                    <span class="tag tag-min" id="govStatusBadge">Në Mandat</span>
+                                </div>
+                                <div id="institutionalSummary" style="font-size: 0.82rem; line-height: 1.65;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">📥 Kërkesat Urgjente</div>
+                                    <button class="action-btn btn-gold" onclick="switchSubTab('dash', 'inbox', document.querySelectorAll('#tab-dashboard .sub-pill')[1])">Të Gjitha</button>
+                                </div>
+                                <div id="quickInboxPreview"></div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">📺 Raportimi i Mediave</div>
+                                </div>
+                                <div id="mediaFeedList"></div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">📊 Sondazhi Kombëtar</div>
+                                    <span style="font-size:0.72rem; color:var(--text-muted);" id="pollDateLabel"></span>
+                                </div>
+                                <div id="quickPollBars"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="dash-inbox" class="sub-content" style="display:none;">
                     <div class="card">
                         <div class="card-header">
-                            <div class="card-title">📜 Publiko Komunikatë Zyrtare</div>
+                            <div class="card-title">📥 Agjenda e Kryeministrit — Kërkesat dhe Raportet</div>
+                            <button class="action-btn" onclick="generateDynamicIncomingRequest(true)">+ Kërko Raportim</button>
                         </div>
-                        <div style="display:flex; gap:6px; flex-direction:column; margin-bottom:12px;">
-                            <input type="text" id="prTitle" placeholder="Titulli i komunikatës (p.sh. Njoftim për Pakon e Re)..." style="width:100%;">
-                            <select id="prCategory" style="width:100%;">
-                                <option value="Vendim Qeveritar">Vendim i Qeverisë</option>
-                                <option value="Reagim Institucional">Reagim ndaj zhvillimeve / opozitës</option>
-                                <option value="Vizitë Ndërkombëtare">Raport i Takimit Diplomatik</option>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">
+                            Ministrat, kryetarët e komunave dhe ambasadorët dërgojnë automatikisht kërkesa. Mosveprimi para skadimit të afatit shkakton pasoja!
+                        </p>
+                        <div id="pmInboxListContainer"></div>
+                    </div>
+                </div>
+                
+                <div id="dash-calendar" class="sub-content" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📅 Kalendari Zyrtar i Takimeve</div>
+                            <button class="action-btn btn-gold" onclick="openScheduleMeetingModal()">+ Cakto Takim</button>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">
+                            Zgjidhni bashkëbiseduesin nga databaza e plotë e Republikës së Kosovës dhe partnerëve ndërkombëtarë.
+                        </p>
+                        <div id="calendarMeetingsContainer"></div>
+                    </div>
+                </div>
+
+                <div id="dash-press" class="sub-content" style="display:none;">
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">🎙️ Konferencë për Media</div>
+                            </div>
+                            <div style="margin-bottom:12px;">
+                                <label style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:4px;">Tema e Konferencës:</label>
+                                <select id="pressTopicSelect" style="width:100%; margin-bottom:8px;">
+                                    <option value="Paketa Ekonomike, Pagat dhe Inflacioni">Paketa Ekonomike dhe Buxheti</option>
+                                    <option value="Dialogu në Bruksel dhe Siguria në Veri">Dialogu dhe Siguria në Veri</option>
+                                    <option value="Stabiliteti i Koalicionit dhe Puna e Kuvendit">Stabiliteti i Koalicionit / Qeveria</option>
+                                    <option value="Sundimi i Ligjit, Vetingu dhe Drejtësia">Sundimi i Ligjit dhe Vetingu</option>
+                                    <option value="Furnizimi me Energji (KEK) dhe Projektet Kapitale">Energjia dhe Investimet Kapitale</option>
+                                </select>
+
+                                <label style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:4px;">Toni / Qëllimi i Komunikimit:</label>
+                                <select id="pressToneSelect" style="width:100%; margin-bottom:8px;">
+                                    <option value="INSTITUTIONAL">Institucional dhe sqarues</option>
+                                    <option value="POPULIST">Kritik ndaj opozitës dhe mobilizues</option>
+                                    <option value="COOPERATIVE">Bashkëpunues me theks te konsensusi</option>
+                                </select>
+                                
+                                <label style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:4px;">Përfaqësimi (Formati):</label>
+                                <select id="pressPartnerSelect" style="width:100%;">
+                                    <option value="SOLO">Paraqitje e vetme e Liderit</option>
+                                    <option value="MINISTER">Së bashku me një Ministër të Linjës</option>
+                                </select>
+                            </div>
+                            <button class="action-btn btn-gold" onclick="startPressConference()">Thirr Konferencën & Hyr në Pyetje ▶</button>
+                        </div>
+
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">📜 Publiko Komunikatë Zyrtare</div>
+                                </div>
+                                <div style="display:flex; gap:6px; flex-direction:column; margin-bottom:12px;">
+                                    <input type="text" id="prTitle" placeholder="Titulli i komunikatës..." style="width:100%;">
+                                    <select id="prCategory" style="width:100%;">
+                                        <option value="Vendim Qeveritar">Vendim i Qeverisë</option>
+                                        <option value="Reagim Institucional">Reagim ndaj zhvillimeve / opozitës</option>
+                                        <option value="Vizitë Ndërkombëtare">Raport i Takimit Diplomatik</option>
+                                    </select>
+                                </div>
+                                <button class="action-btn btn-outline" onclick="publishPressRelease()">Publiko Komunikatën Zyrtare</button>
+                            </div>
+
+                            <div class="card" style="margin-bottom:0;">
+                                <div class="card-header">
+                                    <div class="card-title">💬 Deklaratë Publike (Reagim)</div>
+                                </div>
+                                <div style="display:flex; gap:6px; margin-bottom:12px;">
+                                    <input type="text" id="psText" placeholder="Mesazhi yt i shkurtër për qytetarët..." style="width:100%;">
+                                </div>
+                                <button class="action-btn btn-outline" onclick="issuePublicStatement()">Lësho Deklaratën</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="pressLiveStage" class="card" style="display:none; border-color:var(--accent-gold); margin-top:14px;"></div>
+                </div>
+
+                <div id="dash-promises" class="sub-content" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📌 Regjistri i Premtimeve Zgjedhore & Qeveritare</div>
+                            <span class="tag tag-lvv" id="promiseScoreBadge">Besueshmëria: 78%</span>
+                        </div>
+                        <div id="promisesListContainer"></div>
+                    </div>
+                </div>
+
+                <div id="dash-development" class="sub-content" style="display:none;">
+                    <div id="developmentPanelContainer"></div>
+                </div>
+
+                <div id="dash-history" class="sub-content" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📜 Kronika Politike dhe Historiku i Plotë i Mandatit</div>
+                            <select id="historyFilterSelect" onchange="renderDashboard()">
+                                <option value="ALL">Të gjitha ngjarjet dhe vendimet</option>
+                                <option value="Kuvend">Votimet në Kuvend</option>
+                                <option value="Qeveri">Vendimet e Qeverisë & Sektorët</option>
+                                <option value="Koalicion">Marrëveshjet & Takimet</option>
+                                <option value="Bruksel">Dialogu & Vizitat Diplomatike</option>
+                                <option value="Media">Komunikimi dhe Media</option>
+                                <option value="Zhvillim">Projektet Zhvillimore & Komunat</option>
                             </select>
                         </div>
-                        <button class="action-btn btn-outline" onclick="publishPressRelease()">Publiko Komunikatën Zyrtare</button>
+                        <div id="historyLogContainer" style="max-height:480px; overflow-y:auto;"></div>
                     </div>
+                </div>
+            </section>
 
-                    <div class="card" style="margin-bottom:0;">
+            <!-- TAB 2: PARTIA -->
+            <section id="tab-party" class="tab-view">
+                <div class="sub-nav">
+                    <button class="sub-pill active" onclick="switchSubTab('party', 'structure', this)">🏛️ Struktura e Partisë</button>
+                    <button class="sub-pill" onclick="switchSubTab('party', 'list', this)">📋 Lista Zgjedhore</button>
+                    <button class="sub-pill" onclick="switchSubTab('party', 'coalition', this)">🤝 Negociatat & Koalicioni</button>
+                </div>
+
+                <div id="party-structure" class="sub-content">
+                    <div id="partyDetailsContainer"></div>
+                </div>
+
+                <div id="party-list" class="sub-content" style="display:none;">
+                    <div class="card">
                         <div class="card-header">
-                            <div class="card-title">💬 Deklaratë Publike (Reagim)</div>
+                            <div class="card-title">📋 Hartimi i Listës Zgjedhore për Kuvendin</div>
+                            <span class="tag tag-min" id="listLegalBadge">E Certifikuar nga KQZ</span>
                         </div>
-                        <div style="display:flex; gap:6px; margin-bottom:12px;">
-                            <input type="text" id="psText" placeholder="Mesazhi yt i shkurtër për qytetarët..." style="width:100%;">
+                        <div id="electoralListSummary" style="margin-bottom:12px;"></div>
+                        <div class="grid-2">
+                            <div>
+                                <h4 style="font-size:0.84rem; margin-bottom:8px; color:var(--accent-gold);">Kandidatët Kryesorë</h4>
+                                <div id="activeCandidatesList"></div>
+                            </div>
+                            <div>
+                                <h4 style="font-size:0.84rem; margin-bottom:8px; color:var(--text-muted);">Rezerva e Partisë</h4>
+                                <div id="reserveCandidatesList"></div>
+                            </div>
                         </div>
-                        <button class="action-btn btn-outline" onclick="issuePublicStatement()">Lësho Deklaratën</button>
                     </div>
                 </div>
-            </div>
-            <div id="pressLiveStage" class="card" style="display:none; border-color:var(--accent-gold); margin-top:14px;"></div>
-        </div>
 
-        <div id="dash-promises" class="sub-content" style="display:none;">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">📌 Regjistri i Premtimeve Zgjedhore & Qeveritare</div>
-                    <span class="tag tag-lvv" id="promiseScoreBadge">Besueshmëria: 78%</span>
-                </div>
-                <div id="promisesListContainer"></div>
-            </div>
-        </div>
-
-        <div id="dash-history" class="sub-content" style="display:none;">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">📜 Kronika Politike dhe Historiku i Plotë i Mandatit</div>
-                    <select id="historyFilterSelect" onchange="renderDashboard()">
-                        <option value="ALL">Të gjitha ngjarjet dhe vendimet</option>
-                        <option value="Kuvend">Votimet në Kuvend</option>
-                        <option value="Qeveri">Vendimet e Qeverisë & Sektorët</option>
-                        <option value="Koalicion">Marrëveshjet & Takimet</option>
-                        <option value="Bruksel">Dialogu & Vizitat Diplomatike</option>
-                        <option value="Media">Komunikimi dhe Media</option>
-                    </select>
-                </div>
-                <div id="historyLogContainer" style="max-height:480px; overflow-y:auto;"></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- TAB 2: PARTIA, LISTA ZGJEDHORE & NEGOCIATAT ME RAUNDE -->
-    <section id="tab-party" class="tab-view">
-        <div class="sub-nav">
-            <button class="sub-pill active" onclick="switchSubTab('party', 'structure', this)">🏛️ Struktura e Partisë</button>
-            <button class="sub-pill" onclick="switchSubTab('party', 'list', this)">📋 Lista Zgjedhore & Kuota 30%</button>
-            <button class="sub-pill" onclick="switchSubTab('party', 'coalition', this)">🤝 Negociatat me Raunde për Koalicion</button>
-        </div>
-
-        <div id="party-structure" class="sub-content">
-            <div id="partyDetailsContainer"></div>
-        </div>
-
-        <div id="party-list" class="sub-content" style="display:none;">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">📋 Hartimi i Listës Zgjedhore për Kuvendin e Kosovës</div>
-                    <span class="tag tag-min" id="listLegalBadge">E Certifikuar nga KQZ</span>
-                </div>
-                <div id="electoralListSummary" style="margin-bottom:12px;"></div>
-                <div class="grid-2">
-                    <div>
-                        <h4 style="font-size:0.84rem; margin-bottom:8px; color:var(--accent-gold);">Kandidatët në Listën Zgjedhore (Renditja Kryesore)</h4>
-                        <div id="activeCandidatesList"></div>
-                    </div>
-                    <div>
-                        <h4 style="font-size:0.84rem; margin-bottom:8px; color:var(--text-muted);">Rezerva e Partisë, Ekspertë të Rinj & Shoqëria Civile</h4>
-                        <div id="reserveCandidatesList"></div>
+                <div id="party-coalition" class="sub-content" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🤝 Tavolina e Negociatave Ndërpartiake</div>
+                            <span class="tag tag-gold" id="coalitionTotalBadge">62 / 120 Deputetë</span>
+                        </div>
+                        <div id="coalitionNegotiationContainer"></div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <div id="party-coalition" class="sub-content" style="display:none;">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">🤝 Tavolina e Negociatave Ndërpartiake (Proces me 3 Raunde)</div>
-                    <span class="tag tag-gold" id="coalitionTotalBadge">62 / 120 Deputetë</span>
+            <!-- TAB 3: KUVENDI I KOSOVËS -->
+            <section id="tab-assembly" class="tab-view">
+                <div class="sub-nav">
+                    <button class="sub-pill active" onclick="switchSubTab('ass', 'hemicycle', this)">🏛️ Hemicikli (120 Ulëse)</button>
+                    <button class="sub-pill" onclick="switchSubTab('ass', 'mpslist', this)">👥 Databaza e 120 Deputetëve</button>
+                    <button class="sub-pill" onclick="switchSubTab('ass', 'laws', this)">⚖️ Agjenda & Projektligjet</button>
+                    <button class="sub-pill" onclick="switchSubTab('ass', 'sessions', this)">🗓️ Seancat Parlamentare</button>
+                    <button class="sub-pill" onclick="switchSubTab('ass', 'motions', this)">⚡ Mocionet & Opozita</button>
+                    <button class="sub-pill" onclick="switchSubTab('ass', 'president', this)">🎖️ Zgjedhja e Presidentit</button>
                 </div>
-                <div id="coalitionNegotiationContainer"></div>
-            </div>
-        </div>
-    </section>
 
-    <!-- TAB 3: KUVENDI I KOSOVËS (120 DEPUTETË REALË, LIGJET & PRESIDENTI) -->
-    <section id="tab-assembly" class="tab-view">
-        <div class="sub-nav">
-            <button class="sub-pill active" onclick="switchSubTab('ass', 'hemicycle', this)">🏛️ Hemicikli (120 Ulëse)</button>
-            <button class="sub-pill" onclick="switchSubTab('ass', 'mpslist', this)">👥 Databaza e 120 Deputetëve</button>
-            <button class="sub-pill" onclick="switchSubTab('ass', 'laws', this)">⚖️ Projektligjet & Seancat</button>
-            <button class="sub-pill" onclick="switchSubTab('ass', 'president', this)">🎖️ Zgjedhja e Presidentit</button>
-            <button class="sub-pill" onclick="switchSubTab('ass', 'opposition', this)">⚡ Opozita & Mocioni</button>
-        </div>
+                <div id="ass-hemicycle" class="sub-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🏛️ Kuvendi i Republikës së Kosovës — Legjislatura XI (120 Ulëse)</div>
+                            <span class="tag tag-lvv" id="speakerNameBadge">Kryetare: Albulena Haxhiu</span>
+                        </div>
+                        <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:8px;">
+                            Kliko mbi secilën ulëse për të parë profilin e deputetit të zgjedhur, historikun e votimeve dhe për të biseduar me të.
+                        </p>
+                        <div class="seats-grid" id="parliamentSeats"></div>
+                        <div class="parliament-legend" id="parliamentLegend"></div>
+                    </div>
 
-        <div id="ass-hemicycle" class="sub-content">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">🏛️ Kuvendi i Republikës së Kosovës — Legjislatura XI (120 Ulëse)</div>
-                    <span class="tag tag-lvv" id="speakerNameBadge">Kryetare: Albulena Haxhiu</span>
-                </div>
-                <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:8px;">
-                    Kliko mbi secilën ulëse për të parë profilin e deputetit të zgjedhur, historikun e votimeve dhe për të biseduar me të.
-                </p>
-                <div class="seats-grid" id="parliamentSeats"></div>
-                <div class="parliament-legend" id="parliamentLegend"></div>
-            </div>
+                    <div class="card" id="parliamentCompositionSummaryCard">
+                        <div class="card-header">
+                            <div class="card-title">📊 Përbërja Parlamentare — Statusi & Shumicat e Nevojshme</div>
+                        </div>
+                        <div id="parliamentCompositionSummary"></div>
+                    </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">📋 Përbërja Zyrtare e Grupeve Parlamentare (100 të Përgjithshme + 20 të Garantuara)</div>
-                </div>
-                <div id="parliamentGroupsTable"></div>
-            </div>
-        </div>
-
-        <div id="ass-mpslist" class="sub-content" style="display:none;">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">👥 Databaza e Plotë e 120 Deputetëve të Legjislaturës XI</div>
-                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <select id="mpFilterParty" onchange="renderMPsDirectory()">
-                            <option value="ALL">Të gjitha Grupet Parlamentare (120)</option>
-                            <option value="LVV">LVV (53)</option>
-                            <option value="PDK">PDK (22)</option>
-                            <option value="LDK">LDK (18)</option>
-                            <option value="AAK">AAK (7)</option>
-                            <option value="MIN_MULTI">Komunitetet Multietnike (11)</option>
-                            <option value="SL">Lista Serbe (9)</option>
-                        </select>
-                        <input type="text" id="mpSearchInput" placeholder="Kërko emrin ose komunën..." oninput="renderMPsDirectory()">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📋 Përbërja Zyrtare e Grupeve Parlamentare</div>
+                        </div>
+                        <div id="parliamentGroupsTable" class="table-responsive"></div>
                     </div>
                 </div>
-                <div class="grid-3" id="mpsDirectoryGrid"></div>
-            </div>
-        </div>
 
-        <div id="ass-laws" class="sub-content" style="display:none;">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">⚖️ Rendi i Ditës në Kuvend — Projektligjet dhe Seancat e Jashtëzakonshme</div>
-                    <button class="action-btn btn-gold" onclick="openExtraordinarySessionModal()">+ Thirr Seancë të Jashtëzakonshme</button>
-                </div>
-                <div id="lawsContainer"></div>
-            </div>
-        </div>
-
-        <div id="ass-president" class="sub-content" style="display:none;">
-            <div id="presidentialSectionContainer"></div>
-        </div>
-
-        <div id="ass-opposition" class="sub-content" style="display:none;">
-            <div id="oppositionSectionContainer"></div>
-        </div>
-    </section>
-
-    <!-- TAB 4: QEVERIA, TAKIMET ME MINISTRAT, 15 SEKTORËT E ZHVILLIMIT & EKONOMIA -->
-    <section id="tab-government" class="tab-view">
-        <div class="sub-nav">
-            <button class="sub-pill active" onclick="switchSubTab('gov', 'cabinet', this)">💼 Kabineti & Takimet me Ministrat</button>
-            <button class="sub-pill" onclick="switchSubTab('gov', 'sectors', this)">🏗️ Zhvillimi i Shtetit (15 Sektorët Publikë)</button>
-            <button class="sub-pill" onclick="switchSubTab('gov', 'meeting', this)">🗂️ Mbledhja e Qeverisë</button>
-            <button class="sub-pill" onclick="switchSubTab('gov', 'macro', this)">💶 Buxheti & Makroekonomia</button>
-        </div>
-
-        <div id="gov-cabinet" class="sub-content">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">💼 Kabineti Qeveritar, Zëvendëskryeministrat dhe Takimet e Brendshme</div>
-                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <button class="action-btn btn-gold" onclick="openInternalGovMeetingModal('DEPUTY_PMS')">🤝 Takim me Zëvendëskryeministrat</button>
-                        <button class="action-btn" onclick="openInternalGovMeetingModal('TASK_FORCE')">⚡ Mblidh Grupin Ndërministror të Punës</button>
+                <div id="ass-mpslist" class="sub-content" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">👥 Databaza e Plotë e 120 Deputetëve të Legjislaturës XI</div>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <select id="mpFilterParty" onchange="renderMPsDirectory()">
+                                    <option value="ALL">Të gjitha Grupet Parlamentare (120)</option>
+                                    <option value="LVV">LVV (53)</option>
+                                    <option value="PDK">PDK (22)</option>
+                                    <option value="LDK">LDK (18)</option>
+                                    <option value="AAK">AAK (7)</option>
+                                    <option value="MIN_MULTI">Komunitetet Multietnike (11)</option>
+                                    <option value="SL">Lista Serbe (9)</option>
+                                </select>
+                                <input type="text" id="mpSearchInput" placeholder="Kërko emrin ose komunën..." oninput="renderMPsDirectory()">
+                            </div>
+                        </div>
+                        <div class="grid-3" id="mpsDirectoryGrid"></div>
                     </div>
                 </div>
-                <div class="grid-2" id="ministriesGrid"></div>
-            </div>
-        </div>
 
-        <div id="gov-sectors" class="sub-content" style="display:none;">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">🏗️ Sistemi i Zhvillimit të Shtetit — 15 Sektorët dhe Shërbimet Publike</div>
-                    <span class="tag tag-gold">Ndarje e Qartë e Kompetencave (KM / Qeveri / Kuvend)</span>
-                </div>
-                <div class="grid-3" id="stateSectorsGrid"></div>
-            </div>
-        </div>
-
-        <div id="gov-meeting" class="sub-content" style="display:none;">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">🗂️ Mbledhja e Qeverisë së Republikës së Kosovës (Debat & Procesverbal)</div>
-                    <span class="tag tag-min" id="cabinetMeetingNumber">Mbledhja Zyrtare</span>
-                </div>
-                <div id="cabinetAgendaContainer"></div>
-            </div>
-        </div>
-
-        <div id="gov-macro" class="sub-content" style="display:none;">
-            <div id="macroEconomyContainer"></div>
-        </div>
-    </section>
-
-    <!-- TAB 5: ZGJEDHJET, FUSHATA & 38 KOMUNAT ME PROJEKTE KAPITALE -->
-    <section id="tab-elections" class="tab-view">
-        <div class="sub-nav">
-            <button class="sub-pill active" onclick="switchSubTab('elec', 'municipalities', this)">🗺️ 38 Komunat & Projektet Kapitale</button>
-            <button class="sub-pill" onclick="switchSubTab('elec', 'campaign', this)">📢 Qendra e Fushatës & Debatet</button>
-            <button class="sub-pill" onclick="switchSubTab('elec', 'cec', this)">🗳️ KQZ & Simulimi Zgjedhor</button>
-        </div>
-
-        <div id="elec-municipalities" class="sub-content">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">🗺️ Pushteti Lokal në 38 Komunat dhe Menaxhimi i Projekteve Kapitale</div>
-                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <select id="muniRegionFilter" onchange="renderMunicipalities()">
-                            <option value="ALL">Të gjitha Rajonet (38 Komuna)</option>
-                            <option value="PRISHTINA">Rajoni i Prishtinës</option>
-                            <option value="PRIZRENI">Rajoni i Prizrenit</option>
-                            <option value="PEJA">Rajoni i Pejës</option>
-                            <option value="MITROVICA">Rajoni i Mitrovicës</option>
-                            <option value="GJILANI">Rajoni i Gjilanit</option>
-                            <option value="FERIZAJ">Rajoni i Ferizajt</option>
-                            <option value="GJAKOVA">Rajoni i Gjakovës</option>
-                        </select>
-                        <button class="action-btn btn-gold" onclick="runLocalElections()">🗳️ Mbaj Zgjedhjet e Rregullta Lokale</button>
+                <div id="ass-laws" class="sub-content" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">⚖️ Agjenda & Projektligjet — Procesi Legjislativ</div>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <button class="action-btn btn-gold" onclick="openNewBillModal()">+ Propozo Projektligj të Ri</button>
+                                <select id="billStatusFilter" onchange="renderBillAgenda()" style="font-size:0.8rem;">
+                                    <option value="ALL">Të gjitha statuset</option>
+                                    <option value="DRAFT">Draft (të papërpunuar)</option>
+                                    <option value="SUBMITTED">Dorëzuar në Kuvend</option>
+                                    <option value="UNDER_REVIEW">Në Shqyrtim</option>
+                                    <option value="SCHEDULED">Caktuar për Seancë</option>
+                                    <option value="PASSED">Të Miratuara</option>
+                                    <option value="FAILED">Të Rrëzuara</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="billAgendaContainer"></div>
                     </div>
                 </div>
-                <div id="municipalitiesSummaryBar" style="margin-bottom:12px;"></div>
-                <div class="grid-3" id="municipalitiesGrid"></div>
-            </div>
-        </div>
 
-        <div id="elec-campaign" class="sub-content" style="display:none;">
-            <div id="campaignCenterContainer"></div>
-        </div>
+                <div id="ass-sessions" class="sub-content" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🗓️ Seancat Parlamentare — Organizimi & Zhvillimi</div>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <button class="action-btn btn-gold" onclick="openSessionSchedulerModal()">+ Cakto Seancë të Re</button>
+                                <button class="action-btn btn-outline" onclick="openExtraordinarySessionModal()">⚡ Thirr Seancë të Jashtëzakonshme</button>
+                            </div>
+                        </div>
+                        <div id="parliamentSessionsContainer"></div>
+                    </div>
+                </div>
 
-        <div id="elec-cec" class="sub-content" style="display:none;">
-            <div id="cecElectionContainer"></div>
-        </div>
-    </section>
+                <div id="ass-motions" class="sub-content" style="display:none;">
+                    <div id="oppositionSectionContainer"></div>
+                    <div class="card" style="margin-top:10px;">
+                        <div class="card-header">
+                            <div class="card-title">⚡ Regjistri i Mocioneve Parlamentare</div>
+                        </div>
+                        <div id="motionsContainer"></div>
+                    </div>
+                </div>
 
-    <!-- TAB 6: DIPLOMACIA, VIZITAT BILATERALE TË PLOTA & DIALOGU NË BRUKSEL -->
-    <section id="tab-diplomacy" class="tab-view">
-        <div class="sub-nav">
-            <button class="sub-pill active" onclick="switchSubTab('dip', 'dialogue', this)">🇪🇺 Dialogu në Bruksel & Konsultimet me Aleatët</button>
-            <button class="sub-pill" onclick="switchSubTab('dip', 'bilateral', this)">🌍 Marrëdhëniet Bilaterale & Vizitat Zyrtare</button>
-        </div>
+                <div id="ass-president" class="sub-content" style="display:none;">
+                    <div id="presidentialSectionContainer"></div>
+                </div>
+            </section>
 
-        <div id="dip-dialogue" class="sub-content">
-            <div id="dialogueBrusselsContainer"></div>
-        </div>
+            <!-- TAB 4: QEVERIA -->
+            <section id="tab-government" class="tab-view">
+                <div class="sub-nav">
+                    <button class="sub-pill active" onclick="switchSubTab('gov', 'cabinet', this)">💼 Kabineti & Ministrat</button>
+                    <button class="sub-pill" onclick="switchSubTab('gov', 'sectors', this)">🏗️ Reformat Sektoriale</button>
+                    <button class="sub-pill" onclick="switchSubTab('gov', 'meeting', this)">🗂️ Mbledhja e Qeverisë</button>
+                    <button class="sub-pill" onclick="switchSubTab('gov', 'macro', this)">💶 Makroekonomia</button>
+                    <button class="sub-pill" onclick="switchSubTab('gov', 'fiscal', this)">📊 Buxheti & Ekonomia</button>
+                </div>
 
-        <div id="dip-bilateral" class="sub-content" style="display:none;">
-            <div id="diplomacyBilateralContainer"></div>
-        </div>
-    </section>
+                <div id="gov-cabinet" class="sub-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">💼 Kabineti Qeveritar dhe Takimet e Brendshme</div>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <button class="action-btn btn-gold" onclick="openInternalGovMeetingModal('DEPUTY_PMS')">🤝 Takim me Zv. Kryeministrat</button>
+                                <button class="action-btn" onclick="openInternalGovMeetingModal('TASK_FORCE')">⚡ Mblidh Grupin Ndërministror</button>
+                            </div>
+                        </div>
+                        <div class="grid-2" id="ministriesGrid"></div>
+                    </div>
+                </div>
 
-</main>
+                <div id="gov-sectors" class="sub-content" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🏗️ Sistemi i Zhvillimit të Shtetit — 15 Sektorët</div>
+                            <span class="tag tag-gold">Ndarje e Qartë e Kompetencave</span>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <button class="action-btn btn-gold" onclick="switchMainTab('tab-dashboard'); switchSubTab('dash', 'development', document.querySelectorAll('#tab-dashboard .sub-pill')[5]);">🏗️ Hap Panelin e Plotë të Zhvillimit të Shtetit ▶</button>
+                        </div>
+                        <div class="grid-3" id="stateSectorsGrid"></div>
+                    </div>
+                </div>
 
-<!-- TOAST -->
-<div id="toast">Vendimi u zbatua!</div>
+                <div id="gov-meeting" class="sub-content" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🗂️ Mbledhja e Qeverisë së Republikës së Kosovës</div>
+                            <span class="tag tag-min" id="cabinetMeetingNumber">Mbledhja Zyrtare</span>
+                        </div>
+                        <div id="cabinetAgendaContainer"></div>
+                    </div>
+                </div>
 
-<!-- BOTTOM NAVIGATION -->
-<nav class="bottom-nav">
-    <button class="nav-item active" onclick="switchMainTab('tab-dashboard', this)">
-        <span class="nav-icon">🏛️</span>
-        <span>Shteti</span>
-    </button>
-    <button class="nav-item" onclick="switchMainTab('tab-party', this)">
-        <span class="nav-icon">🚩</span>
-        <span>Partia</span>
-    </button>
-    <button class="nav-item" onclick="switchMainTab('tab-assembly', this)">
-        <span class="nav-icon">⚖️</span>
-        <span>Kuvendi</span>
-    </button>
-    <button class="nav-item" onclick="switchMainTab('tab-government', this)">
-        <span class="nav-icon">💼</span>
-        <span>Qeveria</span>
-    </button>
-    <button class="nav-item" onclick="switchMainTab('tab-elections', this)">
-        <span class="nav-icon">🗳️</span>
-        <span>38 Komunat</span>
-    </button>
-    <button class="nav-item" onclick="switchMainTab('tab-diplomacy', this)">
-        <span class="nav-icon">🌍</span>
-        <span>Diplomacia</span>
-    </button>
-</nav>
+                <div id="gov-macro" class="sub-content" style="display:none;">
+                    <div id="macroEconomyContainer"></div>
+                </div>
+
+                <div id="gov-fiscal" class="sub-content" style="display:none;">
+                    <div id="fiscalPanelContainer"></div>
+                </div>
+            </section>
+
+            <!-- TAB 5: 38 KOMUNAT -->
+            <section id="tab-elections" class="tab-view">
+                <div class="sub-nav">
+                    <button class="sub-pill active" onclick="switchSubTab('elec', 'municipalities', this)">🗺️ 38 Komunat & Projektet</button>
+                    <button class="sub-pill" onclick="switchSubTab('elec', 'campaign', this)">🗳️ Zgjedhjet e Parakohshme</button>
+                </div>
+
+                <div id="elec-municipalities" class="sub-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🗺️ Pushteti Lokal në 38 Komunat dhe Menaxhimi i Projekteve Kapitale</div>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <select id="muniRegionFilter" onchange="renderMunicipalities()">
+                                    <option value="ALL">Të gjitha Rajonet (38 Komuna)</option>
+                                    <option value="PRISHTINA">Rajoni i Prishtinës</option>
+                                    <option value="PRIZRENI">Rajoni i Prizrenit</option>
+                                    <option value="PEJA">Rajoni i Pejës</option>
+                                    <option value="MITROVICA">Rajoni i Mitrovicës</option>
+                                    <option value="GJILANI">Rajoni i Gjilanit</option>
+                                    <option value="FERIZAJ">Rajoni i Ferizajt</option>
+                                    <option value="GJAKOVA">Rajoni i Gjakovës</option>
+                                </select>
+                                <input type="text" id="muniSearchInput" placeholder="Kërko komunë ose problem..." oninput="renderMunicipalities()" style="font-size:0.8rem;">
+                            </div>
+                        </div>
+                        <div id="municipalitiesSummaryBar" style="margin-bottom:12px;"></div>
+                        <div class="grid-3" id="municipalitiesGrid"></div>
+                    </div>
+                </div>
+
+                <div id="elec-campaign" class="sub-content" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🗳️ Thirrja e Zgjedhjeve të Parakohshme Parlamentare</div>
+                        </div>
+                        <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:14px;">
+                            Sipas Kushtetutës, nëse Qeveria humb shumicën ose rrëzohet nga një mocion mosbesimi, 
+                            vendi mund të shkojë në zgjedhje të reja parlamentare. 
+                            <strong>Kjo nuk e ndërpret mandatin e Presidentit.</strong>
+                        </p>
+                        <button class="action-btn btn-danger" onclick="startParliamentaryElections()">📢 Shpall Zgjedhjet Parlamentare & Shpërnda Kuvendin</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: DIPLOMACIA -->
+            <section id="tab-diplomacy" class="tab-view">
+                <div class="sub-nav">
+                    <button class="sub-pill active" onclick="switchSubTab('dip', 'dialogue', this)">🇪🇺 Dialogu në Bruksel & QUINT</button>
+                    <button class="sub-pill" onclick="switchSubTab('dip', 'bilateral', this)">🌍 Vizitat Bilaterale</button>
+                    <button class="sub-pill" onclick="switchSubTab('dip', 'monitoring', this)">📋 Monitorimi i Marrëveshjeve</button>
+                </div>
+
+                <div id="dip-dialogue" class="sub-content">
+                    <div id="dialogueBrusselsContainer"></div>
+                </div>
+
+                <div id="dip-bilateral" class="sub-content" style="display:none;">
+                    <div id="diplomacyBilateralContainer"></div>
+                </div>
+
+                <div id="dip-monitoring" class="sub-content" style="display:none;">
+                    <div id="dialogueMonitoringContainer"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
 
 <script src="script.js"></script>
 </body>
